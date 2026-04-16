@@ -8,12 +8,12 @@ Add as a marketplace in Claude Code:
 
 ```
 /plugin marketplace add pt-hieu/skills
-/plugin install skills@brian-skills
+/plugin install brian@brian-skills
 ```
 
 ## What's inside
 
-Single bundled plugin `skills` containing:
+Single bundled plugin `brian` containing:
 
 | Skill | Purpose |
 | --- | --- |
@@ -28,7 +28,7 @@ Single bundled plugin `skills` containing:
 .claude-plugin/
   marketplace.json          # marketplace manifest
 plugins/
-  skills/
+  brian/
     .claude-plugin/
       plugin.json           # plugin manifest
     skills/

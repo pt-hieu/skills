@@ -10,8 +10,8 @@
   },
   "plugins": [
     {
-      "name": "skills",
-      "source": "./plugins/skills",
+      "name": "brian",
+      "source": "./plugins/brian",
       "description": "Bundled skills: challenge, commit, diagnose, prompting.",
       "version": "1.0.0",
       "category": "productivity",
