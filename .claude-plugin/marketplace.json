@@ -1,0 +1,21 @@
+{
+  "name": "brian-skills",
+  "owner": {
+    "name": "pt-hieu",
+    "url": "https://github.com/pt-hieu"
+  },
+  "metadata": {
+    "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, and commit workflow.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "skills",
+      "source": ".",
+      "description": "Bundled skills: challenge, commit, diagnose, prompting.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": ["skills", "debugging", "prompting", "commit", "architecture-review"]
+    }
+  ]
+}

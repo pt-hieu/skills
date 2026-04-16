@@ -1,0 +1,13 @@
+{
+  "name": "skills",
+  "version": "1.0.0",
+  "description": "Bundled skills: challenge, commit, diagnose, prompting.",
+  "author": {
+    "name": "Brian Pham",
+    "url": "https://github.com/pt-hieu"
+  },
+  "homepage": "https://github.com/pt-hieu/skills",
+  "repository": "https://github.com/pt-hieu/skills",
+  "license": "MIT",
+  "keywords": ["skills", "debugging", "prompting", "commit", "architecture-review"]
+}
