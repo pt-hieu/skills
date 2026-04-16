@@ -26,13 +26,16 @@ Single bundled plugin `skills` containing:
 
 ```
 .claude-plugin/
-  marketplace.json   # marketplace manifest
-  plugin.json        # plugin manifest
-skills/
-  challenge/
-  commit/
-  diagnose/
-  prompting/
+  marketplace.json          # marketplace manifest
+plugins/
+  skills/
+    .claude-plugin/
+      plugin.json           # plugin manifest
+    skills/
+      challenge/
+      commit/
+      diagnose/
+      prompting/
 ```
 
 ## License
