@@ -45,6 +45,8 @@ Gather project-specific knowledge so agents review against documented patterns, 
 
 Both agents run in background with `model: opus` and `run_in_background: true`.
 
+**Before launching**: resolve the absolute path to the diagnose methodology file (Agent 2 needs it). This plugin is distributed, so the install location varies per machine. When this skill loads, Claude Code prints a line like `Base directory for this skill: <plugin_root>/skills/challenge`. Take that base directory, strip the trailing `/challenge`, and append `/diagnose/references/methodology.md`. If the base directory line was not visible (e.g. you are continuing from compacted context), Glob `**/brian/skills/diagnose/references/methodology.md` under `~/.claude/plugins/cache/` and pick the first hit. Substitute the resolved absolute path in place of `{METHODOLOGY_PATH}` in the Agent 2 prompt below.
+
 ### Agent 1: Architectural Fitness Reviewer
 
 Prompt template:
@@ -242,7 +244,7 @@ Bad because: no evidence cited, no specific files or lines, vague impact, generi
 Prompt template:
 ```
 ## Methodology (READ FIRST)
-Before doing anything else, read /Users/brian.pham/.claude/skills/diagnose/references/methodology.md in full. That file defines your role (principal engineer, skeptical auditor), the disconfirmation rule, constraints, review order, and the complete framework you must apply:
+Before doing anything else, read {METHODOLOGY_PATH} in full. That file defines your role (principal engineer, skeptical auditor), the disconfirmation rule, constraints, review order, and the complete framework you must apply:
 - Problem Framing Challenge
 - Conflict Detection
 - Root Cause Trace (Iterative Deepening, with Bedrock Test + Removal/Recurrence/Sufficiency validation)
@@ -289,7 +291,7 @@ If no concerns found for a dimension, state: `No concerns — [brief evidence wh
 If >30% of findings are [LOW] or [UNVERIFIED] after the methodology's Verification Step: note this in your verdict and lean toward ⚠️ or ❌.
 ```
 
-See `/Users/brian.pham/.claude/skills/diagnose/references/methodology.md` for the worked example of a Root Cause Trace done well (and a bad one) — Agent 2 will read it as part of the methodology.
+See the diagnose methodology file (resolved as `{METHODOLOGY_PATH}` above — sibling skill `diagnose/references/methodology.md` inside the same plugin) for the worked example of a Root Cause Trace done well (and a bad one) — Agent 2 will read it as part of the methodology.
 
 ---
 
