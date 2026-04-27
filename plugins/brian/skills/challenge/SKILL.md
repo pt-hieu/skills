@@ -1,7 +1,6 @@
 ---
 name: challenge
 description: "Use before finalizing a significant plan, after complex implementation changes, before PRs touching core architecture, or when uncertain whether a solution is systematic enough."
-argument-hint: "[plan|impl] [focus area]"
 ---
 
 # Challenge
