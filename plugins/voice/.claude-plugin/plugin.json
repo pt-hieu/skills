@@ -1,6 +1,6 @@
 {
   "name": "voice",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Communication-style skill: write outbound team-facing messages in a warm, hedged, emoji-aware engineering voice.",
   "author": {
     "name": "Brian Pham",

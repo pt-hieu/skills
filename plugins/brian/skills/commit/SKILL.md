@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "[User-level skill] Use when committing."
+description: "Use when committing staged or working-tree changes to git."
 disable-model-invocation: false
 argument-hint: "[JIRA-TICKET] [focus topic]"
 allowed-tools: Bash(git *)

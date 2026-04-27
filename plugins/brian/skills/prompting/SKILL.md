@@ -1,6 +1,6 @@
 ---
 name: prompting
-description: "[User-level skill] Research-backed prompting techniques for building reliable LLM agents. Covers conflict detection, confidence calibration, pro/con balance, chain-of-verification, data citation, and hallucination prevention. Use when creating or improving agent prompts, designing structured output schemas, or diagnosing vague/overconfident/hallucinated outputs."
+description: "Use when creating or improving LLM agent prompts, designing structured output schemas, or diagnosing vague, overconfident, or hallucinated agent outputs."
 ---
 
 # Prompting

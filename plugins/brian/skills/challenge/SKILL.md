@@ -1,6 +1,6 @@
 ---
 name: challenge
-description: "[User-level skill] Challenge a plan or implementation with 2 independent opus subagents that audit architectural health, maintainability, expandability, and whether changes resolve issues systematically vs patching. Use when asked to \"challenge\", \"review architecture\", \"audit changes\", or before merging significant work."
+description: "Use before finalizing a significant plan, after complex implementation changes, before PRs touching core architecture, or when uncertain whether a solution is systematic enough."
 argument-hint: "[plan|impl] [focus area]"
 ---
 

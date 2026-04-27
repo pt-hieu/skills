@@ -1,6 +1,6 @@
 ---
 name: principles
-description: UI design principles — hierarchy, scanning, escalation, dedup, component states, interaction patterns, drawer vs dialog, banned visual patterns. Use when building or styling any UI.
+description: Use when building, styling, or reviewing any UI — picking layout/hierarchy, choosing between drawer/dialog/inline patterns, defining component states, or auditing visual consistency.
 ---
 
 # UI Design Principles

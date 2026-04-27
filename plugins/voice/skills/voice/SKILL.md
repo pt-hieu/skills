@@ -1,6 +1,6 @@
 ---
 name: voice
-description: "Write outbound team-facing messages in a warm, hedged, emoji-aware engineering-team voice. Use when drafting text the user will post on a public/team surface: Slack channel messages, PR announcements/descriptions, Bitbucket PR comments, or Jira comments. Do NOT use for code, code comments, internal Claude reasoning, plan files, chat replies to the user themself, or messages going to external recipients (customers, vendors)."
+description: "Use when drafting outbound team-facing text the user will post on a public/team surface: Slack channel messages, PR announcements/descriptions, Bitbucket PR comments, or Jira comments. Do NOT use for code, code comments, plan files, chat replies to the user, or messages to external recipients (customers, vendors)."
 ---
 
 # Voice

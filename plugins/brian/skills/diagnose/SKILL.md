@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: "[User-level skill] Systematic debugging methodology for root cause analysis: problem framing, iterative deepening beyond the first plausible cause, defect class identification, root cause validation tests, and devil's advocate self-challenge. Use when investigating bugs, reviewing fixes, running post-incident analysis, or any time you need to verify a fix lands on root cause rather than symptom."
+description: "Use when investigating bugs, reviewing fixes, running post-incident analysis, or verifying a fix lands on root cause rather than a symptom."
 ---
 
 # Diagnose
