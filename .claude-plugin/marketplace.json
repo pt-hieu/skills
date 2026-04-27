@@ -5,8 +5,8 @@
     "url": "https://github.com/pt-hieu"
   },
   "metadata": {
-    "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, and team-voice writing.",
-    "version": "1.1.0"
+    "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, team-voice writing, and UI design principles.",
+    "version": "1.2.0"
   },
   "plugins": [
     {
@@ -24,6 +24,14 @@
       "version": "1.0.0",
       "category": "communication",
       "tags": ["skills", "voice", "communication", "slack", "writing"]
+    },
+    {
+      "name": "design",
+      "source": "./plugins/design",
+      "description": "Design skills: UI design principles, component patterns, formatting, and interaction rules.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": ["skills", "design", "ui", "frontend", "design-system"]
     }
   ]
 }
