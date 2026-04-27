@@ -1,0 +1,13 @@
+{
+  "name": "voice",
+  "version": "1.0.0",
+  "description": "Communication-style skill: write outbound team-facing messages in a warm, hedged, emoji-aware engineering voice.",
+  "author": {
+    "name": "Brian Pham",
+    "url": "https://github.com/pt-hieu"
+  },
+  "homepage": "https://github.com/pt-hieu/skills",
+  "repository": "https://github.com/pt-hieu/skills",
+  "license": "MIT",
+  "keywords": ["voice", "communication", "slack", "writing"]
+}

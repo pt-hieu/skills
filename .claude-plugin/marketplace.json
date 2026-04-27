@@ -16,6 +16,14 @@
       "version": "1.0.2",
       "category": "productivity",
       "tags": ["skills", "debugging", "prompting", "commit", "architecture-review"]
+    },
+    {
+      "name": "voice",
+      "source": "./plugins/voice",
+      "description": "Communication-style skill: write outbound team-facing messages in a warm, hedged, emoji-aware engineering voice.",
+      "version": "1.0.0",
+      "category": "communication",
+      "tags": ["skills", "voice", "communication", "slack", "writing"]
     }
   ]
 }
