@@ -129,6 +129,67 @@ After both agents complete:
 
 ---
 
-## Step 4: Present the Report
+## Step 4: Critically Address Findings (Round N)
 
-Use `AskUserQuestion` to present the report and ask whether to proceed, revise, or rethink.
+Treat the Step 3 report as a hostile audit, not a list of suggestions. The default disposition is "the reviewer is right" — flip that only with evidence.
+
+For every `[HIGH]` and `[MEDIUM]` finding (including `[CONSENSUS-BLIND-SPOT]`), pick exactly one disposition:
+
+1. **Fix** — modify the plan or diff so the finding no longer applies. State what changed and where (file:line for impl, plan section for plan mode).
+2. **Rebut** — explain why the finding is wrong, with concrete evidence: file references, prior decisions in git history, constraints the reviewer didn't see, or domain rules from Step 1.5. A rebuttal without citable evidence does not count — convert it to a Fix instead.
+3. **Defer** — only when the finding is real but genuinely out of scope. Requires a follow-up task, ticket, or `/schedule` reference. "Out of scope" is not a synonym for "hard."
+
+Hard rules:
+- Do NOT silently drop findings.
+- Do NOT mark a finding "addressed" by restating the same approach the reviewer flagged in different words.
+- Cross-agent conflicts from Step 3 must be resolved (pick a side with evidence) before proceeding.
+
+Produce a **Round N Changes** block:
+
+```
+### Round N Changes
+- F1 [HIGH] {one-line finding}: FIXED — {what changed, where}
+- F2 [MEDIUM] {one-line finding}: REBUTTED — {evidence: file:line / git ref / domain rule}
+- F3 [MEDIUM] {one-line finding}: DEFERRED — {ticket / follow-up reference}
+```
+
+---
+
+## Step 5: Re-Challenge Loop
+
+Re-run the challenge to verify changes hold. Keep looping until the plan would pass a fresh round 2 with no new HIGH/MEDIUM findings.
+
+1. **Re-launch** both reviewers (Step 2) with the updated plan/diff plus two extra context blocks:
+   ```
+   ## Prior Round Findings
+   {merged HIGH/MEDIUM findings from all prior rounds}
+
+   ## Round N Changes
+   {Round N Changes block from Step 4}
+   ```
+   Instruct both reviewers to: (a) verify each prior finding is genuinely resolved by the claimed fix, (b) call out rebuttals that don't hold up, and (c) check whether the fixes themselves introduced new issues.
+
+2. **Re-synthesize** (Step 3) to produce a Round N+1 report.
+
+3. **Termination check** — exit the loop when ANY of:
+   - **Overall Verdict = PASS** → go to Step 6.
+   - **Round 3 reached** without PASS → exit, escalate with full round history. Do not silently continue past round 3.
+   - **Diminishing returns**: a finding flagged in round N re-appears in round N+1 despite a claimed Fix, OR the new round produces ≥80% of the same findings. This signals the design is incompatible with the constraints — exit and surface this to the user honestly rather than grinding further.
+
+   Otherwise (new or remaining HIGH/MEDIUM findings, fixable) → return to Step 4 as Round N+1.
+
+Each round MUST produce a Round N Changes block, even if it consists only of rebuttals. Track round-over-round verdict progression (e.g., `RETHINK → REVISE → PASS`) for the final report.
+
+---
+
+## Step 6: Final Report
+
+After the loop exits, present:
+
+- **Verdict progression**: `Round 1: {verdict} → Round 2: {verdict} → ...`
+- **Final unified report** from the last round (Step 3 format).
+- **Round Changes log**: all Round N Changes blocks in order — shows what was fixed, rebutted, deferred across the iteration.
+- **Deferred findings**: consolidated list with follow-up references.
+- **Escalation notes** (only if loop exited at round 3 or via diminishing returns): explain why convergence didn't happen and what the user should decide.
+
+Use `AskUserQuestion` to confirm: proceed, manual review, or roll back.
