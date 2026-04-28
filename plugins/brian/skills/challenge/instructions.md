@@ -8,48 +8,36 @@ The reviewers are first-class plugin agents:
 
 Their system prompts live in `plugins/brian/agents/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, defect-class enum, re-run sections). Agent files keep methodology, dimensions, examples, and per-agent verdict enums only.
 
+> Scope: this skill intentionally violates the `prompting` skill's CRITICAL
+> rule "Deterministic split — code computes all numbers; LLM interprets only".
+> Rationale: the orchestrator is the sole consumer of any quantitative state
+> here (no cross-process handoff). Verbal discipline + a human-readable run
+> file is sufficient for single-process loops. The prompting rule still
+> binds for any agent shipped for external consumers.
+
 ---
 
 ## Step 0: Run Setup
 
-Compute a run id and create the artifact directory. Persistence survives compaction and gives every round a forensic trail.
+Compute a run file path and initialize it. Persistence survives compaction and gives every round a forensic trail.
 
 ```
-run_id = $(date -u +%Y%m%dT%H%M%SZ)-$(openssl rand -hex 3)
-artifact_dir = /tmp/claude-challenge/<run_id>
-mkdir -p <artifact_dir>/round-1
+run_file=/tmp/claude-challenge/$(date -u +%Y%m%dT%H%M%SZ)-$(openssl rand -hex 3).md
+mkdir -p /tmp/claude-challenge
+printf "# Challenge Run — $(date -u +%FT%TZ)\n- Mode: <implementer|review-only>\n- Target: <plan path | git ref>\n\n" > "$run_file"
 ```
 
-Initialize `manifest.json`:
-
-```json
-{
-  "run_id": "<run_id>",
-  "started_at": "<iso8601>",
-  "mode": null,
-  "base_ref": "<git rev-parse for impl, null for plan>",
-  "rounds": []
-}
-```
-
-Print the artifact directory path so the user can re-open it later.
+Print `$run_file` so the user can re-open it later.
 
 ---
 
 ## Round Lifecycle
 
-Each round writes a fixed set of files into `<artifact_dir>/round-N/`:
+All round artifacts (context, agent returns, synthesis, dispositions) are appended to `$run_file` as `## Round N` subsections. No per-round directory; no separate files.
 
-- `context.md` — the assembled user-turn prompt (written before launching agents)
-- `architectural.md` — verbatim architectural-reviewer return
-- `root-cause.md` — verbatim root-cause-reviewer return
-- `synthesis.md` — Step 3 unified report (implementer + review-only)
-- `changes.md` — Step 4 Round N Changes block (implementer mode only)
-- `pr-review-comments.md` — Step 4 output (review-only mode only)
+If a Step 3 retry fetches missing context, the re-launched agent's output replaces the prior `### Architectural Review` / `### Root-Cause Review` block under the current `## Round N` heading and the synthesis notes the prior attempt. If both agents fail twice, append `### Round N: ABORTED — both agents failed twice` to the run file and skip synthesis (see Step 2 Await protocol for the terminal disposition).
 
-If a Step 3 retry fetches missing context, the re-launched agent's output overwrites its file (the original is preserved in the synthesis report's prior-attempt note). If both agents fail twice, mark the round aborted in `manifest.json` and skip synthesis.
-
-Re-runs (Step 5) read prior `synthesis.md` + `changes.md` from disk and inject them as `## Prior Round Findings` + `## Round N Changes` into the next round's Step 2 contract. Review-only mode never re-runs (no loop, no escalation banner).
+Re-runs (Step 5) read prior `### Synthesis` and `### Round N Changes` sections from the run file and inject them as `## Prior Round Findings` + `## Round N Changes` into the next round's Step 2 contract. Review-only mode never re-runs (no loop, no escalation banner).
 
 ---
 
@@ -61,14 +49,14 @@ Identify what to challenge:
 
 Gather context:
 - If plan: read the plan content or task list verbatim into `## Context`.
-- If implementation: capture `git diff <base-ref>...HEAD`. Record `<base-ref>` in manifest.
+- If implementation: capture `git diff <base-ref>...HEAD`. Note `<base-ref>` in the run file's header line.
 - Identify affected files/modules — derive from `git diff --name-only` in impl mode; list explicitly in plan mode.
 
 ---
 
 ## Step 1.0: Caller Disposition
 
-Determine whether the caller is the implementer (can Fix/Rebut/Defer findings) or a reviewer (only writes comments). Persist `mode` in `manifest.json`.
+Determine whether the caller is the implementer (can Fix/Rebut/Defer findings) or a reviewer (only writes comments). Note the mode in the run file's header line — human-facing only. Mode is bound in the orchestrator's working memory at Step 1.0; later steps NEVER re-parse the header line to re-derive mode.
 
 **Detection signals**:
 - Implementer: working tree has uncommitted changes; HEAD ahead of origin on a non-default branch; user phrasing such as "my plan", "before I push", "I just changed".
@@ -81,7 +69,7 @@ Determine whether the caller is the implementer (can Fix/Rebut/Defer findings) o
 | Mode | Step 4 procedure | Step 5 loop | Step 6 terminal |
 |---|---|---|---|
 | implementer | Round N Changes (Fix / Rebut-cite / Rebut-judgment / Defer) | enabled | proceed / manual review / rollback |
-| review-only | Write `pr-review-comments.md` | skipped | post via Bitbucket MCP / copy to clipboard / done |
+| review-only | Append `### PR Review Comments` to run file | skipped | post via Bitbucket MCP / copy to clipboard / done |
 
 ---
 
@@ -173,17 +161,17 @@ Abstinence rule (INSUFFICIENT CONTEXT): if you cannot assess a dimension with th
 {knowledge_context from Step 1.5}
 ```
 
-On re-runs (round 2+), append two more sections (read from `round-{N-1}/synthesis.md` and `round-{N-1}/changes.md`):
+On re-runs (round 2+), append two more sections (read from the run file per Step 5):
 
 ```
 ## Prior Round Findings
-{merged HIGH/MEDIUM finding_ids and anchors from prior rounds}
+{concatenated ### Synthesis subsections from every prior round, separated by --- Round K --- markers}
 
 ## Round N Changes
-{disposition block from prior Step 4}
+{the most recent prior round's ### Round N Changes subsection}
 ```
 
-When the contract injection includes Prior/Changes blocks, agent job order shifts to verify-first: (a) verify each prior finding by `finding_id`, (b) call out rebuttals that don't hold, (c) check whether fixes introduced new issues, (d) only then look for net-new findings.
+When the contract injection includes Prior/Changes blocks, agent job order shifts to verify-first: (a) verify each prior finding, (b) call out rebuttals that don't hold, (c) check whether fixes introduced new issues, (d) only then look for net-new findings.
 
 If gaps were resolved between attempts (Step 3 retry), append:
 
@@ -196,7 +184,7 @@ If gaps were resolved between attempts (Step 3 retry), append:
 
 After emitting both calls, the loop driver MUST NOT proceed to Step 3 until both agents have returned. Use the harness's task-completion notifications (no polling). Emit at most one status line in the wait window.
 
-On agent error or timeout: retry once with the same prompt. If both retries fail, mark the round aborted in `manifest.json` and stop. **Do not synthesize a one-agent verdict** — the cross-agent conflict check is load-bearing.
+On agent error or timeout: retry once with the same prompt. If both retries fail, append `### Round N: ABORTED — both agents failed twice` to the run file. Skip Step 5; jump to Step 6 with `mode = aborted`: chat emits one-line abort + run-file path; AskUserQuestion offers retry / proceed without challenge / rollback. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check is load-bearing.
 
 Do not re-embed agent-definition content in the prompt.
 
@@ -216,7 +204,23 @@ After both agents complete:
 
 ### 3.0 Persistence
 
-Write `round-N/architectural.md` and `round-N/root-cause.md` (verbatim agent returns). If a retry happens (3.1 below), overwrite with the retry output and note the prior attempt in `synthesis.md`. Failures after retry abort the round.
+Append `### Architectural Review` and `### Root-Cause Review` subsections under the current `## Round N` heading. Wrap each verbatim agent return in a fenced markdown code block so the agent's own `##`/`###` headings stay inert in the run file's outline:
+
+```
+### Architectural Review
+~~~markdown
+{verbatim agent return}
+~~~
+
+### Root-Cause Review
+~~~markdown
+{verbatim agent return}
+~~~
+```
+
+Use `~~~` (tilde) fences so any ` ``` ` triple-backtick code blocks inside the agent's output don't terminate the wrapper.
+
+If a retry happens (3.1 below), replace the affected agent's block with the retry output and note the prior attempt in the synthesis. Failures after retry abort the round (see Step 2 Await protocol).
 
 ### 3.1 INSUFFICIENT CONTEXT gate (pre-verdict)
 
@@ -225,24 +229,11 @@ Count `INSUFFICIENT CONTEXT` dimensions across both agents.
 - If the gap is **closable** (file path / ticket / grep pattern reachable from the orchestrator): fetch the missing context (`Read` the file, `WebFetch` the ticket, run the grep), then re-launch **only the affected agent** with an extra `## Resolved Gaps` block. Cap at 1 retry per round. After retry, re-run 3.0 and re-evaluate the gate.
 - If the gap is **non-closable** OR remains unresolved after retry: verdict is capped at `REVISE` regardless of finding count. Cannot `PASS` with unresolved gaps. The "Insufficient Context Areas" section in the report becomes a top-level callout, not a footnote.
 
-### 3.2 Finding-id computation (deterministic)
-
-For each Finding Anchor emitted by either agent:
-
-```
-defect_slug   = lowercase(defect_class).replace(' ', '-')
-hash_input    = file + "|" + summary
-finding_id    = "<agent>-<defect_slug>-" + sha1(hash_input)[:8]
-finding_label = file + ":" + line     # human-readable; allowed to drift
-```
-
-Where `<agent>` is `arch` or `rca`. Store `{finding_id → {anchor, label, confidence, severity}}` in `manifest.json` for the current round.
-
 ### 3.3 Merge / dedupe / prioritize
 
 1. Collect both verdicts and confidence levels.
 2. **Discard `[UNVERIFIED]` and `[LOW]` findings** unless they represent a potentially critical concern worth flagging.
-3. Merge overlapping concerns by anchor similarity (same `file` + same `defect_class`, or matching `finding_id`). When merging, list both source `finding_id`s.
+3. Merge overlapping concerns by anchor similarity (same `file` + same `defect_class`). When merging, note both source agents.
 4. Prioritize by severity × confidence: `[HIGH]` blockers first, then `[MEDIUM]`.
 5. **Detect cross-agent conflicts** — if architectural-reviewer says "good abstraction" but root-cause-reviewer says "over-abstraction hides the root cause", surface this explicitly with both sides cited.
 6. **False Consensus Check** — if both agents reached positive verdicts (PASS + SYSTEMATIC) AND neither has any `[MEDIUM]+` concerns:
@@ -251,46 +242,92 @@ Where `<agent>` is `arch` or `rca`. Store `{finding_id → {anchor, label, confi
    - If something is found, add it as a new finding with tag `[CONSENSUS-BLIND-SPOT]`.
    - Otherwise note: "False consensus check completed — agreement appears genuine."
 
+The merged finding list is held verbally for the duration of one synthesis pass; that's all that's needed.
+
 ### 3.4 Render the unified report
 
-Write to `round-N/synthesis.md` and present:
+Synthesis goes two places: appended verbatim to the run file (forensic), and rendered compactly in chat (user-facing). Don't dump JSON, don't write `N/A` for empty sections, don't repeat agent paragraphs verbatim — the orchestrator condenses.
+
+3.4a runs only after 3.1 resolves (retries complete or aborted); 3.4b runs only after 3.4a is appended to the run file.
+
+On the aborted-round path (both agents failed twice): skip both 3.4a and 3.4b; emit only one line to chat:
 
 ```
-## Challenge Report — Round N
+Round N: ABORTED — both agents failed twice. See <run_file>.
+```
 
-### Architectural Fitness: {verdict}
-{[HIGH] and [MEDIUM] findings only, with finding_label and evidence citations}
+### 3.4a Persist verbose synthesis (run file)
 
-### Systematic Resolution: {verdict}
-{[HIGH] and [MEDIUM] findings only, with causal chains}
+Append `### Synthesis` under the current `## Round N` heading using the template below.
 
-### Cross-Agent Conflicts
-{any disagreements between the two reviewers — both sides explicit}
+```
+### Synthesis
 
-### False Consensus Check
-{result — "N/A" if agents disagreed}
+#### Architectural Fitness: {verdict}
+{[HIGH] and [MEDIUM] findings only, with file:line and evidence citations — drawn from architectural-reviewer's findings}
 
-### What the Changes Do Well
-{consolidated strengths from both agents}
+#### Systematic Resolution: {verdict}
+{[HIGH] and [MEDIUM] findings only, with causal chains — drawn from root-cause-reviewer's findings}
 
-### Action Items
-1. ❌ [HIGH] {finding_label} — {finding_id} — {description} — {suggestion}
-2. ⚠️ [MEDIUM] {finding_label} — {finding_id} — {description} — {suggestion}
+#### Cross-Agent Conflicts
+{any disagreements between the two reviewers — both sides explicit. Omit subsection if none.}
+
+#### False Consensus Check
+{result. Omit subsection if agents disagreed.}
+
+#### What the Changes Do Well
+{consolidated strengths from both agents. Omit subsection if none.}
+
+#### Action Items
+1. ❌ [HIGH] {file:line} — {one-sentence issue} — {one-sentence fix}
+2. ⚠️ [MEDIUM] {file:line} — {one-sentence issue} — {one-sentence fix}
 ...
 
-### Skill Compliance
-{findings against project skills / CLAUDE.md rules — "N/A" if none}
+#### Skill Compliance
+{findings against project skills / CLAUDE.md rules. Omit subsection if none.}
 
-### Insufficient Context Areas
-{dimensions either agent could not assess — top-level callout if any remain after retry}
+#### Insufficient Context Areas
+{dimensions either agent could not assess — top-level callout if any remain after retry. Omit subsection if none.}
 
-### Overall Verdict: {PASS | REVISE | RETHINK}
+#### Overall Verdict: {PASS | REVISE | RETHINK}
 - PASS: no [HIGH] AND no [MEDIUM] concerns
 - REVISE: one or more [MEDIUM]+ concerns with clear fix paths
 - RETHINK: any [HIGH] concern indicating fundamental issue
 
 (Verdict capped at REVISE if any unresolved INSUFFICIENT CONTEXT — see 3.1.)
 ```
+
+### 3.4b Render compact synthesis to chat
+
+After 3.4a is appended, render the chat-channel template below. Project from the same merged finding list — fields are NOT re-derived.
+
+```
+## Challenge Report — Round N — {VERDICT}{ — confidence: {HIGHER|LOWER}}
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
+
+### Findings
+- ❌ [HIGH] {arch|rca|both} {file:line} — {one-sentence issue, cite skill name inline if a skill rule is violated}. Fix: {one-sentence fix}.
+- ⚠️ [MEDIUM] ...
+
+### Conflicts (omit section if none)
+- {one-line: both sides cited}
+
+### Strengths (omit section if none, max 3 consolidated bullets)
+- {one-line strength}
+
+### Insufficient Context (omit section if none)
+- {dimension → what's missing in one line}
+
+(if any [LOW]/[UNVERIFIED] dropped that aren't critical-flagged or consensus-blind-spot:)
+Dropped from chat: N low-confidence findings (see run file)
+```
+
+Hard rules:
+- Source prefix: `arch`, `rca`, or `both` (when merged).
+- Skill Compliance: cite skill name inline in the issue sentence; no separate section.
+- False Consensus / Debated Findings: no section header in chat — debated findings appear in Findings list with resolved severity; `[CONSENSUS-BLIND-SPOT]` findings appear in Findings like any other.
+- Empty sections: omit header entirely (no `N/A`).
+- Suppression escape hatch: drop `[LOW]/[UNVERIFIED]` from chat UNLESS 3.3 marked it "critical concern worth flagging" OR the finding has tag `[CONSENSUS-BLIND-SPOT]`. Never silently drop those two classes.
 
 ---
 
@@ -318,34 +355,56 @@ Hard rules:
 - Do NOT mark a finding "addressed" by restating the same approach the reviewer flagged in different words.
 - Cross-agent conflicts from Step 3 must be resolved (pick a side with evidence) before proceeding.
 
-Produce a **Round N Changes** block (write to `round-N/changes.md`):
+Append the **Round N Changes** block to the run file under the current `## Round N` heading. The forensic record (multi-line dispositions allowed) lives in the run file; the chat render is one line per finding — **hard cap**.
+
+Run file (`### Round N Changes` — multi-line allowed):
 
 ```
 ### Round N Changes
-- F1 [HIGH] {finding_id} — {one-line finding}: FIXED — {what changed, where}
-- F2 [MEDIUM] {finding_id} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
-- F3 [MEDIUM] {finding_id} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
-- F4 [MEDIUM] {finding_id} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
+- F1 [HIGH] {file:line} — {one-line finding}: FIXED — {what changed, where}
+- F2 [MEDIUM] {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
+- F3 [MEDIUM] {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
+- F4 [MEDIUM] {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
 ```
 
-Append dispositions to `manifest.json`.
+Chat render (one line per finding, hard cap):
+
+```
+- F{n} [SEVERITY] {file:line}: {DISPOSITION} — {≤25-word reason}
+```
+
+Multi-line disposition prose belongs in the run file only. The chat emits the one-liner.
 
 ### 4b. Review-only mode
 
 Skip Fix/Rebut/Defer entirely. The caller is not the implementer — they leave comments.
 
-Render every `[HIGH]` and `[MEDIUM]` finding as a PR-review comment in `round-N/pr-review-comments.md`:
+Append `### PR Review Comments` to the run file with every `[HIGH]` and `[MEDIUM]` finding as a PR-review comment (verbose, includes code snippets):
 
 ```
+### PR Review Comments
+
 **[HIGH]** {file}:{line} — {description}
 
 {suggestion, including code snippet if available}
 
-<!-- finding_id: {finding_id} -->
 ---
+**[MEDIUM]** {file}:{line} — {description}
+...
 ```
 
-Mark the round `terminal: true` in `manifest.json`. Skip Step 5 entirely; jump to Step 6.
+Then render the compact chat view (mirrors 3.4b chat discipline — same defect class):
+
+```
+## PR Review Comments — N findings ready
+- ❌ [HIGH] {file:line}: {one-sentence issue}
+- ⚠️ [MEDIUM] {file:line}: {one-sentence issue}
+
+Full comments with code snippets in: <run_file>
+Use Bitbucket MCP to post, or copy from the file.
+```
+
+Append `### Review-only round — terminal` to the run file. Skip Step 5 entirely; jump to Step 6.
 
 ---
 
@@ -353,15 +412,12 @@ Mark the round `terminal: true` in `manifest.json`. Skip Step 5 entirely; jump t
 
 Re-run the challenge to verify changes hold. Keep looping until the plan/impl would pass a fresh round with no new HIGH/MEDIUM findings. Skipped in review-only mode.
 
-1. **Increment round**: `mkdir -p <artifact_dir>/round-{N+1}`. Re-launch both reviewers (Step 2) with the contract injection PLUS:
+1. **Increment round**. Re-launch both reviewers (Step 2) with the contract injection PLUS:
 
-   ```
-   ## Prior Round Findings
-   {merged HIGH/MEDIUM finding_ids and anchors from all prior rounds — read from manifest}
+   - `## Prior Round Findings`: concatenate the `### Synthesis` subsection from EVERY prior round in chronological order, separated by `--- Round K ---` markers. (Round 2 → R1's synthesis only; Round 3 → R1+R2 syntheses concatenated. Verbal duplication is acceptable; agents re-deduplicate.)
+   - `## Round N Changes`: the most recent prior round's `### Round N Changes` subsection only.
 
-   ## Round N Changes
-   {Round N Changes block read from round-{N}/changes.md}
-   ```
+   Section extraction: anchor on the `### Synthesis` and `### Round N Changes` H3 headings (NOT the `## Round N` H2 — agent returns are fenced per Step 3.0 but extraction grammar is keyed off our own H3 sentinels for safety). Read content from the H3 heading to the next H3 heading at the same level, or to EOF.
 
    The reviewers' verify-first behavior is enabled by these sections (see Step 2).
 
@@ -370,29 +426,35 @@ Re-run the challenge to verify changes hold. Keep looping until the plan/impl wo
    - `REBUTTED-JUDGMENT` of a `[HIGH]` without a documented sibling-instance check.
    - `DEFERRED` without a follow-up reference.
 
-3. **Re-synthesize** (Step 3) to produce a Round N+1 report. Persist artifacts.
+3. **Re-synthesize** (Step 3) to produce a Round N+1 report. Append artifacts to the run file.
 
 4. **Termination check** — exit the loop when ANY of:
    - **Overall Verdict = PASS** → go to Step 6.
    - **Round 3 reached** without PASS → exit, transition to Step 6 with escalation. Do not silently continue past round 3.
-   - **Diminishing returns** (finding_id keyed):
-     - ≥60% of round-{N+1} `[HIGH]/[MEDIUM]` finding_ids appeared in round-N, OR
-     - any `finding_id` marked FIXED in `round-{N}/changes.md` reappears in `round-{N+1}/synthesis.md`.
-     This signals the design is incompatible with the constraints — exit and surface honestly rather than grind further.
+   - **Diminishing returns**: the orchestrator reads the prior round's findings and, if findings rhyme across rounds (same file/defect-class re-surfacing by similar prose, or any finding marked FIXED in the prior `### Round N Changes` reappears in the new `### Synthesis`), exits and surfaces honestly rather than grinding further.
 
    Otherwise (new or remaining HIGH/MEDIUM findings, fixable) → return to Step 4 as Round N+1.
 
-Each round MUST produce a Round N Changes block, even if it consists only of rebuttals. Track round-over-round verdict progression (e.g., `RETHINK → REVISE → PASS`) in the manifest.
+Each round MUST produce a Round N Changes block, even if it consists only of rebuttals. Track round-over-round verdict progression (e.g., `RETHINK → REVISE → PASS`) verbally for Step 6.
 
 ---
 
 ## Step 6: Final Report
 
-Write `<artifact_dir>/final-report.md` and present.
+The run file IS the final report. Chat emits a single turn:
+
+```
+## Challenge Complete — {VERDICT progression: R1 → R2 → R3}
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  artifact: <run_file>
+{escalation banner if round-3-cap or diminishing-returns}
+{last round's compact synthesis (3.4b template)}
+{last round's Round N Changes one-liners (4a chat-render format)}
+{deferred findings inline if any}
+```
 
 ### Salient escalation banner (implementer mode only)
 
-If the loop exited at round 3 OR via diminishing returns, the **first line** of `final-report.md` MUST be:
+If the loop exited at round 3 OR via diminishing returns, prepend:
 
 ```
 🛑 HUMAN REVIEW REQUIRED — DO NOT MERGE WITHOUT MANUAL VERIFICATION
@@ -400,16 +462,11 @@ Reason: <round-3-cap | diminishing-returns>
 Unresolved [HIGH]: N, Unresolved [MEDIUM]: M
 ```
 
-`N` and `M` are derived from the manifest by counting findings whose latest disposition is **not** `FIXED`. Counts come from disposition tracking, not re-derived from finding_ids — decouples M6 from finding_id stability.
+`N` and `M` are the count of findings whose latest disposition is **not** `FIXED`, judged from the run file's `### Round N Changes` blocks.
 
-### Report body
+### Escalated-overflow fallback
 
-- **Verdict progression**: `Round 1: {verdict} → Round 2: {verdict} → ...`
-- **Final unified report** from the last round (Step 3 format).
-- **Round Changes log**: all Round N Changes blocks in order — what was fixed, rebutted, deferred across iteration.
-- **Deferred findings**: consolidated list with follow-up references.
-- **Escalation notes** (only if escalated): why convergence didn't happen and what the user should decide.
-- **Artifact directory**: print `<artifact_dir>` so the user can re-open the trail.
+If the run is escalated AND the combined chat output would exceed roughly one screenful (~50 lines by visual eyeball, no countable cap), emit ONLY the escalation banner + verdict progression line + artifact path. The synthesis, disposition trail, and deferred list remain in the run file for the user to open.
 
 ### Terminal action
 
@@ -418,3 +475,4 @@ Use `AskUserQuestion`. Options vary by mode and escalation:
 - **implementer + non-escalated PASS**: `proceed` / `manual review` / `roll back`.
 - **implementer + escalated**: `manual review` / `roll back` / `accept risk and proceed (explicit confirmation required)`. No silent default.
 - **review-only**: `post comments via Bitbucket MCP` / `copy to clipboard` / `done`.
+- **aborted** (both agents failed twice): `retry challenge` / `proceed without challenge` / `roll back`.
