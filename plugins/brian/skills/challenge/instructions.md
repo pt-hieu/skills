@@ -180,6 +180,22 @@ If gaps were resolved between attempts (Step 3 retry), append:
 {the missing context that was fetched, formatted for that agent}
 ```
 
+### Contract Audit (run before every spec-stripping change)
+
+Before deleting or renaming any field listed below, grep `plugins/brian/agents/*.md` for the literal token. For every hit, plan a same-commit edit that updates the agent prose. Add the affected agent file(s) to the commit's diff before pushing.
+
+Currently-live contract tokens (alphabetized):
+
+- `defect_class` (and its closed enum members)
+- `Finding Anchor`
+- `INSUFFICIENT CONTEXT`
+- `Output Contract`
+- `Prior Round Findings`
+- `Resolved Gaps`
+- `Round N Changes`
+
+When the orchestrator-emit shape evolves (new field added, existing field renamed, token retired), update this list in the same commit. The list is the single source of truth — agents narrate it in their Input Contract sections; this audit step keeps both sides aligned.
+
 ### Await protocol
 
 After emitting both calls, the loop driver MUST NOT proceed to Step 3 until both agents have returned. Use the harness's task-completion notifications (no polling). Emit at most one status line in the wait window.
@@ -361,16 +377,16 @@ Run file (`### Round N Changes` — multi-line allowed):
 
 ```
 ### Round N Changes
-- F1 [HIGH] {file:line} — {one-line finding}: FIXED — {what changed, where}
-- F2 [MEDIUM] {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
-- F3 [MEDIUM] {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
-- F4 [MEDIUM] {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
+- [HIGH] {file:line} — {one-line finding}: FIXED — {what changed, where}
+- [MEDIUM] {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
+- [MEDIUM] {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
+- [MEDIUM] {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
 ```
 
 Chat render (one line per finding, hard cap):
 
 ```
-- F{n} [SEVERITY] {file:line}: {DISPOSITION} — {≤25-word reason}
+- [SEVERITY] {file:line}: {DISPOSITION} — {≤25-word reason}
 ```
 
 Multi-line disposition prose belongs in the run file only. The chat emits the one-liner.
