@@ -13,6 +13,21 @@ Systematic root-cause analysis framework. Stops you from patching symptoms by fo
 - Post-incident analysis where you need to identify the defect class and find sibling instances
 - Anywhere the 5-whys feels insufficient
 
+## Output Contract (interactive use)
+Run the methodology silently; surface only conclusions.
+
+Default shape (≤ 10 lines + 1 line per cited sibling beyond the first 3):
+- One-line root cause
+- Defect class (one line, from the closed enum)
+- Where the fix lands on the chain
+- Sibling instances (file:line list)
+- Confidence — only when LOW or contested
+- Optional one-line suggestion
+
+Expand to full structured output when:
+- The user asks "explain" / "show your work", OR
+- An orchestrator (e.g. `/challenge`) injects its own Output Contract — that contract supersedes this one.
+
 ## Core Principle
 Stop at the first plausible cause → you're patching. Keep asking "why does THIS exist?" until you hit bedrock: an explicit design decision, an external constraint, a missing abstraction, or circular reasoning back to an earlier node.
 
