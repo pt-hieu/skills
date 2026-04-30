@@ -5,8 +5,8 @@
     "url": "https://github.com/pt-hieu"
   },
   "metadata": {
-    "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, team-voice writing, and UI design principles.",
-    "version": "1.5.0"
+    "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, team-voice writing, plan recaps, and UI design principles.",
+    "version": "1.6.0"
   },
   "plugins": [
     {
@@ -20,10 +20,10 @@
     {
       "name": "voice",
       "source": "./plugins/voice",
-      "description": "Communication-style skill: write outbound team-facing messages in a warm, hedged, emoji-aware engineering voice.",
-      "version": "1.0.1",
+      "description": "Communication-style skills: outbound team-facing writing in a warm, hedged, emoji-aware engineering voice; plain-language plan recaps before exiting plan mode.",
+      "version": "1.1.0",
       "category": "communication",
-      "tags": ["skills", "voice", "communication", "slack", "writing"]
+      "tags": ["skills", "voice", "communication", "slack", "writing", "recap", "plan-mode"]
     },
     {
       "name": "design",
