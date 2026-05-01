@@ -16,6 +16,7 @@ Set spawned-subagent models per step. The harness exposes the model via the `Age
 | Step | Subagent | Effort | Model |
 | --- | --- | --- | --- |
 | 2 Explore | `Explore` (×1–3) | low | `haiku` |
+| 2.5 Diagnose (bug path) | `brian:diagnose` | medium | `opus` |
 | 5 Plan | `Plan` (×1) | high | `opus` |
 | 6 Challenge | reviewer subagents | medium | `opus` |
 
@@ -35,10 +36,10 @@ For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` �
 
 - **Goal**: ground the plan in real code.
 - **Action**:
-  - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration.
+  - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. `brian:diagnose` produces a root cause + defect class + fix-shape suggestion; treat that output as **Phase-1 findings**, not as a finished design. The Plan agent in Step 5 still runs and consumes the diagnose output as input.
   - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.).
   - Use `model: "haiku"` for each Explore subagent — these are scoped lookups; reserve heavier models for design.
-- **Gate**: concrete file paths, reusable utilities, and existing patterns are in hand.
+- **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are in hand.
 
 ---
 
@@ -70,22 +71,23 @@ For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` �
 
 ---
 
-## Step 5 — Plan agent (Phase 2)
+## Step 5 — Plan agent (Phase 2) — HARD GATE
 
 - **Goal**: produce a detailed implementation plan from a focused designer.
 - **Action**: launch ONE `Plan` subagent at high effort (`model: "opus"`). Hand it:
-  - Phase-1 findings (file paths, traces, reusable utilities)
+  - Phase-1 findings (file paths, traces, reusable utilities; on the bug path this includes the `brian:diagnose` root cause + defect class + suggested fix shape)
   - Requirements and constraints
   - Skill-scan output and any skill-derived patterns to follow
   - Architecture decisions confirmed in Step 3
-- **Gate**: a detailed implementation plan is returned.
+- **Gate**: a detailed implementation plan is returned **from the Plan agent**. A self-written plan does NOT clear this gate, no matter how coherent the shape feels in your head. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching the cross-file synthesis issues challengers will otherwise raise as HIGH findings.
 
 ---
 
 ## Step 6 — Challenge
 
+- **Pre-flight self-check (MANDATORY)**: before invoking challenge, answer in one line: *"Did the plan I'm about to challenge come from a Plan-agent return, or did I write it myself?"* If self-written, return to Step 5 and run the Plan agent. Challenge tests the plan, not the orchestrator's intuitions.
 - **Goal**: catch missed details and weak spots before pitching.
-- **Action**: invoke `brian:challenge` on the plan. Run its spawned reviewer subagents on `opus` at **medium thinking effort** (not high). Revise the plan with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
+- **Action**: invoke `brian:challenge` on the **Plan-agent output** (revised with Step 3 architecture decisions and skill-scan constraints). Run its spawned reviewer subagents on `opus` at **medium thinking effort** (not high). Revise the plan with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
 - **Gate**: challenge round complete and the plan has been updated.
 
 ---
