@@ -17,12 +17,12 @@ Add as a marketplace in Claude Code:
 
 Most of my work happens through Claude Code, where Claude does the typing and I steer. These skills are the rails that keep that loop honest. They're organized around the moments where I most often go off the road.
 
-### 1. Before I let Claude commit to a plan — `challenge` + `recap`
+### 1. Before I let Claude commit to a plan — `challenge` + `pitch`
 
 The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, two things happen:
 
 - **`challenge`** runs two fresh-context subagents — one for architecture fit, one for root cause — against the plan. Two green passes is a high bar; the first plan rarely clears it, which is the point.
-- **`recap`** then summarizes the surviving plan back to me in everyday language: problem, fix, new behavior, no jargon. That's where I catch direction-level mistakes that a technical plan would have hidden behind file names.
+- **`pitch`** then summarizes the surviving plan back to me in everyday language: problem, fix, new behavior, no jargon. That's where I catch direction-level mistakes that a technical plan would have hidden behind file names.
 
 Only after both do I approve and let implementation start.
 
@@ -64,7 +64,7 @@ Three plugins, each a coherent domain:
 | Skill | Purpose |
 | --- | --- |
 | `voice` | Team-facing writing voice for Slack, PRs, Bitbucket, Jira. |
-| `recap` | Plain-language plan recap before exiting plan mode. |
+| `pitch` | Plain-language plan pitch before exiting plan mode. |
 
 ### `design` — UI design rules
 
@@ -89,7 +89,7 @@ plugins/
     .claude-plugin/plugin.json
     skills/
       voice/
-      recap/
+      pitch/
   design/
     .claude-plugin/plugin.json
     skills/

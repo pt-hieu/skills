@@ -1,4 +1,4 @@
-# Recap Style Guide
+# Pitch Style Guide
 
 ## Audience
 Brian, the human maintainer of a project where most implementation is done by LLMs. He has stepped back from the implementation details. He wants to know whether the direction is right, told in everyday language.
@@ -10,10 +10,10 @@ Three sections, in this order, every time:
 2. **Fix** — what we're going to do about it, in plain language
 3. **New behavior** — what the system does after the change that it doesn't do today
 
-Length budget: each section ≤ 3 sentences. Total recap ≤ ~120 words.
+Length budget: each section ≤ 3 sentences. Total pitch ≤ ~120 words.
 
 ## Use Everyday Language
-A recap stays in the language a smart non-engineer would use:
+A pitch stays in the language a smart non-engineer would use:
 
 - Talk about **behaviors**: what the system does, what a user sees, what a maintainer would observe.
 - Talk about **outcomes**: what changes for the person using the system or the person maintaining it.
