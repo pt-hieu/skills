@@ -20,7 +20,7 @@ Set spawned-subagent models per step. The harness exposes the model via the `Age
 | 5 Plan | `Plan` (×1) | high | `opus` |
 | 6 Challenge | reviewer subagents | medium | `opus` |
 
-For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` — keep that, but request **medium thinking effort** (not high) for those subagents so they stay focused without burning the budget.
+For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` — keep that, but request **medium thinking effort** for those subagents so they stay focused without burning the budget.
 
 ---
 
@@ -79,7 +79,7 @@ For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` �
   - Requirements and constraints
   - Skill-scan output and any skill-derived patterns to follow
   - Architecture decisions confirmed in Step 3
-- **Gate**: a detailed implementation plan is returned **from the Plan agent**. A self-written plan does NOT clear this gate, no matter how coherent the shape feels in your head. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching the cross-file synthesis issues challengers will otherwise raise as HIGH findings.
+- **Gate**: a detailed implementation plan is returned **from the Plan agent**. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching the cross-file synthesis issues challengers will otherwise raise as HIGH findings.
 
 ---
 
@@ -94,13 +94,29 @@ For Step 6, the `brian:challenge` orchestrator spawns its reviewers on `opus` �
 
 ## Step 7 — Write the final plan file
 
-- **Goal**: leave a high-quality artifact for execution.
-- **Action**: write the plan file specified by the plan-mode system prompt with sections for:
-  - **Context** — why this change is being made
-  - **Recommended approach** — only the chosen path, not alternatives
-  - **Critical file paths** — what will change
-  - **Reused utilities** — existing functions/patterns this builds on (with paths)
-  - **Verification** — how to test the change end-to-end
+- **Goal**: leave a self-sustained artifact for execution. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
+- **Action**: write the plan file specified by the plan-mode system prompt with these sections, in order:
+  - **Context** — one continuous narrative covering:
+    - the requirement in concrete terms (what the change is),
+    - where it came from (ticket id, user ask, bug report, link or quote),
+    - why it is being made (the problem solved, the user or business motivation),
+    - the Phase-1 findings that justify the chosen approach — inline them. On the bug path include the root cause and defect class from `brian:diagnose`. On the feature path include the existing patterns, call sites, and constraints surfaced by Explore. Write enough that a fresh agent understands the goal and the evidence from this file alone.
+  - **Recommended approach** — the chosen path.
+  - **Critical file paths** — every file that will change, absolute paths.
+  - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
+  - **Verification** — how to confirm the change works end-to-end (commands, manual steps, or test names).
+  - **Post-implementation protocol** (verbatim executor contract — keep wording byte-identical when copying):
+
+    > **Post-implementation protocol (kickoff v1)**
+    > 1. After implementation is complete, run the `simplify` skill on the diff to prune over-engineering and surface reuse opportunities.
+    > 2. Surface the diff and a short summary in chat, then wait for Brian's explicit approval before running `git add`, `git commit`, `git push`, or any PR/MR action.
+- **Gate**: re-read the written plan file end-to-end and confirm in chat:
+  (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link),
+  (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
+  (c) Post-implementation protocol block is present byte-identical to the version above, including the `(kickoff v1)` stamp.
+  Confirm all three checks pass, then advance to Step 8; fix any that fail first.
+
+  When the protocol block changes in the future, bump `v1 → v2` here in the same commit. Previously written plan files keep their frozen earlier-version copy — the stamp surfaces which revision a plan was generated against.
 
 ---
 

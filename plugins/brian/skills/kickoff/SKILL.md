@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: "Drive a new requirement through Brian's deterministic planning pipeline: plan mode -> explore -> interrogate -> skill scan -> plan agent -> challenge -> pitch -> ExitPlanMode."
+description: "Use when Brian invokes /kickoff or hands off a new requirement, ticket, or task description for planning."
 ---
 
 # Kickoff
