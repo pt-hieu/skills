@@ -22,7 +22,7 @@ Set spawned-subagent models per task. The harness exposes the model via the `Age
 | 2 Diagnose (bug path) | `brian:diagnose` | medium | `opus` |
 | 3 Historian | `code-historian` | medium | `sonnet` |
 | 6 Plan | `Plan` (×1) | high | `opus` |
-| 7 Challenge | reviewer subagents | medium | `opus` |
+| 8 Challenge | reviewer subagents | medium | `opus` |
 | 10 Protocol-injector | `protocol-injector` | trivial | `haiku` |
 
 For the Challenge task, the `brian:challenge` orchestrator spawns its reviewers on `opus` — keep that, but request **medium thinking effort** for those subagents so they stay focused without burning the budget.
@@ -119,22 +119,11 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 
 ---
 
-**Task 7 — Challenge**
+**Task 7 — Write the plan file**
 
-- subject: `Challenge the Plan-agent output`
+- subject: `Write the plan file`
 - description:
-  > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Did the plan I'm about to challenge come from a Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent. Challenge tests the plan, not the orchestrator's intuitions.
-  > **Goal**: catch missed details and weak spots before pitching.
-  > **Action**: invoke `brian:challenge` on the Plan-agent output (revised with Interrogate-task architecture decisions and skill-scan constraints). Run its reviewer subagents on `opus` at **medium thinking effort** (not high). Revise the plan with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
-  > **Gate**: challenge round complete and the plan has been updated.
-
----
-
-**Task 8 — Write the final plan file**
-
-- subject: `Write the final plan file`
-- description:
-  > **Goal**: leave a self-sustained artifact for execution. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
+  > **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
   > **Action**: write the plan file specified by the plan-mode system prompt with these sections, in order:
   > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
   > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors. Quote prior decisions verbatim.
@@ -143,12 +132,23 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
   > - **Verification** — how to confirm the change works end-to-end (commands, manual steps, or test names).
   >
-  > End the file at **Verification**. The `protocol-injector` subagent appends the post-implementation protocol in the Inject task — leave room for it.
+  > End the file at **Verification**. The `protocol-injector` subagent appends the post-implementation protocol in the Inject task — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
   > **Gate**: re-read the written plan file end-to-end and confirm in chat:
   > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link),
   > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
   > (c) Prior intent section is present with commit-hash and/or ticket-key anchors.
   > Confirm all checks pass before completing this task; fix any that fail first.
+
+---
+
+**Task 8 — Challenge**
+
+- subject: `Challenge the plan file`
+- description:
+  > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
+  > **Goal**: catch missed details and weak spots before pitching.
+  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Run its reviewer subagents on `opus` at **medium thinking effort** (not high). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
+  > **Gate**: challenge round complete and the plan file on disk has been updated.
 
 ---
 
@@ -167,7 +167,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Inject post-implementation protocol into plan file`
 - description:
   > **Goal**: ensure the plan file ends with the canonical post-implementation protocol block before handoff.
-  > **Action**: invoke the `protocol-injector` subagent via the `Agent` tool with `subagent_type: "protocol-injector"`. Pass the absolute path of the plan file written by the Write-the-final-plan-file task. The agent is idempotent — it appends the canonical block if absent, or reports `already present` if the block is already there.
+  > **Action**: invoke the `protocol-injector` subagent via the `Agent` tool with `subagent_type: "protocol-injector"`. Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent is idempotent — it appends the canonical block if absent, or reports `already present` if the block is already there.
   > **Gate**: subagent reports `injected` or `already present`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
 
 ---
