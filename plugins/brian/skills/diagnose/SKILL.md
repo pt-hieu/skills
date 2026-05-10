@@ -16,10 +16,11 @@ Systematic root-cause analysis framework. Stops you from patching symptoms by fo
 ## Output Contract (interactive use)
 Run the methodology silently; surface only conclusions.
 
-Default shape (≤ 10 lines + 1 line per cited sibling beyond the first 3):
+Default shape (≤ 11 lines + 1 line per cited sibling beyond the first 3):
 - One-line root cause
 - Defect class (one line, from the closed enum)
 - Where the fix lands on the chain
+- Reproduction: `path::test name` (failing test or regression test in the diff), or `UNABLE TO REPRODUCE — [reason]`
 - Sibling instances (file:line list)
 - Confidence — only when LOW or contested
 - Optional one-line suggestion
@@ -29,10 +30,10 @@ Expand to full structured output when:
 - An orchestrator (e.g. `/challenge`) injects its own Output Contract — that contract supersedes this one.
 
 ## Core Principle
-Stop at the first plausible cause → you're patching. Keep asking "why does THIS exist?" until you hit bedrock: an explicit design decision, an external constraint, a missing abstraction, or circular reasoning back to an earlier node.
+Stop at the first plausible cause → you're patching. Keep asking "why does THIS exist?" until you hit bedrock: an explicit design decision, an external constraint, a missing abstraction, or circular reasoning back to an earlier node. A root cause you cannot reproduce is a hypothesis, not a conclusion — surface it as such.
 
 ## Instructions
-See `references/methodology.md` for the full framework: problem framing, root cause trace (iterative deepening), defect class identification, validation tests, sibling search, and self-challenge.
+See `references/methodology.md` for the full framework: problem framing, root cause trace (iterative deepening), reproduction gate, defect class identification, validation tests, sibling search, and self-challenge.
 
 ## Used By
 - `challenge` skill — the Systematic Resolution Reviewer (Agent 2) applies this methodology to audit whether a fix targets root cause or symptom

@@ -46,7 +46,7 @@ Systematic root cause analysis framework. Apply to the user-turn context in full
 
 ## Review Order (follow in sequence)
 
-Problem Framing → Conflict Detection → Root Cause Trace (Iterative Deepening) → Defect Class Identification → Completeness → Regression Surface → Test Coverage → Duplication & Reuse → Root Cause Self-Challenge → Verification Step
+Problem Framing → Conflict Detection → Root Cause Trace (Iterative Deepening) → Reproduction Gate → Defect Class Identification → Completeness → Regression Surface → Test Coverage → Duplication & Reuse → Root Cause Self-Challenge → Verification Step
 
 ---
 
@@ -106,7 +106,24 @@ Report where on the FULL deepened chain the fix (proposed or actual) lands.
 
 ---
 
-## 4. Defect Class Identification
+## 4. Reproduction Gate (MANDATORY before claiming a root cause)
+
+You operate primarily in **review mode (Mode B)** — pin the named root cause to a regression test before locking in the chain from §3.
+
+### Mode A — Investigation (when you can run code)
+If the orchestrator authorizes execution and a Bash-runnable test harness is available, write or identify a test that (i) targets the smallest unit that exhibits the failure, (ii) fails today *because of* the hypothesized root cause, (iii) passes when (and only when) the root cause is removed. Run it. Cite `path::test name — failing assertion / error`.
+
+### Mode B — Review (default for this agent)
+Verify the diff contains a regression test that exercises the named root cause and would have failed before the fix. The test must reach the cause, not just the symptom (see §8 Test Coverage). If no such test exists, raise it as a `[HIGH] Test Coverage` Finding Anchor.
+
+### Mode C — Unable to reproduce
+If reproduction is genuinely infeasible (flaky concurrency, prod-only data, missing infra), output `UNABLE TO REPRODUCE — [why; what would be needed]`. Confidence is capped at `[LOW]`.
+
+**FORBIDDEN**: a `[HIGH]` root-cause Finding Anchor without either a passing investigation-mode reproduction or a regression test in the diff that exercises the named root cause.
+
+---
+
+## 5. Defect Class Identification
 
 ### Step A — Name the class abstractly
 Define the defect class as an abstract pattern independent of this specific instance. Format:
@@ -127,16 +144,16 @@ Does the fix eliminate the defect CLASS (prevents all instances) or just this de
 
 ---
 
-## 5. Completeness (Sibling Search)
+## 6. Completeness (Sibling Search)
 Are there other places in the codebase with the same underlying issue that should also be fixed? Use Grep driven by the defect class pattern. Cite specific results (file:line).
 
-## 6. Regression Surface
+## 7. Regression Surface
 Does the fix introduce new assumptions that could break under different conditions? List the assumptions explicitly.
 
-## 7. Test Coverage
-Would the tests catch regression of the ROOT CAUSE, not just the specific symptom? If the test only pins the current fix site, it's a symptom test.
+## 8. Test Coverage
+Would the tests catch regression of the ROOT CAUSE, not just the specific symptom? If the test only pins the current fix site, it's a symptom test. §4's reproduction is the minimum bar; sibling-instance coverage is a plus.
 
-## 8. Duplication & Reuse
+## 9. Duplication & Reuse
 Does the fix duplicate logic that already exists elsewhere? Could shared utilities or abstractions reduce redundancy?
 
 ---
@@ -155,9 +172,9 @@ For every finding, you MUST also acknowledge what the current approach does WELL
 
 Append a confidence tag to every finding:
 
-- **[HIGH]**: verified by reading code, grepping sibling patterns, or tracing the causal chain through actual files (3+ data points)
+- **[HIGH]**: §4 Reproduction Gate satisfied (review-mode regression test in the diff that exercises the named root cause, OR investigation-mode failing test that flips on root-cause removal) AND verified by reading code, grepping sibling patterns, or tracing the causal chain through actual files (3+ data points)
 - **[MEDIUM]**: based on diff/context + 1-2 verified signals, one minor uncertainty noted
-- **[LOW]**: based primarily on the diff without broader verification — downgrade severity automatically
+- **[LOW]**: `UNABLE TO REPRODUCE` is in effect, OR the finding is based primarily on the diff without broader verification — downgrade severity automatically
 
 If you cannot cite specific files/lines supporting a finding, it must be **[LOW]**.
 
@@ -194,8 +211,9 @@ Stress-test your root cause identification:
 After generating your analysis:
 1. Re-read each finding
 2. For each claim: can you trace it to a specific file, line, or grep result?
-3. Remove or flag any claim that failed verification with `[UNVERIFIED]`
-4. If >30% of findings are `[LOW]` or `[UNVERIFIED]`: output `INSUFFICIENT CONTEXT` for the overall analysis and note what additional access would raise confidence.
+3. For every root-cause finding: confirm §4 Reproduction Gate produced one of — a regression test in the diff cited by `path::test name`, an investigation-mode failing test, or an explicit `UNABLE TO REPRODUCE — [reason]`. Drop the root-cause claim if none is present, or downgrade per the Confidence Calibration rules.
+4. Remove or flag any other claim that failed verification with `[UNVERIFIED]`
+5. If >30% of findings are `[LOW]` or `[UNVERIFIED]`: output `INSUFFICIENT CONTEXT` for the overall analysis and note what additional access would raise confidence.
 
 ---
 
@@ -215,6 +233,7 @@ Then render the finding body:
 - **Issue**: What's wrong `[CONFIDENCE]`
 - **Causal Chain**: symptom → ... → root cause (show the FULL deepened chain from Iterative Deepening — not a one-line summary)
 - **Defect Class**: `[CATEGORY]: [abstract description]`
+- **Reproduction**: `path::test name — exercises [which link in the chain]` (review-mode regression test from the diff), or `path::test name — fails with [error]; passes when [root cause removed]` (investigation mode), or `UNABLE TO REPRODUCE — [reason; what would be needed]`.
 - **Evidence**: file:line references, grep results, or code snippets
 - **What it does well**: The systematic benefit this fix provides (Pro/Con Balance)
 - **Suggestion**: How to fix it at a deeper level, with specific locations AND a code snippet or diff showing the fix. NO abstract-only suggestions — if you cannot write the code, downgrade confidence.
@@ -254,6 +273,8 @@ Finding Anchor: defect_class=Missing Abstraction; file=src/utils/; line=cross; s
 
 **Defect Class**: Missing Abstraction: no shared concurrency/rate-limiting layer between business logic and HTTP client, forcing each caller to manage its own request pattern.
 
+**Reproduction**: src/jobs/__tests__/sync.spec.ts::"throttles concurrent calls" — exercises the missing-abstraction root cause: fires 51 parallel sends and asserts the API client never sees more than the configured concurrency cap. Fails on main with 429; passes once `RateLimitedBatcher` is wired in.
+
 **Evidence**: src/jobs/sync.ts:34 uses `Promise.all(items.map(api.send))`. Same pattern in src/jobs/export.ts:22, src/jobs/notify.ts:45, src/jobs/reconcile.ts:18, src/jobs/archive.ts:31. No rate-limiting utility exists in src/utils/ (verified via Grep).
 
 **Fix lands at**: intermediate level (retry on 429). True root = missing request orchestration layer.
@@ -267,7 +288,7 @@ Finding Anchor: defect_class=Missing Abstraction; file=src/utils/; line=cross; s
 - REFUTE: This is an organizational process concern, not a codebase defect. The codebase CAN have a shared abstraction without organizational change. The bedrock test passes: this is a missing abstraction that can be built.
 
 <reasoning>
-Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, finds 4 sibling instances with concrete evidence, proposes a systemic fix, acknowledges what the current fix does well, and runs the self-challenge with a non-trivial devil's advocate argument.
+Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, empirically pins the root cause via the §4 Reproduction Gate (regression test in the diff that exercises the missing abstraction, not just the 429 symptom), finds 4 sibling instances with concrete evidence, proposes a systemic fix, acknowledges what the current fix does well, and runs the self-challenge with a non-trivial devil's advocate argument.
 </reasoning>
 </good_example>
 
