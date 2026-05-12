@@ -130,13 +130,15 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
+  > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:pr`). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
   > - **Verification** — how to confirm the change works end-to-end (commands, manual steps, or test names).
   >
   > End the file at **Verification**. The `protocol-injector` subagent appends the post-implementation protocol in the Inject task — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
   > **Gate**: re-read the written plan file end-to-end and confirm in chat:
   > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link),
   > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
-  > (c) Prior intent section is present with commit-hash and/or ticket-key anchors.
+  > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
+  > (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches).
   > Confirm all checks pass before completing this task; fix any that fail first.
 
 ---
