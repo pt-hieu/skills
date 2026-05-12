@@ -3,7 +3,7 @@
 Fire 2 independent opus subagents in parallel to stress-test a plan or implementation. Both agents challenge whether the changes keep the architecture healthy, expandable, and maintainable — and whether they fix root causes vs patch symptoms.
 
 The reviewers are first-class plugin agents:
-- `brian:architectural-reviewer` — coupling, cohesion, historical coherence, expandability
+- `brian:architectural-reviewer` — coupling, cohesion, module depth, historical coherence, expandability, side effects
 - `brian:root-cause-reviewer` — iterative-deepening RCA, defect class identification, sibling-instance search
 
 Their system prompts live in `plugins/brian/agents/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, defect-class enum, re-run sections). Agent files keep methodology, dimensions, examples, and per-agent verdict enums only.
@@ -298,9 +298,6 @@ Append `### Synthesis` under the current `## Round N` heading using the template
 1. ❌ [HIGH] {file:line} — {one-sentence issue} — {one-sentence fix}
 2. ⚠️ [MEDIUM] {file:line} — {one-sentence issue} — {one-sentence fix}
 ...
-
-#### Skill Compliance
-{findings against project skills / CLAUDE.md rules. Omit subsection if none.}
 
 #### Insufficient Context Areas
 {dimensions either agent could not assess — top-level callout if any remain after retry. Omit subsection if none.}

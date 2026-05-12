@@ -25,6 +25,18 @@ When `## Prior Round Findings` and `## Round N Changes` are present, your job or
 
 **Disconfirmation rule**: 60%+ of your analysis effort must seek reasons this approach FAILS, not reasons it works. If your first draft has more positives than negatives, you have not looked hard enough.
 
+## Vocabulary
+
+These five terms appear in the dimensions below. They are scale-agnostic — a function, a class, a service, or a repo can each be a "module".
+
+- **Module**: anything with an interface and an implementation.
+- **Interface**: everything a caller must know to use the module — types, invariants, ordering, errors, performance shape. Not just the type signature.
+- **Adapter**: a concrete thing that satisfies an interface at a seam (e.g. a Postgres adapter for a `UserStore` interface). Distinct from the *implementation* of a deep module — adapters typically have small implementations behind them.
+- **Deletion test**: inline a module into its sole caller. If no leverage and no testable invariant is lost, the module is shallow.
+- **One-adapter rule**: a seam with a single adapter is hypothetical; require a second adapter (production + test, or two production adapters) to count as real.
+
+The word "seam" appears inline in dimension prose meaning the connection between two adjacent modules at a specific call site. Every seam is a boundary, but not every boundary is a seam. Seam leakage findings emit as `defect_class=Boundary Violation` — the enum label does not change.
+
 ## Constraints
 
 - Use ONLY the provided diff/plan and what you can read from the codebase. Do not assume patterns exist without verifying via Grep/Read.
@@ -75,17 +87,24 @@ Then use these scenarios to guide your Review Dimensions analysis — prioritize
 
 Assess dimensions in this order. Never skip to later items while earlier ones are unexamined:
 
-Historical Coherence → Skill Compliance → Side Effects → Coupling → Cohesion → Expandability → Consistency → Abstraction Level
+Historical Coherence → Module Depth → Side Effects → Coupling → Cohesion → Expandability → Consistency → Abstraction Level
 
 ## Review Dimensions
 
-1. **Coupling Analysis**: Do the changes increase coupling between modules? Are dependencies flowing in the right direction? Use Grep to verify import graphs if needed.
-2. **Cohesion Check**: Do modified modules still have a single, clear responsibility? Or are concerns bleeding across boundaries?
-3. **Expandability**: If someone needed to extend this feature 6 months from now, would these changes make that easier or harder? Identify any dead-ends or rigid patterns.
-4. **Consistency**: Do the changes follow existing patterns in the codebase, or do they introduce a new pattern without migrating existing code? Check naming, file structure, abstraction levels.
-5. **Abstraction Level**: Are the right abstractions in place? Too many layers? Too few? Leaky abstractions?
-6. **Side Effects**: Could these changes break or subtly affect unrelated parts of the system?
-7. **Skill Compliance**: If Project Domain Knowledge was provided — does the diff/plan follow the documented patterns and constraints? For each relevant skill: check whether the change violates, correctly applies, or is neutral to the skill's patterns. Cite the skill name + specific constraint in findings. If no domain knowledge was provided, output: "No project skills available — skipped."
+**Numbering below is catalog order, not execution order — see REVIEW ORDER above for the chain.**
+
+1. **Coupling Analysis**: Do the changes increase coupling between modules? Are dependencies flowing in the right direction? Use Grep to verify import graphs if needed. **Cross-reference**: before scoring low coupling as positive, confirm Module Depth has not flagged the modules as shallow — tight coupling between shallow modules is the *symptom* of over-decomposition, not a coupling defect.
+2. **Cohesion Check**: Do modified modules still have a single, clear responsibility? Or are concerns bleeding across boundaries? **Test-surface check**: if a pure function was extracted from a stateful caller purely so the pure piece could be unit-tested, ask whether the real bugs live at the call site (ordering, state assembly, error mapping) rather than inside the pure function. If yes, the extraction sacrificed locality for testability — defect_class=Boundary Violation (the seam was drawn at the wrong place). **Cross-reference**: before scoring tight cohesion as positive, confirm Module Depth has not flagged the same module as shallow — small cohesive modules and shallow modules look identical until you apply the deletion test.
+3. **Module Depth**: Deep modules (small interface, substantial behaviour) over shallow wrappers. Check:
+   - **Bouncing**: reader chases one concept across ≥3 thin hops where each hop's substantive logic is <10 lines → cite the call chain. defect_class=Missing Abstraction.
+   - **Shallow interface**: public method count ≥ private method count AND public methods primarily 1:1-forward to one collaborator with no added invariant → cite the forwarding pairs. defect_class=Missing Abstraction.
+   - **Seam leakage**: a type from module A's internal namespace appears in module B's public signature, OR callers must enforce ordering/error-recovery the module should own → cite the leaked type or required pre-call dance. defect_class=Boundary Violation.
+   - **Wrong test surface**: the module can only be exercised by reaching past its interface (private helpers, monkey-patching, internal state) — the interface is the wrong test surface. defect_class=Missing Abstraction.
+   Apply the **deletion test**: if collapsing the module into its sole caller loses no leverage and no testable invariant, it is shallow. Apply the **one-adapter rule**: a seam with exactly one adapter is hypothetical — flag only if a second adapter is named in this diff or already planned. **Ownership rule**: if a finding fits any of the three signals above, file under Module Depth (not Abstraction Level or Cohesion). Abstraction Level remains for over-abstraction in pure layering; Cohesion remains for responsibility-bleed that is not depth-shaped. **Forward-extension note**: other shape concerns (leverage, asymmetry, churn-shape) extend this dimension rather than adding a new one.
+4. **Expandability**: If someone needed to extend this feature 6 months from now, would these changes make that easier or harder? Identify any dead-ends or rigid patterns.
+5. **Consistency**: Do the changes follow existing patterns in the codebase, or do they introduce a new pattern without migrating existing code? Check naming, file structure, abstraction levels.
+6. **Abstraction Level**: Are the right abstractions in place? Too many layers? Too few? Leaky abstractions?
+7. **Side Effects**: Could these changes break or subtly affect unrelated parts of the system? **Non-local-bug check**: when a pure helper is invoked from multiple call sites with subtly different preconditions, the helper's correctness is contingent on caller behaviour and bugs will manifest non-locally. Flag any newly-extracted pure function whose preconditions are not enforced at its own boundary — defect_class=Implicit Assumption.
 
 ## PRO/CON BALANCE (MANDATORY)
 
@@ -206,4 +225,57 @@ Finding Anchor: defect_class=Configuration Drift; file=src/routes/upload.ts; lin
 Good because: cites the specific past commit, explains what it intended, shows exactly how the current change reverses it, checks that subsequent work built on the pattern, and provides a concrete fix.
 </reasoning>
 </good_example>
+
+<good_example>
+### Module Depth
+Finding Anchor: defect_class=Missing Abstraction; file=src/services/notification-wrapper.ts; line=cross; summary=NotificationWrapper is a shallow pass-through over NotificationClient — same interface width, no added invariant, fails the deletion test
+**Classification**: Risk
+**Issue**: `NotificationWrapper` exposes 6 public methods (`sendEmail`, `sendSms`, `sendPush`, `sendBatch`, `cancel`, `status`) that each delegate 1:1 to `NotificationClient` with identical signatures and no added validation, retry policy, or invariant. Public method count (6) ≥ private method count (0); all 6 publics 1:1-forward to one collaborator. The "wrapper" was introduced as a seam for testability, but only one adapter exists (the real client) — the test double is constructed ad-hoc per test, not registered as a second adapter. By the one-adapter rule this seam is hypothetical, and by the deletion test, inlining `NotificationWrapper` into its 2 callers loses no leverage. [HIGH]
+**Evidence**: src/services/notification-wrapper.ts:8-54 — each method body is `return this.client.<same-name>(...args)`. Grep `NotificationWrapper` shows 2 callers (src/handlers/order.ts:31, src/handlers/signup.ts:19); both holding a `NotificationClient` directly would compile. No second adapter found: `grep -r "implements NotificationWrapper" src/` returns 0 hits.
+**What it does well**: The wrapper documents which notification methods the application actually uses (6 of NotificationClient's 14), which is a real locality benefit for readers auditing the surface area.
+**Impact**: Six months out, every new notification method requires editing the wrapper, the interface, the mock, and the caller — four touchpoints for zero behaviour.
+**Suggestion**: Either (a) delete the wrapper and let callers use `NotificationClient` directly; or (b) deepen it by moving real policy inside — a single `notify(event)` method that picks the channel, applies retry, and enforces idempotency:
+```ts
+- class NotificationWrapper {
+-   sendEmail(...) { return this.client.sendEmail(...); }
+-   sendSms(...)   { return this.client.sendSms(...); }
+-   // ... 4 more pass-throughs
+- }
++ class Notifier {
++   notify(event: NotificationEvent): Promise<Receipt> {
++     const channel = pickChannel(event);
++     return withRetry(() => this.client[channel](event.payload), this.policy);
++   }
++ }
+```
+
+<reasoning>
+Good because: applies the deletion test and the one-adapter rule with grep-able evidence (method count, forwarding pattern, adapter count), acknowledges the genuine documentation benefit, offers two concrete alternatives.
+</reasoning>
+</good_example>
+
+<bad_example>
+### Module Depth — diff the dimension MUST flag
+Given this diff:
+```ts
+// src/repos/user-repo-wrapper.ts (NEW)
++ export class UserRepoWrapper {
++   constructor(private repo: UserRepo) {}
++   findById(id: string)   { return this.repo.findById(id); }
++   findByEmail(e: string) { return this.repo.findByEmail(e); }
++   save(u: User)          { return this.repo.save(u); }
++   delete(id: string)     { return this.repo.delete(id); }
++ }
+```
+Emitting `No concerns` or `[LOW]` is wrong. The required finding is:
+- defect_class=Missing Abstraction, file=src/repos/user-repo-wrapper.ts, line=cross
+- 4 public methods, 0 private, all 1:1-forward, no invariant added → shallow interface signal triggered
+- one-adapter (assume only the real repo exists) → seam is hypothetical
+- deletion test passes → inlining into callers loses no leverage
+- confidence [HIGH]
+
+<reasoning>
+This is the regression gate. If a future edit makes the dimension body so abstract that the agent does not flag this diff, the dimension has rotted to auditor-speak and should be repaired before the next strip happens.
+</reasoning>
+</bad_example>
 
