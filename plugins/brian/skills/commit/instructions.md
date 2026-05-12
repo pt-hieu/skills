@@ -78,3 +78,5 @@ fix(auth): refresh token before expiry instead of after
 Split when: different concerns, different types, different file patterns, too large for single review.
 
 Keep tests with their feature/fix commit. Test-only commits only for test-only changes.
+
+**Bundle escape hatch**: if splitting would require fabricating an intermediate state that never existed in the working tree (e.g. two iterations touched the same line, or a piece of logic moved between subsystems mid-session), bundle them into one commit and name the *coherent design decision* in the message (not the steps). Do not edit files back into a hypothetical mid-state just to satisfy the split rule — that intermediate never compiled, never ran, and is worse for `git bisect` than the bundle. The Changelog-Commit rules above still apply: no counts, no session references, name the specific behavior that changed.
