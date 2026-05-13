@@ -115,7 +115,9 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > - Requirements and constraints
   > - Skill-scan output and any skill-derived patterns to follow
   > - Architecture decisions confirmed in the Interrogate task
-  > **Gate**: a detailed implementation plan is returned **from the Plan agent**. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
+  >
+  > **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the plan file path specified by the plan-mode system prompt (create the file if absent). This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file exists on disk and contains the Plan agent's return.
+  > **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the plan file on disk. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
 
 ---
 
@@ -124,7 +126,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Write the plan file`
 - description:
   > **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
-  > **Action**: write the plan file specified by the plan-mode system prompt with these sections, in order:
+  > **Action**: the plan file already exists on disk with the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
   > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
   > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors. Quote prior decisions verbatim.
   > - **Recommended approach** — the chosen path.
