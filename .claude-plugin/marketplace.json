@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, merge conflict resolution, team-voice writing, plan pitches, and UI design principles.",
-    "version": "1.14.3"
+    "version": "1.14.4"
   },
   "plugins": [
     {
@@ -21,7 +21,7 @@
       "name": "voice",
       "source": "./plugins/voice",
       "description": "Communication-style skills: outbound team-facing writing in a warm, hedged, emoji-aware engineering voice; plain-language plan pitches before exiting plan mode.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "category": "communication",
       "tags": ["skills", "voice", "communication", "slack", "writing", "pitch", "recap", "plan-mode"]
     },

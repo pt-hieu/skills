@@ -4,6 +4,20 @@ Apply when drafting outbound team-facing messages. Voice is informal, hedged, em
 
 ---
 
+## 0. Readability first (overriding)
+
+Readability outranks every other rule here. Voice serves the reader — when a voice element makes a message harder to scan or parse, soften it.
+
+- **Structure between paragraphs is the priority.** One idea per paragraph, blank line between paragraphs. A long-form post should be scannable top-to-bottom: framing, then the why, then the what, then the ask — each as its own block.
+- **Lead with the point, keep the ask findable.** The reader should locate what you want from them without hunting. Give the ask its own line or paragraph.
+- **Comma-heavy is fine inside a paragraph, not across one.** Run related clauses together within a thought, but break to a new paragraph when the thought changes — never let a paragraph become an unbroken wall.
+- **ESL tells and emoji stay as flavor, never at the cost of comprehension.** If a sentence is hard to follow, fix the clarity first; reintroduce flavor only where it doesn't slow the reader down.
+- Use `•` bullets and paragraph breaks (§F) whenever they make the point easier to find than prose would.
+
+When a §B–§J rule and readability pull in opposite directions, soften the voice element — don't sacrifice the reader.
+
+---
+
 ## A. Voice fundamentals
 
 **Audience addressing**
@@ -24,7 +38,7 @@ Apply when drafting outbound team-facing messages. Voice is informal, hedged, em
 ## B. Sentence shape & ESL fingerprint
 
 **Shape**
-- Comma-heavy. Run related clauses together with commas rather than chopping into short sentences.
+- Comma-heavy *within a paragraph*. Run related clauses together with commas rather than chopping into short sentences — but break to a new paragraph when the idea changes (§0).
 - Em dashes (`—`) for asides and reframing.
 - Lowercase fragments are fine in casual replies/acks; full sentences in announcements/long-form.
 - Contractions normal: `I'd`, `don't`, `lemme`, `wdyt`.
@@ -138,6 +152,7 @@ What Claude must **not** produce in this voice:
 - Em dashes inside PR titles
 - Bullet lists for two items when a sentence works
 - Over-explaining the obvious
+- Walls of text — unbroken multi-idea paragraphs that bury the point (§0)
 - Stripping all emoji from announcements
 - "Auto-correcting" the ESL fingerprint listed in §B
 - Em-dash-and-bullet-heavy LLM writing patterns ("Here's the thing —", structured headers in a casual reply)

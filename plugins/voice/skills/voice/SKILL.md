@@ -19,4 +19,4 @@ A communication style for outbound team-facing engineering messages: informal, h
 - Customer- or vendor-facing external messages — different register
 
 ## Instructions
-See `references/style-guide.md` for the full voice spec.
+See `references/style-guide.md` for the full voice spec. Readability is the overriding constraint (§0) — when a voice element hurts scannability, soften it; prioritize clear structure between paragraphs.
