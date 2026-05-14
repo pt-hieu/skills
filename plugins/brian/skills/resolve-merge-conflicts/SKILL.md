@@ -1,5 +1,5 @@
 ---
-name: merge-conflict
+name: resolve-merge-conflicts
 description: "Use when resolving Git merge conflicts"
 ---
 
