@@ -85,6 +85,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > **Goal**: close any gap that would change the chosen approach.
   > **Action**: focus on **architecture- and approach-level** questions only — direction, trade-offs, scope boundaries, integration choices. Trust the Plan agent to handle implementation detail later. Use the report from the Historian task to inform which questions matter — prior failures or constraints surfaced there often *are* the architecture questions.
   > - 1–3 questions max in a single batched `AskUserQuestion` call.
+  > - Phrase every question and option in **plain English** — describe the decision and its trade-offs the way you would to a smart non-engineer. Strip jargon, class names, and file paths from the question and option labels; if a technical term is unavoidable, gloss it in the description. Brian should be able to answer from the choice itself without reverse-engineering the codebase.
   > - Skip the task entirely (mark completed with a one-line note "no architecture ambiguity") when the requirement is already unambiguous.
   > **Gate**: remaining unknowns will not change the chosen approach.
 
