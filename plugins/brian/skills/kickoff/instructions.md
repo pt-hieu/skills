@@ -23,7 +23,7 @@ Set spawned-subagent models per task. The harness exposes the model via the `Age
 | 3 Historian | `code-historian` | medium | `sonnet` |
 | 6 Plan | `Plan` (×1) | high | `opus` |
 | 8 Challenge | reviewer subagents | medium | `opus` |
-| 10 Protocol-injector | `protocol-injector` | trivial | `haiku` |
+| 10 Plan-verifier | `plan-verifier` | medium | `sonnet` |
 
 For the Challenge task, the `brian:challenge` orchestrator spawns its reviewers on `opus` — keep that, but request **medium thinking effort** for those subagents so they stay focused without burning the budget.
 
@@ -135,7 +135,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:pr`). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
   > - **Verification** — how to confirm the change works end-to-end (commands, manual steps, or test names).
   >
-  > End the file at **Verification**. The `protocol-injector` subagent appends the post-implementation protocol in the Inject task — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
+  > End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 10 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
   > **Gate**: re-read the written plan file end-to-end and confirm in chat:
   > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link),
   > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
@@ -166,13 +166,14 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 
 ---
 
-**Task 10 — Inject post-implementation protocol**
+**Task 10 — Verify the plan and inject post-implementation protocol**
 
-- subject: `Inject post-implementation protocol into plan file`
+- subject: `Verify plan coherence and inject post-implementation protocol`
 - description:
-  > **Goal**: ensure the plan file ends with the canonical post-implementation protocol block before handoff.
-  > **Action**: invoke the `protocol-injector` subagent via the `Agent` tool with `subagent_type: "protocol-injector"`. Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent is idempotent — it appends the canonical block if absent, or reports `already present` if the block is already there.
-  > **Gate**: subagent reports `injected` or `already present`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
+  > **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
+  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "plan-verifier"`, `model: "sonnet"`. Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
+  > The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
+  > **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
 
 ---
 
