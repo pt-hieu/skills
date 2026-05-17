@@ -24,7 +24,15 @@ The plan must tell a single, forward-moving story. Context → Prior intent → 
 
 Flag anything that breaks the single narrative:
 
-- **Superseded-decision residue.** Challenge revised this file in place, so earlier drafts can leave scars. Flag any text that narrates a decision that was made and then abandoned: "originally we'd…, but instead…", "an earlier approach…", "we considered X then switched", or two different approaches both described as if current. The plan must read as if the final approach was always the approach — the *reasoning* for it belongs in the plan, the *discarded alternatives* do not.
+- **Superseded-decision residue.** Challenge revised this file in place and the orchestrator may have quoted the interrogation transcript verbatim into Context, so earlier drafts and resolution journeys leave scars. The plan must read as if the final approach was always the approach — the *reasoning* for it belongs in the plan, the *discarded alternatives and the path to them* do not. Flag any of the following patterns:
+  - Editorial back-and-forth: "originally we'd…, but instead…", "an earlier approach…", "we considered X then switched", or two different approaches both described as if current.
+  - Resolution-journey phrasings in Context: "originally…" / "initially…" / "first asked for…" followed by "but…" / "however…" / "instead…" / "after interrogation…" / "after challenge…" / "after clarification…"; "was going to…" / "was planned to…" / "earlier draft…" / "previously we…" / "the original ask…" / "on follow-up…".
+  - Revision-delta banners: "Revised after <challenge | interrogation | user feedback>" at the plan header or mid-Context — the implementer needs the post-revision state, not the delta.
+  - "User decision" / "User confirmed" / "Brian confirmed" appearing inside Context (these signal mid-planning clarification leaked into the narrative; they belong in Prior intent if anywhere).
+  - "What we thought vs. what is true" correction tables inside Context.
+  - Two different names for the same artifact (filename, scope, approach) appearing in Context where only the second is carried into Recommended approach.
+
+  Worked example of the failure mode: a Context that opens "Brian asked for `CONTRIBUTION.md`… After interrogation he confirmed `CONTRIBUTING.md`…" should be flagged. Fix direction: collapse to the final agreed scope; drop the original ask.
 - **Contradiction.** Two sections that cannot both be true — e.g. Recommended approach says modify `foo.ts`, but Critical file paths omits it; Reused utilities lists a helper the final approach no longer calls; Verification tests a behavior the approach no longer produces.
 - **Dangling reference.** A section points at something no other section supports — a file path nothing explains, a utility never used, a skill listed but never tied to a step.
 - **Orphaned context.** Context or Prior intent justifies a constraint or finding that the Recommended approach never picks up, leaving the implementer wondering why it was mentioned.

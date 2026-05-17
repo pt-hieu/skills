@@ -128,7 +128,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
   > **Action**: the plan file already exists on disk with the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
-  > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
+  > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
   > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors. Quote prior decisions verbatim.
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
@@ -138,7 +138,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   >
   > End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 10 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
   > **Gate**: re-read the written plan file end-to-end and confirm in chat:
-  > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link),
+  > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
   > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
   > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
   > (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches).
