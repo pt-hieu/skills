@@ -2,9 +2,10 @@
 
 ## Versioning (required before committing)
 
-In `.claude-plugin/marketplace.json`, bump:
+For every touched plugin under `plugins/<name>/`, bump:
 
-1. Per-plugin `version` for every touched plugin under `plugins/`.
-2. Top-level `metadata.version` whenever any plugin version changes or the marketplace itself changes.
+1. `plugins/<name>/.claude-plugin/plugin.json` — the plugin's own `version`.
+2. `.claude-plugin/marketplace.json` — the matching per-plugin `version` entry.
+3. `.claude-plugin/marketplace.json` — the top-level `metadata.version` (whenever any plugin version changes or the marketplace itself changes).
 
-Bumps go in the same commit as the change.
+All three bumps go in the same commit as the change.
