@@ -54,7 +54,7 @@ Insert exactly this text as the **final section** of the plan file. Do not parap
 ```
 ## Post-implementation protocol
 
-1. After implementation is complete, run the `simplify` skill on the diff to prune over-engineering and surface reuse opportunities.
+1. After implementation is complete, run the `code-review` skill on the diff to prune over-engineering and surface reuse opportunities.
 2. Explain behavioral diff in plain English in chat, then wait for Brian's explicit approval before running `git add`, `git commit`, `git push`, or any PR/MR action.
 ```
 
