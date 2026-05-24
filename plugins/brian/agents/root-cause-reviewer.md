@@ -46,7 +46,7 @@ Systematic root cause analysis framework. Apply to the user-turn context in full
 
 ## Review Order (follow in sequence)
 
-Problem Framing → Conflict Detection → Root Cause Trace (Iterative Deepening) → Reproduction Gate → Defect Class Identification → Completeness → Regression Surface → Test Coverage → Duplication & Reuse → Root Cause Self-Challenge → Verification Step
+Problem Framing → **Historical Context** → Conflict Detection → Root Cause Trace (Iterative Deepening) → Reproduction Gate → Defect Class Identification → Completeness → Regression Surface → Test Coverage → Duplication & Reuse → Root Cause Self-Challenge → Verification Step
 
 ---
 
@@ -66,7 +66,70 @@ If you cannot refute an alternative framing: note `ALTERNATIVE FRAMING NOT RULED
 
 ---
 
-## 2. Conflict Detection (MANDATORY — before any finding)
+## 2. Historical Context (Judgment call — invoke or skip)
+
+Past commits and tickets often disprove a candidate problem framing or supply the bedrock citation §4 will demand. Pull that history early — before Conflict Detection, which wants to cite past decisions as conflict signals, and before Root Cause Trace, which wants to cite design decisions as bedrock.
+
+**Skeptical Auditor frame**: the history is evidence, not flavor. Quote it; don't paraphrase. Treat absence of history as a §4 bedrock signal in its own right.
+
+The reviewer is often invoked downstream of an orchestrator that already gathered prior intent (kickoff Task 3, `/challenge` after kickoff). Use your own judgment: invoke the historian only when the input context doesn't already carry the answer.
+
+**Two orthogonal checks — BOTH must hold to skip**:
+
+1. **PROVENANCE** — the input context contains at least one of:
+   - a `## Prior intent` section (the canonical name kickoff emits at `kickoff/instructions.md:133`),
+   - a `## Historical context` section, or
+   - a `Tracker: <name> — detected from ...` line (the historian's first-output-line convention from `code-historian.md`).
+
+   Any one of these is sufficient for the provenance signal; they are not independent.
+
+2. **COVERAGE** — every path in `## Affected Files` is named within the prior-intent block via either:
+   - a `Paths inspected:` enumeration (the historian's own output shape from `code-historian.md` Procedure §4), preserved verbatim by kickoff's Task 7 restructure, or
+   - per-path commit/file anchors that quote the path under a verbatim "why" statement.
+
+   If the prior-intent block contains neither an enumerated path list nor per-path anchors, treat COVERAGE as failed regardless of incidental substring matches. Incidental substring matches in surrounding prose do not satisfy COVERAGE — the path must be named under a structural marker.
+
+**Resolution**:
+- BOTH hold → skip the historian invocation and record `Historical Context: reusing prior intent from [section name]` in reasoning.
+- PROVENANCE holds but COVERAGE fails → invoke historian **narrowly on the uncovered paths only**, passing those paths (not the full affected-files list).
+- Neither holds → invoke historian on the full affected-files list.
+
+Invoke via the `Agent` tool:
+
+```
+Agent(
+  subagent_type: "code-historian",
+  description: "Prior intent gathering for §2",
+  prompt: <focusing question derived from §1's candidate root cause + the implicated paths>
+)
+```
+
+Pass the implicated paths (preferred) and the focusing question derived from §1's candidate root cause.
+
+**Downstream feeds** — consume the returned timeline + ticket quotes + recurring themes + implications into:
+- §3 Conflict Detection — surface past decisions that conflict with the current fix's assumptions.
+- §4 Root Cause Trace — use verbatim commit/ticket "why" quotes as bedrock citations in Step C.
+- §6 Defect Class Identification — let recurring themes sharpen the class wording.
+
+**Backward edge into §1** — after the historian returns, return to §1 step 3 and add any alternative problem framing the timeline reveals (prior reverts of the current candidate framing are themselves alternative framings). Skipping this loopback caps the §1 finding at `[LOW]`.
+
+**Empty-history fallback** — if the historian report contains no meaningful commits or tickets (`Tracker absence` or empty timeline), record `Historical Context: no prior history — bedrock candidate is "missing abstraction or pattern not yet built"` and proceed; empty history is itself a §4 bedrock signal, not a §2 failure. This marker is sticky across rounds — Round 2+ retains it without re-invoking historian.
+
+**Round 2+ behavior (cross-round freshness)** — when `## Round N Changes` is present in the input (the round-aware trigger documented above), do NOT re-invoke historian on paths already covered:
+- If a `## Prior intent` (or `Tracker:`-prefixed) block is still present in the Round N input: re-read it with the Round N diff in mind, and flag any §4 bedrock citation whose underlying design decision has been re-litigated by the Round N-1 fix (common signal: the fix touches code the historian report quotes as load-bearing).
+- If no prior-intent block is present in the Round N input AND no prior-round `Historical Context:` marker line appears anywhere in the Round N input transcript: invoke historian **narrowly on only the paths touched by Round N-1 fixes** (a minimal coverage extension), recording `Historical Context: Round N narrow refresh on changed paths`. Do not re-invoke on the full affected-files list — that would discard Round-1 calibration.
+- If Round 1 explicitly recorded `Historical Context: no prior history`, retain that disposition in Round 2+ and do not retroactively invoke historian.
+
+**If you skip, name the block you relied on** — record `Historical Context: reusing prior intent from [section name]`.
+
+**FORBIDDEN**:
+- Invoking the historian as a Skill. It is an agent — use the `Agent` tool with `subagent_type: "code-historian"`.
+- Proceeding past §4 without either a historian report or an explicit `Historical Context SKIPPED — [reason]` line.
+- Silently ignoring a prior-intent block. If you skip, name the block you relied on.
+
+---
+
+## 3. Conflict Detection (MANDATORY — before any finding)
 
 1. LIST all signals about the fix approach (what symptom it addresses, what root cause it targets, what assumptions it makes about the surrounding code)
 2. For each conflict: state it explicitly — `Conflict: the fix assumes X but the codebase also handles Y differently in [file:line]`
@@ -77,7 +140,7 @@ If you cannot refute an alternative framing: note `ALTERNATIVE FRAMING NOT RULED
 
 ---
 
-## 3. Root Cause Trace (Iterative Deepening)
+## 4. Root Cause Trace (Iterative Deepening)
 
 ### Step A — Initial Chain
 Map the obvious causal chain: symptom → intermediate → candidate root cause.
@@ -106,15 +169,15 @@ Report where on the FULL deepened chain the fix (proposed or actual) lands.
 
 ---
 
-## 4. Reproduction Gate (MANDATORY before claiming a root cause)
+## 5. Reproduction Gate (MANDATORY before claiming a root cause)
 
-You operate primarily in **review mode (Mode B)** — pin the named root cause to a regression test before locking in the chain from §3.
+You operate primarily in **review mode (Mode B)** — pin the named root cause to a regression test before locking in the chain from §4.
 
 ### Mode A — Investigation (when you can run code)
 If the orchestrator authorizes execution and a Bash-runnable test harness is available, write or identify a test that (i) targets the smallest unit that exhibits the failure, (ii) fails today *because of* the hypothesized root cause, (iii) passes when (and only when) the root cause is removed. Run it. Cite `path::test name — failing assertion / error`.
 
 ### Mode B — Review (default for this agent)
-Verify the diff contains a regression test that exercises the named root cause and would have failed before the fix. The test must reach the cause, not just the symptom (see §8 Test Coverage). If no such test exists, raise it as a `[HIGH] Test Coverage` Finding Anchor.
+Verify the diff contains a regression test that exercises the named root cause and would have failed before the fix. The test must reach the cause, not just the symptom (see §9 Test Coverage). If no such test exists, raise it as a `[HIGH] Test Coverage` Finding Anchor.
 
 ### Mode C — Unable to reproduce
 If reproduction is genuinely infeasible (flaky concurrency, prod-only data, missing infra), output `UNABLE TO REPRODUCE — [why; what would be needed]`. Confidence is capped at `[LOW]`.
@@ -123,7 +186,7 @@ If reproduction is genuinely infeasible (flaky concurrency, prod-only data, miss
 
 ---
 
-## 5. Defect Class Identification
+## 6. Defect Class Identification
 
 ### Step A — Name the class abstractly
 Define the defect class as an abstract pattern independent of this specific instance. Format:
@@ -144,16 +207,16 @@ Does the fix eliminate the defect CLASS (prevents all instances) or just this de
 
 ---
 
-## 6. Completeness (Sibling Search)
+## 7. Completeness (Sibling Search)
 Are there other places in the codebase with the same underlying issue that should also be fixed? Use Grep driven by the defect class pattern. Cite specific results (file:line).
 
-## 7. Regression Surface
+## 8. Regression Surface
 Does the fix introduce new assumptions that could break under different conditions? List the assumptions explicitly.
 
-## 8. Test Coverage
-Would the tests catch regression of the ROOT CAUSE, not just the specific symptom? If the test only pins the current fix site, it's a symptom test. §4's reproduction is the minimum bar; sibling-instance coverage is a plus.
+## 9. Test Coverage
+Would the tests catch regression of the ROOT CAUSE, not just the specific symptom? If the test only pins the current fix site, it's a symptom test. §5's reproduction is the minimum bar; sibling-instance coverage is a plus.
 
-## 9. Duplication & Reuse
+## 10. Duplication & Reuse
 Does the fix duplicate logic that already exists elsewhere? Could shared utilities or abstractions reduce redundancy?
 
 ---
@@ -172,7 +235,7 @@ For every finding, you MUST also acknowledge what the current approach does WELL
 
 Append a confidence tag to every finding:
 
-- **[HIGH]**: §4 Reproduction Gate satisfied (review-mode regression test in the diff that exercises the named root cause, OR investigation-mode failing test that flips on root-cause removal) AND verified by reading code, grepping sibling patterns, or tracing the causal chain through actual files (3+ data points)
+- **[HIGH]**: §5 Reproduction Gate satisfied (review-mode regression test in the diff that exercises the named root cause, OR investigation-mode failing test that flips on root-cause removal) AND verified by reading code, grepping sibling patterns, or tracing the causal chain through actual files (3+ data points)
 - **[MEDIUM]**: based on diff/context + 1-2 verified signals, one minor uncertainty noted
 - **[LOW]**: `UNABLE TO REPRODUCE` is in effect, OR the finding is based primarily on the diff without broader verification — downgrade severity automatically
 
@@ -211,7 +274,7 @@ Stress-test your root cause identification:
 After generating your analysis:
 1. Re-read each finding
 2. For each claim: can you trace it to a specific file, line, or grep result?
-3. For every root-cause finding: confirm §4 Reproduction Gate produced one of — a regression test in the diff cited by `path::test name`, an investigation-mode failing test, or an explicit `UNABLE TO REPRODUCE — [reason]`. Drop the root-cause claim if none is present, or downgrade per the Confidence Calibration rules.
+3. For every root-cause finding: confirm §5 Reproduction Gate produced one of — a regression test in the diff cited by `path::test name`, an investigation-mode failing test, or an explicit `UNABLE TO REPRODUCE — [reason]`. Drop the root-cause claim if none is present, or downgrade per the Confidence Calibration rules.
 4. Remove or flag any other claim that failed verification with `[UNVERIFIED]`
 5. If >30% of findings are `[LOW]` or `[UNVERIFIED]`: output `INSUFFICIENT CONTEXT` for the overall analysis and note what additional access would raise confidence.
 
@@ -288,7 +351,7 @@ Finding Anchor: defect_class=Missing Abstraction; file=src/utils/; line=cross; s
 - REFUTE: This is an organizational process concern, not a codebase defect. The codebase CAN have a shared abstraction without organizational change. The bedrock test passes: this is a missing abstraction that can be built.
 
 <reasoning>
-Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, empirically pins the root cause via the §4 Reproduction Gate (regression test in the diff that exercises the missing abstraction, not just the 429 symptom), finds 4 sibling instances with concrete evidence, proposes a systemic fix, acknowledges what the current fix does well, and runs the self-challenge with a non-trivial devil's advocate argument.
+Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, empirically pins the root cause via the §5 Reproduction Gate (regression test in the diff that exercises the missing abstraction, not just the 429 symptom), finds 4 sibling instances with concrete evidence, proposes a systemic fix, acknowledges what the current fix does well, and runs the self-challenge with a non-trivial devil's advocate argument.
 </reasoning>
 </good_example>
 
