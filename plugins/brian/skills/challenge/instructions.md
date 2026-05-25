@@ -128,6 +128,18 @@ If the pipeline yields zero blocks: `"No project-specific skills or CLAUDE.md fo
 
 ---
 
+## Step 1.6: Load Shared Contract (defect_class enum)
+
+Before assembling the Output Contract for the reviewers, Read the canonical enum source and substitute the sentinel.
+
+```
+enum_text = Read("plugins/brian/agents/_shared/defect-class-enum.md")
+```
+
+When building the user-turn prompt in Step 2, replace the literal sentinel `<<INJECT_DEFECT_CLASS_ENUM>>` in the Output Contract block with `enum_text`. The canonical list lives in `plugins/brian/agents/_shared/defect-class-enum.md` and is shared with `brian:scrutinize`; this skill does not restate it inline beyond the sentinel.
+
+---
+
 ## Step 2: Launch Both Reviewers in Parallel
 
 Invoke `brian:architectural-reviewer` and `brian:root-cause-reviewer` via the `Agent` tool. Both calls MUST be emitted as **two tool-use blocks in the same assistant message** so they run concurrently. Each call uses `model: "opus"` and `run_in_background: true`.
@@ -141,11 +153,7 @@ Every finding MUST start with a structured Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<CATEGORY>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>
 
-defect_class enum (closed list):
-  Missing Validation | Missing Abstraction | Implicit Assumption |
-  State Synchronization Gap | Error Handling Gap | Boundary Violation |
-  Resource Lifecycle | Concurrency Hazard | Configuration Drift |
-  API Contract Violation
+defect_class enum: <<INJECT_DEFECT_CLASS_ENUM>>
 
 Confidence calibration: every finding ends with a confidence tag — [HIGH] / [MEDIUM] / [LOW].
 
@@ -186,7 +194,7 @@ Before deleting or renaming any field listed below, grep `plugins/brian/agents/*
 
 Currently-live contract tokens (alphabetized):
 
-- `defect_class` (and its closed enum members)
+- `defect_class` (and its closed enum members — canonical source: `plugins/brian/agents/_shared/defect-class-enum.md`; injected at runtime via the `<<INJECT_DEFECT_CLASS_ENUM>>` sentinel, see Step 1.6)
 - `Finding Anchor`
 - `INSUFFICIENT CONTEXT`
 - `Output Contract`

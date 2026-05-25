@@ -192,7 +192,7 @@ If reproduction is genuinely infeasible (flaky concurrency, prod-only data, miss
 Define the defect class as an abstract pattern independent of this specific instance. Format:
 `[CATEGORY]: [abstract description independent of specific module/variable names]`
 
-Categories: Missing Validation | Missing Abstraction | Implicit Assumption | State Synchronization Gap | Error Handling Gap | Boundary Violation | Resource Lifecycle | Concurrency Hazard | Configuration Drift | API Contract Violation
+Categories: the closed `defect_class` enum injected by the orchestrator in the `## Output Contract` block. Canonical source: `plugins/brian/agents/_shared/defect-class-enum.md`. Use the exact enum in the injected Output Contract;
 
 Example: `Missing Validation: external input used in database query without sanitization` — NOT `the user input in handleSearch isn't sanitized`
 
