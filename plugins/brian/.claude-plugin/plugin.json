@@ -1,7 +1,7 @@
 {
   "name": "brian",
-  "version": "1.7.1",
-  "description": "Bundled skills: challenge, commit, diagnose, kickoff, prompting.",
+  "version": "1.8.0",
+  "description": "Bundled skills: challenge, commit, diagnose, kickoff, prompting, scrutinize.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"
@@ -16,6 +16,7 @@
     "commit",
     "architecture-review",
     "workflow",
-    "kickoff"
+    "kickoff",
+    "scrutinize"
   ]
 }
