@@ -8,15 +8,17 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 
 ## Axis Registry (single source of truth)
 
-| axis | agent file | always-on? | trigger (one-line) | default model |
-|---|---|---|---|---|
-| `correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
-| `cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
-| `security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
-| `tests` | `review-tests.md` | no | production-code file in diff | sonnet |
-| `architecture` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
+| axis | `subagent_type` (Agent tool) | agent file | always-on? | trigger (one-line) | default model |
+|---|---|---|---|---|---|
+| `correctness-reliability` | `review-correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
+| `cleanness` | `review-cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
+| `security` | `review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
+| `tests` | `review-tests` | `review-tests.md` | no | production-code file in diff | sonnet |
+| `architecture` | `architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
 
 Steps C, D, E, F, G all reference this table. Do not re-list axes in prose elsewhere in this file.
+
+**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column — never substitute `architectural-reviewer` (or any other value) as a default. If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
 
 ---
 
@@ -286,7 +288,13 @@ If none exist, write the line: `No project rules found; review against general p
 
 Emit ALL dispatched-axis Agent calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call:
 
-- `subagent_type`: the agent's `name:` frontmatter value (e.g. `review-correctness-reliability`, `architectural-reviewer`).
+- `subagent_type`: the **second column of the Axis Registry** for this axis. Concretely:
+  - `correctness-reliability` axis → `subagent_type: "review-correctness-reliability"`
+  - `cleanness` axis → `subagent_type: "review-cleanness"`
+  - `security` axis → `subagent_type: "review-security"`
+  - `tests` axis → `subagent_type: "review-tests"`
+  - `architecture` axis → `subagent_type: "architectural-reviewer"`
+  Every dispatched axis MUST use a distinct `subagent_type`. If you are about to emit two Agent calls with the same value, stop and re-read the registry.
 - `model`: per the tier decision in Step C.2 (default `sonnet`; tier downgrade pins `sonnet`).
 - `run_in_background: true`.
 - `prompt`: the assembled user-turn from D.1.
