@@ -16,6 +16,7 @@ Dispatches axis-specialized opus reviewer subagents in parallel against the loca
 - `--axes=all` — force every axis (override smart-dispatch).
 - `--axes=<csv>` — force a specific axis set (always-on axes still run).
 - `--input <sha-ts>` — replay against a prior cached `.scrutinize/<sha-ts>.diff` snapshot.
+- `--no-html` — chat-only mode; suppresses the HTML report. Use sparingly — the HTML is the canonical artifact and is mandatory unless this flag is set.
 
 ## Output
 - HTML report: `/tmp/scrutinize-<repo>-<sha>-<UTC-ISO>.html` — self-contained; open in browser.

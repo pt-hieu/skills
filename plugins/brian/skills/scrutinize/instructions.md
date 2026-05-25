@@ -29,6 +29,7 @@ Extract from the user's `/scrutinize` invocation:
 - `mode ∈ {working-tree, branch, commit, base}` — driven by which flag is present (default: `working-tree`).
 - `axes_override ∈ {all, <comma-list>, default}` — from `--axes=...`.
 - `replay_input ∈ {<sha-ts> | none}` — from `--input <sha-ts>`.
+- `skip_html ∈ {true, false}` — `true` only when the user explicitly passes `--no-html` OR types an unambiguous in-message override ("skip the HTML report", "just print to chat", "don't render HTML"). Default `false`. This is the SOLE way to skip Step F — see the mandatory block at the top of Step F.
 
 Reject incompatible combinations (e.g. `--branch` and `--commit` together) with a one-line error and exit non-zero.
 
@@ -322,6 +323,37 @@ The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha
 ---
 
 ## Step F. Render HTML
+
+### 🔴 MANDATORY — HTML rendering is non-skippable
+
+The HTML report is the **only durable, user-facing artifact** of every `/scrutinize` run. Step F MUST execute on every run, with no exceptions for any of the following conditions:
+
+- **Zero findings** (`NO FINDINGS` from every dispatched axis) — still render. The report's "HIGH/MEDIUM/LOW (0)" sections plus the dispatched-axes header prove the run actually happened. A clean report IS the output.
+- **All axes skipped by smart-dispatch** — still render. The header's `axes_skipped[]` table is the deliverable.
+- **An agent abstained with `INSUFFICIENT CONTEXT`** — still render. The `axes_abstained[]` section in the header surfaces this.
+- **Agent timeout / partial returns** — still render with whatever findings arrived; missing axes go into `axes_abstained[]` with `reason: "agent timeout"`.
+- **The diff is tiny / cosmetic / a comment-only change** — still render. Tier downgrade affects model choice, not whether the report is produced.
+- **The orchestrator believes it can summarize findings in chat instead** — NO. Chat summaries are NOT a substitute for the HTML. Step G's chat print is the path; Step F is the artifact. Never collapse Step F into Step G's chat output.
+
+The ONLY way to skip Step F is an **explicit, in-band user override** — the user typed `--no-html` (or equivalent in-message instruction such as "skip the HTML report this time" or "just print findings to chat"). Absent that explicit instruction, render.
+
+If Step F fails for any reason (python missing, write error, render exits non-zero), the orchestrator MUST surface the failure with the exit code AND the payload path so the user can re-render manually. **Do not proceed to Step G without confirming the HTML exists.**
+
+### Skip gate (the ONLY skip path)
+
+```
+if skip_html == true:
+    # user explicitly requested chat-only via --no-html or in-message override (Step A)
+    # print a one-line notice to chat: "scrutinize: --no-html set; HTML report skipped"
+    # render findings to chat directly using the data dict (severity-ordered list)
+    # proceed to Step G
+else:
+    # default — render HTML per the next subsection
+```
+
+Any other reason to skip (zero findings, all-skipped axes, abstinence, tier downgrade, orchestrator's own judgment) does NOT satisfy this gate. Only `skip_html == true` does.
+
+### How it runs
 
 The orchestrator builds an in-memory `data` dict from Step E's outputs and pipes it (plus the template Read in Step D.0) into `python3` over stdin. No JSON sidecar is persisted — the HTML is the only durable artifact (the `.diff` snapshot is separately persisted in Step B for replay).
 
