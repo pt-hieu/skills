@@ -13,9 +13,20 @@
       "name": "brian",
       "source": "./plugins/brian",
       "description": "Bundled skills: challenge, commit, diagnose, kickoff, resolve-merge-conflicts, prompting, scrutinize.",
-      "version": "1.14.2",
+      "version": "1.14.3",
       "category": "productivity",
-      "tags": ["skills", "debugging", "prompting", "commit", "architecture-review", "workflow", "kickoff", "resolve-merge-conflicts", "git", "scrutinize"]
+      "tags": [
+        "skills",
+        "debugging",
+        "prompting",
+        "commit",
+        "architecture-review",
+        "workflow",
+        "kickoff",
+        "resolve-merge-conflicts",
+        "git",
+        "scrutinize"
+      ]
     },
     {
       "name": "voice",
@@ -23,7 +34,16 @@
       "description": "Communication-style skills: outbound team-facing writing in a warm, hedged, emoji-aware engineering voice; plain-language plan pitches before exiting plan mode.",
       "version": "1.2.1",
       "category": "communication",
-      "tags": ["skills", "voice", "communication", "slack", "writing", "pitch", "recap", "plan-mode"]
+      "tags": [
+        "skills",
+        "voice",
+        "communication",
+        "slack",
+        "writing",
+        "pitch",
+        "recap",
+        "plan-mode"
+      ]
     },
     {
       "name": "design",
