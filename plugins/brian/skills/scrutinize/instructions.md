@@ -1,6 +1,6 @@
 # Scrutinize — Execution Guide
 
-`brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and renders a self-contained HTML report plus a durable JSON sidecar. The HTML is presentation; the JSON is canon.
+`brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and prints a severity-ordered findings list to chat. Chat output is the canonical and sole output mode; the diff is snapshotted to disk under `<repo>/.scrutinize/` to support `--input <sha-ts>` replay.
 
 The orchestrator owns the I/O contract. Reviewer agents narrate the contract in their Input Contract sections — they do not own the schema, enum, or rules. The orchestrator Read-injects the shared blocks at invocation time.
 
@@ -29,7 +29,6 @@ Extract from the user's `/scrutinize` invocation:
 - `mode ∈ {working-tree, branch, commit, base}` — driven by which flag is present (default: `working-tree`).
 - `axes_override ∈ {all, <comma-list>, default}` — from `--axes=...`.
 - `replay_input ∈ {<sha-ts> | none}` — from `--input <sha-ts>`.
-- `skip_html ∈ {true, false}` — `true` only when the user explicitly passes `--no-html` OR types an unambiguous in-message override ("skip the HTML report", "just print to chat", "don't render HTML"). Default `false`. This is the SOLE way to skip Step F — see the mandatory block at the top of Step F.
 
 Reject incompatible combinations (e.g. `--branch` and `--commit` together) with a one-line error and exit non-zero.
 
@@ -149,7 +148,7 @@ Dispatch `security` if ANY of:
    ```
 3. **Mandatory-Security rule**: any file with `git diff --name-status` status `A` (added) AND (the file is under one of the security-trigger directory tokens above OR the file is under a module-boundary directory `api|routes|controllers|services|middleware`).
 
-When dispatched, record which trigger fired (path / code-pattern / mandatory-new-file) in the HTML header.
+When dispatched, record the trigger reason (path / code-pattern / mandatory-new-file) in `axes_dispatched[]` metadata for chat output.
 
 ### C.4 Tests trigger
 
@@ -181,7 +180,7 @@ Dispatch `architecture` if ANY of:
 - `--axes=<csv>`: dispatch the listed axes. Always-on axes still run unless `--axes=<csv>` explicitly excludes them (the comma-list is authoritative). Mandatory-Security still forces security on when its rule fires.
 - Default (no flag): always-on + triggered axes; everything else is recorded in `skipped[]` with a one-sentence `reason` string explaining the gap ("no production-code files changed; pass `--axes=tests` to force").
 
-The dispatch decision flows through Step F (JSON `axes_dispatched` and `axes_skipped`) and Step G (HTML header line).
+The dispatch decision flows through to the chat-print step (Step F), which renders `axes_dispatched`, `axes_skipped`, and `axes_abstained` in the header line.
 
 ---
 
@@ -194,8 +193,6 @@ Before the parallel dispatch, the orchestrator Reads three files. **These Reads 
 ```
 enum_text         = Read("plugins/brian/agents/_shared/defect-class-enum.md")
 house_rules_txt   = Read("plugins/brian/agents/_shared/reviewer-house-rules.md")
-html_template     = Read("plugins/brian/skills/scrutinize/references/html-template.html")
-render_script_text = Read("plugins/brian/skills/scrutinize/references/html-render.py")
 ```
 
 The orchestrator NEVER restates the enum or house rules literally — only via these Read-and-inject substitutions.
@@ -318,118 +315,50 @@ When all dispatched agents have returned:
 6. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
 7. **Abstinence tracking**: if an agent returned `INSUFFICIENT CONTEXT — ...`, record `{axis: <axis>, reason: <what was missing>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
 
-The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, tier, counts), is held in orchestrator memory as a single `data` dict and handed directly to Step F. Step E never builds HTML strings; Step F never persists this dict to disk.
+The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, tier, counts), is held in orchestrator memory as a single `data` dict and handed directly to the chat-print step (Step F).
 
 ---
 
-## Step F. Render HTML
+## Step F. Chat print
 
-### 🔴 MANDATORY — HTML rendering is non-skippable
+Print the findings directly to chat using the in-memory `data` dict from Step E. This is the canonical and sole output mode.
 
-The HTML report is the **only durable, user-facing artifact** of every `/scrutinize` run. Step F MUST execute on every run, with no exceptions for any of the following conditions:
+### F.1 — Header line
 
-- **Zero findings** (`NO FINDINGS` from every dispatched axis) — still render. The report's "HIGH/MEDIUM/LOW (0)" sections plus the dispatched-axes header prove the run actually happened. A clean report IS the output.
-- **All axes skipped by smart-dispatch** — still render. The header's `axes_skipped[]` table is the deliverable.
-- **An agent abstained with `INSUFFICIENT CONTEXT`** — still render. The `axes_abstained[]` section in the header surfaces this.
-- **Agent timeout / partial returns** — still render with whatever findings arrived; missing axes go into `axes_abstained[]` with `reason: "agent timeout"`.
-- **The diff is tiny / cosmetic / a comment-only change** — still render. Tier downgrade affects model choice, not whether the report is produced.
-- **The orchestrator believes it can summarize findings in chat instead** — NO. Chat summaries are NOT a substitute for the HTML. Step G's chat print is the path; Step F is the artifact. Never collapse Step F into Step G's chat output.
-
-The ONLY way to skip Step F is an **explicit, in-band user override** — the user typed `--no-html` (or equivalent in-message instruction such as "skip the HTML report this time" or "just print findings to chat"). Absent that explicit instruction, render.
-
-If Step F fails for any reason (python missing, write error, render exits non-zero), the orchestrator MUST surface the failure with the exit code AND the payload path so the user can re-render manually. **Do not proceed to Step G without confirming the HTML exists.**
-
-### Skip gate (the ONLY skip path)
+Print one header block summarizing the run:
 
 ```
-if skip_html == true:
-    # user explicitly requested chat-only via --no-html or in-message override (Step A)
-    # print a one-line notice to chat: "scrutinize: --no-html set; HTML report skipped"
-    # render findings to chat directly using the data dict (severity-ordered list)
-    # proceed to Step G
-else:
-    # default — render HTML per the next subsection
+scrutinize | tier: <tier> | <repo_root> @ <short_sha> (<iso_ts>)
+dispatched: <axes_dispatched joined by ", ">
+skipped:    <axis>: <reason>; ...   (omit line if empty)
+abstained:  <axis>: <reason>; ...   (omit line if empty)
+diff snapshot: <repo>/.scrutinize/<sha>-<ts>.diff
 ```
 
-Any other reason to skip (zero findings, all-skipped axes, abstinence, tier downgrade, orchestrator's own judgment) does NOT satisfy this gate. Only `skip_html == true` does.
+### F.2 — Findings
 
-### How it runs
-
-The orchestrator builds an in-memory `data` dict from Step E's outputs and pipes it (plus the template Read in Step D.0) into `python3` over stdin. No JSON sidecar is persisted — the HTML is the only durable artifact (the `.diff` snapshot is separately persisted in Step B for replay).
-
-The `data` dict shape (constructed in memory; serialized only for the python stdin payload):
-
-```jsonc
-{
-  "repo_root": "<absolute path>",
-  "base_ref": "<ref or 'working-tree'>",
-  "head_ref": "<ref>",
-  "short_sha": "<sha>",
-  "iso_timestamp": "<UTC ISO>",
-  "axes_dispatched": ["correctness-reliability", "cleanness", "security"],
-  "axes_skipped": [{"axis": "tests", "reason": "no production-code files changed"}],
-  "axes_abstained": [{"axis": "security", "reason": "auth middleware not in diff snapshot"}],
-  "tier": "opus-full",
-  "diff_snapshot_path": "<repo>/.scrutinize/<sha>-<ts>.diff",
-  "counts": {"high": 0, "medium": 0, "low_collapsed_themes": 0, "low_dropped": 0},
-  "findings": [
-    {
-      "axes": ["correctness-reliability"],
-      "defect_class": "Concurrency Hazard",
-      "file": "src/foo.ts",
-      "line": "42-48",
-      "summary": "...",
-      "claim": "...",
-      "evidence": {"file_line": "src/foo.ts:42", "lang": "ts", "snippet": "..."},
-      "fix": "...",
-      "confidence": "HIGH"
-    }
-  ]
-}
-```
-
-The orchestrator NEVER builds HTML strings. The rendering is a deterministic shell-out to the checked-in script `plugins/brian/skills/scrutinize/references/html-render.py` — see that file for the full renderer. The orchestrator does not embed the script body anywhere; it Reads it once (Step D.0) and stages it.
-
-### F.1 — Stage the script and payload
-
-The Bash tool runs in the user's working directory, which is usually NOT the skills marketplace, so the checked-in script path is not directly callable. Stage both the script and the JSON payload to absolute `/tmp/` paths.
+Print findings grouped by severity, in this order: HIGH → MEDIUM → LOW themes (the collapsed groups produced in Step E.4). For each finding, format:
 
 ```
-out_path="/tmp/scrutinize-$(basename "$repo_root")-${short_sha}-${iso_ts}.html"
-script_path="/tmp/scrutinize-render-${short_sha}-${iso_ts}.py"
-payload_path="/tmp/scrutinize-payload-${short_sha}-${iso_ts}.json"
-
-command -v python3 >/dev/null 2>&1 || { echo "scrutinize: python3 required" >&2; exit 2; }
+[<SEVERITY>] <file>:<line>  (<defect_class>; axes: <axes joined>)
+  Claim:    <claim>
+  Evidence: <evidence.file_line>
+            ```<evidence.lang>
+            <evidence.snippet>
+            ```
+  Fix:      <fix or "—">
+  Confidence: <HIGH|MEDIUM|LOW>
 ```
 
-The orchestrator uses the Write tool to put `render_script_text` (from the Step D.0 Read of `references/html-render.py`) into `$script_path`, and to put the JSON payload `{"template": template_text, "data": <data dict>}` into `$payload_path`. Both writes complete before F.2.
-
-### F.2 — Invoke
+If `findings[]` is empty, still print the header (so the run is legible) followed by a one-line acknowledgement:
 
 ```
-python3 "$script_path" "$out_path" < "$payload_path"
-rc=$?
-rm -f "$script_path" "$payload_path"
-test $rc -eq 0 || { echo "scrutinize: render exited $rc" >&2; exit $rc; }
+No findings. (axes ran clean.)
 ```
 
-Non-zero exit from the script propagates with its stderr (sentinel coverage, malformed payload, missing key). The script's exit codes are documented in its module docstring.
+### F.3 — Retention prune
 
----
-
-## Step G. Verify and print
-
-```
-test -s "$out_path" || { echo "scrutinize: HTML render produced empty file" >&2; exit 4; }
-```
-
-Then print to chat:
-```
-HTML report:  <out_path>
-Diff snapshot: <repo>/.scrutinize/<sha>-<ts>.diff
-```
-
-Run Step B.4 retention prune. Done.
+Run Step B.4 retention prune on `<repo>/.scrutinize/` to keep the 30 most recent `.diff` snapshots. Done.
 
 ---
 
