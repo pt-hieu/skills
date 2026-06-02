@@ -1,6 +1,6 @@
 # Scrutinize — Execution Guide
 
-`brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and prints a severity-ordered findings list to chat. Chat output is the canonical and sole output mode; the diff is snapshotted to disk under `<repo>/.scrutinize/` to support `--input <sha-ts>` replay.
+`brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and prints a severity-ordered findings list to chat. Chat output is the canonical and sole output mode; the diff is snapshotted to disk under a per-repo directory in `/tmp` to support `--input <sha-ts>` replay. The snapshot lives outside the repo root so it never pollutes the working tree or needs a `.gitignore` entry.
 
 The orchestrator owns the I/O contract. Reviewer agents narrate the contract in their Input Contract sections — they do not own the schema, enum, or rules. The orchestrator Read-injects the shared blocks at invocation time.
 
@@ -38,8 +38,11 @@ Reject incompatible combinations (e.g. `--branch` and `--commit` together) with 
 
 ```
 repo_root=$(git rev-parse --show-toplevel)
-mkdir -p "$repo_root/.scrutinize"
+scrutinize_dir="/tmp/scrutinize/$(printf '%s' "$repo_root" | sed 's#^/##; s#/#_#g')"
+mkdir -p "$scrutinize_dir"
 ```
+
+`scrutinize_dir` is a per-repo subdirectory under `/tmp` (the repo path is flattened into the dir name so distinct repos and worktrees never collide). All snapshot paths below resolve under `$scrutinize_dir`, never inside the repo.
 
 ### B.1 Compute diff_text and diff_files
 
@@ -79,16 +82,16 @@ For working-tree mode, also include untracked files (status `A`).
 ```
 short_sha=$(git rev-parse --short HEAD 2>/dev/null || echo nohead)
 iso_ts=$(date -u +%Y%m%dT%H%M%SZ)
-snapshot="$repo_root/.scrutinize/${short_sha}-${iso_ts}.diff"
+snapshot="$scrutinize_dir/${short_sha}-${iso_ts}.diff"
 printf '%s' "$diff_text" > "$snapshot"
 ```
 
 ### B.4 Retention prune
 
-After the run completes (end of Step H), prune `<repo>/.scrutinize/` to keep the 30 most recent of each artifact class by mtime:
+After the run completes (end of Step H), prune `$scrutinize_dir` to keep the 30 most recent of each artifact class by mtime:
 
 ```
-ls -t "$repo_root/.scrutinize/"*.diff 2>/dev/null | tail -n +31 | xargs -r rm --
+ls -t "$scrutinize_dir/"*.diff 2>/dev/null | tail -n +31 | xargs -r rm --
 ```
 
 ### B.5 Replay mode (`--input <sha-ts>`)
@@ -96,7 +99,7 @@ ls -t "$repo_root/.scrutinize/"*.diff 2>/dev/null | tail -n +31 | xargs -r rm --
 If `replay_input` is set, skip B.1–B.3 and instead:
 
 ```
-snapshot="$repo_root/.scrutinize/${replay_input}.diff"
+snapshot="$scrutinize_dir/${replay_input}.diff"
 test -s "$snapshot" || { echo "scrutinize: snapshot not found: $snapshot" >&2; exit 5; }
 diff_text=$(cat "$snapshot")
 ```
@@ -332,7 +335,7 @@ scrutinize | tier: <tier> | <repo_root> @ <short_sha> (<iso_ts>)
 dispatched: <axes_dispatched joined by ", ">
 skipped:    <axis>: <reason>; ...   (omit line if empty)
 abstained:  <axis>: <reason>; ...   (omit line if empty)
-diff snapshot: <repo>/.scrutinize/<sha>-<ts>.diff
+diff snapshot: <scrutinize_dir>/<sha>-<ts>.diff
 ```
 
 ### F.2 — Findings
@@ -358,7 +361,7 @@ No findings. (axes ran clean.)
 
 ### F.3 — Retention prune
 
-Run Step B.4 retention prune on `<repo>/.scrutinize/` to keep the 30 most recent `.diff` snapshots. Done.
+Run Step B.4 retention prune on `$scrutinize_dir` to keep the 30 most recent `.diff` snapshots. Done.
 
 ---
 
