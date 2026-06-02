@@ -54,6 +54,8 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 
 **Task 2 — Explore (Phase 1 findings)**
 
+<!-- VERBATIM COPY in plugins/brian/skills/autopilot/instructions.md T1 — edit both in lockstep. -->
+
 - subject: `Explore — gather Phase-1 findings`
 - description:
   > **Goal**: ground the plan in real code.
@@ -93,6 +95,8 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 ---
 
 **Task 5 — Skill scan (the task most often missed)**
+
+<!-- VERBATIM COPY in plugins/brian/skills/autopilot/instructions.md T3 — edit both in lockstep. -->
 
 - subject: `Skill scan — enumerate and apply`
 - description:
