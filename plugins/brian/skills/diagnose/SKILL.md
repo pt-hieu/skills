@@ -21,7 +21,7 @@ Run the methodology silently; surface only conclusions.
 
 Default shape (≤ 11 lines + 1 line per cited sibling beyond the first 3):
 - One-line root cause
-- Defect class (one line, from the closed enum)
+- Defect class (one line, named in plain words)
 - Where the fix lands on the chain
 - Reproduction: `path::test name` (failing test or regression test in the diff), or `UNABLE TO REPRODUCE — [reason]`
 - Sibling instances (file:line list)

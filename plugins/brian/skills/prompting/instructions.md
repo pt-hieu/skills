@@ -7,8 +7,8 @@ Research synthesis from 20+ papers and industry sources on effective LLM prompti
 ## Quality Checklist (Severity Tiers)
 
 ### CRITICAL — block if missing
-- **Deterministic split** — code computes all numbers; LLM interprets only
-- **Structured output** — Pydantic schema with `Literal`/`Enum` for constrained fields
+- **Deterministic split** — code computes all numbers; LLM interprets only. This is independent of prose-vs-structured output and always binds.
+- **Prose-first communication** — when an LLM or a human reads the output, prefer free natural-language prose. Reserve structured output (Pydantic `Literal`/`Enum` schemas) for true machine-to-machine handoffs with a *non-LLM* consumer that parses the fields.
 - **Abstinence rule** — `INSUFFICIENT DATA` output when data is missing or unverifiable
 - **Conflict detection** — explicit protocol to enumerate and resolve contradictory signals
 
@@ -36,6 +36,18 @@ Flow: Raw Data → Code (compute metrics, scores, deltas) → Structured Context
 ```
 
 **Rule:** Never let the LLM compute numbers that code can compute deterministically. Pre-compute everything possible and pass structured results to the LLM.
+
+---
+
+## Prose-First vs. Structured Output
+
+**Default to prose for anything an LLM or a human reads.** Free natural-language prose carries judgment, nuance, and uncertainty better than a rigid field list, and it does not drift: there is no schema for the producer and consumer to fall out of sync on.
+
+**Reserve structured output (Literal/Enum schemas) for true machine-to-machine handoffs** — where a *non-LLM* consumer parses the value and branches on it. An enum tag read only by another LLM (or a human) buys rigidity without buying determinism, and invites the failure mode below.
+
+**The failure mode prose avoids:** when you force an LLM's output into a rigid schema that another LLM or a human consumes, the two sides drift — a consumer ends up parsing a field the producer renamed or stopped emitting, and the producer hallucinates fields to satisfy a contract no one reads. (Documented in this codebase: a stale `finding_id` contract left agents "verifying by a never-injected field," commit `6652d78`.) Prose has no such contract to drift.
+
+**This is orthogonal to the deterministic split** above: code still computes every number; the LLM still interprets. Prose-first governs only *how the LLM's qualitative output is shaped* — as prose, not as a schema — when the reader is an LLM or a human.
 
 ---
 
@@ -71,6 +83,8 @@ FORBIDDEN: "on balance" or "taking everything into account" without listing conf
 
 ### 3. Confidence Calibration Guide
 
+Use a calibrated tag like this **only when a non-LLM parses the confidence value**. When an LLM or a human reads the output, state confidence and its basis in prose instead (see Block 8b) — the prose default is "low" unless the claim is grounded in cited data.
+
 ```
 ## SIGNAL CONFIDENCE
 Append confidence tag in the analysis field:
@@ -88,17 +102,17 @@ it must be downgraded one level.
 
 ## Strict vs. Flexible Declarations
 
-Use this table when designing output schemas:
+Use this table when designing output. **The consumer type is the deciding column** — reach for an enum only when a non-LLM downstream actually parses the value:
 
-| Field | Strictness | Rationale |
-|-------|-----------|-----------|
-| `action` / `decision` | **STRICT** | Feeds downstream automation |
-| `confidence` (HIGH/MEDIUM/LOW) | **STRICT** | Drives downstream logic |
-| `reasoning` / `thesis` | **FLEXIBLE** | Qualitative judgment |
-| `key_risk` / `counter_argument` | **STRICT template** | Must challenge thesis, not footnote |
-| `conflicts_identified` | **STRICT list** | Must enumerate, not summarize |
+| Field | Consumer | Strictness | Rationale |
+|-------|----------|-----------|-----------|
+| `action` / `decision` | non-LLM automation | **STRICT** | Code branches on the exact value |
+| `confidence` (HIGH/MEDIUM/LOW) | depends | **STRICT only when a non-LLM parses it**; for an LLM/human consumer, prose confidence + its basis is sufficient | A tag earns its rigidity only at a machine parser; otherwise it's drift risk for no gain |
+| `reasoning` / `thesis` | LLM / human | **PROSE** | Qualitative judgment |
+| `key_risk` / `counter_argument` | LLM / human | **PROSE, but mandatory** | Must genuinely challenge the thesis — required content, not a rigid field |
+| `conflicts_identified` | depends | **STRICT list only for a non-LLM**; otherwise enumerate in prose | Must enumerate, not summarize — but a schema buys nothing if an LLM/human reads it |
 
-**Rule:** Fields that feed deterministic downstream code → `Literal` type with exact values. Fields that inform human judgment → `str` with descriptive guidance.
+**Rule:** The consumer type decides. A field parsed by non-LLM code → `Literal`/`Enum` with exact values. A field read by an LLM or a human → prose with descriptive guidance.
 
 ---
 
@@ -125,8 +139,9 @@ This chain should appear as mandatory steps in system prompts for any decision-m
 | No conflict enumeration | LLM papers over contradictions | Force explicit listing |
 | Missing counter-argument | Confirmation bias from training data | Always require KEY RISK / con case |
 | Stale parametric knowledge | Model's knowledge is months old | Always inject fresh data via tools |
-| Verbose narrative | More words = more speculation | Constrain output length, use JSON |
-| Vague confidence | "fairly confident" tells you nothing | Use calibrated levels: HIGH/MEDIUM/LOW |
+| Forcing prose into rigid JSON for an LLM/human reader | Contract drift — a consumer parses a field the producer renamed or never emits; producer hallucinates fields to satisfy a contract no one reads (commit `6652d78`) | Use prose; reserve schemas for non-LLM parsers |
+| Unbounded rambling output | More words = more speculation | Ask for a short, focused paragraph — brevity, not a schema |
+| Vague confidence | "fairly confident" tells you nothing | State confidence AND its basis in plain words (calibrated HIGH/MEDIUM/LOW only when a non-LLM parses it) |
 | No abstinence path | Agent generates analysis when data is absent | Explicit INSUFFICIENT DATA output |
 | Generic role prompt | "You are a helpful assistant" activates wrong patterns | Specific role with methodology |
 | No source attribution | Claims cannot be verified or challenged | Require tool/field citation per claim |

@@ -2,7 +2,7 @@
 
 `brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and prints a severity-ordered findings list to chat. Chat output is the canonical and sole output mode; the diff is snapshotted to disk under a per-repo directory in `/tmp` to support `--input <sha-ts>` replay. The snapshot lives outside the repo root so it never pollutes the working tree or needs a `.gitignore` entry.
 
-The orchestrator owns the I/O contract. Reviewer agents narrate the contract in their Input Contract sections — they do not own the schema, enum, or rules. The orchestrator Read-injects the shared blocks at invocation time.
+The orchestrator owns the I/O contract. Reviewer agents narrate the contract in their Input Contract sections — they do not own the Finding Anchor format, the defect-class wording, or the house rules. The orchestrator Read-injects the shared blocks at invocation time.
 
 ---
 
@@ -189,16 +189,15 @@ The dispatch decision flows through to the chat-print step (Step F), which rende
 
 ## Step D. Launch dispatched agents in parallel
 
-### Step D.0 — Pre-launch Reads
+### Step D.0 — Pre-launch Read
 
-Before the parallel dispatch, the orchestrator Reads three files. **These Reads are load-bearing**; they are the single-source-of-truth substrate that gets injected into every reviewer.
+Before the parallel dispatch, the orchestrator Reads the shared house-rules file. **This Read is load-bearing**; it is the single-source-of-truth substrate that gets injected into every reviewer.
 
 ```
-enum_text         = Read("plugins/brian/agents/_shared/defect-class-enum.md")
 house_rules_txt   = Read("plugins/brian/agents/_shared/reviewer-house-rules.md")
 ```
 
-The orchestrator NEVER restates the enum or house rules literally — only via these Read-and-inject substitutions.
+The orchestrator NEVER restates the house rules literally — only via this Read-and-inject substitution.
 
 ### Step D.1 — Per-axis prompt assembly
 
@@ -209,10 +208,9 @@ For each dispatched axis, build the user-turn prompt as the concatenation, in th
 
 Every finding MUST start with a structured Finding Anchor on its own line:
 
-  Finding Anchor: defect_class=<CATEGORY>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
+  Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-defect_class enum (closed list):
-  {{enum_text}}
+Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges and renders by it, so the phrase is load-bearing.
 
 After the Finding Anchor, the body is:
 
@@ -222,7 +220,8 @@ After the Finding Anchor, the body is:
             <quoted snippet from disk, ≤8 lines>
             ```
   Fix:      <concrete suggestion, optional; "—" if none>
-  Confidence: [HIGH | MEDIUM | LOW]
+
+State your confidence and its basis in plain words as part of the Claim or a short closing sentence — high when verified against cited code, low when it rests mostly on the diff. Do not append a tag.
 
 If zero findings: emit a single line `NO FINDINGS`.
 
@@ -308,13 +307,13 @@ After dispatch, wait for harness notifications — do NOT poll. Emit at most one
 
 When all dispatched agents have returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Confidence extraction accepts both forms**: (a) the new shared house-rules form — a trailing `Confidence: [HIGH|MEDIUM|LOW]` line; (b) the legacy form used by `architectural-reviewer` and `root-cause-reviewer` — an inline `[HIGH|MEDIUM|LOW]` tag at the end of the Issue/Claim sentence. Search both; the legacy form wins only when no trailing `Confidence:` line is present. If neither is found, default to `LOW` (so the finding flows through citation-enforcement / severity gate per rules 5+3).
+1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+3). Two exceptions keep a literal floor: a finding that carries `review-tests`' explicit high-confidence floor tag from its mandatory-floor sites (the zero-tests obligation and test-inflation findings) is treated as HIGH regardless of the prose default — do not demote it.
 2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
 3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
 4. **Severity gate**:
    - `HIGH` and `MEDIUM` findings pass through verbatim.
    - `LOW` findings are grouped by `(axis, file_dir)`. If a group has ≥3, render as one collapsed "LOW theme" card. Else drop. Track `counts.low_dropped`.
-5. **Anti-summary-collapse**: if an agent's tool-trace shows ≥3 distinct file Reads but emits exactly 1 Finding Anchor, prepend a META finding to the list with `axis=meta`, `severity=MEDIUM`, `defect_class=Implicit Assumption`, summary `"<agent> may have under-reported: scanned N files, emitted 1 finding. Re-read manually."`.
+5. **Anti-summary-collapse**: if an agent's tool-trace shows ≥3 distinct file Reads but emits exactly 1 Finding Anchor, prepend a META finding to the list with `axis=meta`, `severity=MEDIUM`, `defect_class=implicit assumption (under-reporting)`, summary `"<agent> may have under-reported: scanned N files, emitted 1 finding. Re-read manually."`.
 6. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
 7. **Abstinence tracking**: if an agent returned `INSUFFICIENT CONTEXT — ...`, record `{axis: <axis>, reason: <what was missing>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
 
@@ -371,7 +370,7 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 
 | Token | Owner file |
 |---|---|
-| `defect_class` (and its 14-member closed enum) | `plugins/brian/agents/_shared/defect-class-enum.md` |
+| `defect_class` (free-prose phrase; the `(file, …)` merge key and render slot) | this file (Step D.1) + agents narrate it in their Input Contract |
 | `Finding Anchor` | this file (Step D.1) + shared agents narrate the format |
 | `Output Contract` (block name) | this file (Step D.1) + agents' Input Contract sections |
 | `House Rules` (block name) | `plugins/brian/agents/_shared/reviewer-house-rules.md` |
@@ -380,4 +379,4 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 | `axis` (orchestrator-side per-agent metadata) | this file (Step E) |
 | `axes_dispatched`, `axes_skipped`, `axes_abstained`, `tier` (data-dict fields) | this file (Steps C, E, F) |
 
-The enum members `Comment Hygiene Drift`, `Test Coverage Gap`, `Simplification Gap`, and `Redundant Work` are new in this skill (extended in `_shared/defect-class-enum.md`). `Simplification Gap` and `Redundant Work` carry the four behavior-preserving quality angles the widened `cleanness` axis covers via `review-cleanness.md`: `Redundant Work` = reuse + efficiency; `Simplification Gap` = simplification + local altitude. Adding a member is a one-file edit; every Read-and-inject consumer (`scrutinize`, `challenge`) picks it up automatically.
+The `defect_class` field is now free prose — reviewers name the defect class in plain words and the orchestrator merges and renders by that phrase; there is no shared vocabulary file or injection step. The widened `cleanness` axis (via `review-cleanness.md`) still covers four behavior-preserving quality angles — reuse, efficiency, simplification, and local altitude — and reviewers describe each in plain words (e.g. "redundant work" for reuse/efficiency, "simplification gap" for simplification/local altitude). Because the field is free prose, nothing needs editing when the vocabulary evolves.

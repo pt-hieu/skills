@@ -6,7 +6,7 @@ The reviewers are first-class plugin agents:
 - `brian:architectural-reviewer` — coupling, cohesion, module depth, historical coherence, expandability, side effects
 - `brian:root-cause-reviewer` — iterative-deepening RCA, defect class identification, sibling-instance search
 
-Their system prompts live in `plugins/brian/agents/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, defect-class enum, re-run sections). Agent files keep methodology, dimensions, examples, and per-agent verdict enums only.
+Their system prompts live in `plugins/brian/agents/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, re-run sections). Agent files keep methodology, dimensions, examples, and their per-agent closing-judgment keywords only.
 
 > Scope: this skill intentionally violates the `prompting` skill's CRITICAL
 > rule "Deterministic split — code computes all numbers; LLM interprets only".
@@ -128,18 +128,6 @@ If the pipeline yields zero blocks: `"No project-specific skills or CLAUDE.md fo
 
 ---
 
-## Step 1.6: Load Shared Contract (defect_class enum)
-
-Before assembling the Output Contract for the reviewers, Read the canonical enum source and substitute the sentinel.
-
-```
-enum_text = Read("plugins/brian/agents/_shared/defect-class-enum.md")
-```
-
-When building the user-turn prompt in Step 2, replace the literal sentinel `<<INJECT_DEFECT_CLASS_ENUM>>` in the Output Contract block with `enum_text`. The canonical list lives in `plugins/brian/agents/_shared/defect-class-enum.md` and is shared with `brian:scrutinize`; this skill does not restate it inline beyond the sentinel.
-
----
-
 ## Step 2: Launch Both Reviewers in Parallel
 
 Invoke `brian:architectural-reviewer` and `brian:root-cause-reviewer` via the `Agent` tool. Both calls MUST be emitted as **two tool-use blocks in the same assistant message** so they run concurrently. Each call uses `model: "opus"` and `run_in_background: true`.
@@ -151,11 +139,11 @@ The orchestrator-injected contract goes into the user-turn `prompt` field. Ident
 
 Every finding MUST start with a structured Finding Anchor on its own line:
 
-  Finding Anchor: defect_class=<CATEGORY>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>
+  Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>
 
-defect_class enum: <<INJECT_DEFECT_CLASS_ENUM>>
+Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges findings by `(file, defect_class)`, so the phrase is load-bearing.
 
-Confidence calibration: every finding ends with a confidence tag — [HIGH] / [MEDIUM] / [LOW].
+Confidence: state each finding's confidence and its basis in plain prose within the finding body (high when you verified it against cited code; low when it rests mostly on the diff). Do not append a tag.
 
 Abstinence rule (INSUFFICIENT CONTEXT): if you cannot assess a dimension with the provided data, output `INSUFFICIENT CONTEXT — [what's missing, what you'd need to read/verify]` for that dimension and move on. Do NOT speculate.
 
@@ -194,7 +182,7 @@ Before deleting or renaming any field listed below, grep `plugins/brian/agents/*
 
 Currently-live contract tokens (alphabetized):
 
-- `defect_class` (and its closed enum members — canonical source: `plugins/brian/agents/_shared/defect-class-enum.md`; injected at runtime via the `<<INJECT_DEFECT_CLASS_ENUM>>` sentinel, see Step 1.6)
+- `defect_class` (now a free-prose field — reviewers name the defect class in plain words; there is no fixed vocabulary, no shared SSOT file, and no runtime injection sentinel. The field itself stays on the anchor as the `(file, defect_class)` merge key.)
 - `Finding Anchor`
 - `INSUFFICIENT CONTEXT`
 - `Output Contract`
@@ -216,13 +204,15 @@ Do not re-embed agent-definition content in the prompt.
 
 ## Step 3: Synthesize Results
 
-Each agent uses its own verdict enum — map them into the final report's enum:
+Each agent closes with a plain-language judgment sentence containing exactly one named keyword. Read that keyword — do not infer a verdict from the overall tone — and map it onto the final report's verdict:
 
-| Agent | Positive | Concerning | Fundamental issue |
-|---|---|---|---|
-| `architectural-reviewer` | ✅ PASS | ⚠️ CONCERNS | ❌ RETHINK |
-| `root-cause-reviewer` | ✅ SYSTEMATIC | ⚠️ PARTIAL FIX | ❌ PATCH-ONLY |
-| Final `Overall Verdict` | PASS | REVISE | RETHINK |
+| Agent | Keyword in its closing sentence | Positive | Concerning | Fundamental issue |
+|---|---|---|---|---|
+| `architectural-reviewer` | `pass` / `concerns` / `rethink` | pass | concerns | rethink |
+| `root-cause-reviewer` | `systematic` / `partial` / `patch-only` | systematic | partial | patch-only |
+| Final `Overall Verdict` | (orchestrator-owned) | PASS | REVISE | RETHINK |
+
+A `pass`/`systematic` agent contributes a PASS-leaning signal, `concerns`/`partial` a REVISE-leaning signal, and `rethink`/`patch-only` a RETHINK-leaning signal; combining across both agents, the worse of the two governs the final verdict. (The display columns in the chat templates below still show `✅`/`⚠️`/`❌` for the human — those are cosmetic and map directly off these keywords.)
 
 After both agents complete:
 
@@ -255,12 +245,12 @@ Count `INSUFFICIENT CONTEXT` dimensions across both agents.
 
 ### 3.3 Merge / dedupe / prioritize
 
-1. Collect both verdicts and confidence levels.
-2. **Discard `[UNVERIFIED]` and `[LOW]` findings** unless they represent a potentially critical concern worth flagging.
-3. Merge overlapping concerns by anchor similarity (same `file` + same `defect_class`). When merging, note both source agents.
-4. Prioritize by severity × confidence: `[HIGH]` blockers first, then `[MEDIUM]`.
+1. Collect both agents' closing keywords and read each finding's confidence from its prose.
+2. **Discard unverified and low-confidence findings** (confidence judged from the finding's prose) unless they represent a potentially critical concern worth flagging.
+3. Merge overlapping concerns by anchor similarity: same `file` AND the same underlying `defect_class`. `defect_class` is now a plain-words phrase, so judge sameness by *meaning* — two findings on the same file are the same finding only when they describe the same underlying defect class. A structural issue and a missing test on the same file are distinct defect classes; do NOT merge them (this preserves the non-collapse guarantee). When merging genuine duplicates, note both source agents.
+4. Prioritize by severity × confidence, both judged from the prose: high-severity blockers first, then medium.
 5. **Detect cross-agent conflicts** — if architectural-reviewer says "good abstraction" but root-cause-reviewer says "over-abstraction hides the root cause", surface this explicitly with both sides cited.
-6. **False Consensus Check** — if both agents reached positive verdicts (PASS + SYSTEMATIC) AND neither has any `[MEDIUM]+` concerns:
+6. **False Consensus Check** — if both agents closed positive (keywords `pass` + `systematic`) AND neither raised any concern they described as medium-or-higher severity:
    - Note: "Both agents agree this is clean. Applying extra scrutiny."
    - Re-examine the 3 highest-risk areas of the diff/plan for anything both agents may have normalized or overlooked.
    - If something is found, add it as a new finding with tag `[CONSENSUS-BLIND-SPOT]`.
@@ -288,10 +278,10 @@ Append `### Synthesis` under the current `## Round N` heading using the template
 ### Synthesis
 
 #### Architectural Fitness: {verdict}
-{[HIGH] and [MEDIUM] findings only, with file:line and evidence citations — drawn from architectural-reviewer's findings}
+{high- and medium-severity findings only, with file:line and evidence citations — drawn from architectural-reviewer's findings}
 
 #### Systematic Resolution: {verdict}
-{[HIGH] and [MEDIUM] findings only, with causal chains — drawn from root-cause-reviewer's findings}
+{high- and medium-severity findings only, with causal chains — drawn from root-cause-reviewer's findings}
 
 #### Cross-Agent Conflicts
 {any disagreements between the two reviewers — both sides explicit. Omit subsection if none.}
@@ -303,17 +293,17 @@ Append `### Synthesis` under the current `## Round N` heading using the template
 {consolidated strengths from both agents. Omit subsection if none.}
 
 #### Action Items
-1. ❌ [HIGH] {file:line} — {one-sentence issue} — {one-sentence fix}
-2. ⚠️ [MEDIUM] {file:line} — {one-sentence issue} — {one-sentence fix}
+1. ❌ HIGH {file:line} — {one-sentence issue} — {one-sentence fix}
+2. ⚠️ MEDIUM {file:line} — {one-sentence issue} — {one-sentence fix}
 ...
 
 #### Insufficient Context Areas
 {dimensions either agent could not assess — top-level callout if any remain after retry. Omit subsection if none.}
 
 #### Overall Verdict: {PASS | REVISE | RETHINK}
-- PASS: no [HIGH] AND no [MEDIUM] concerns
-- REVISE: one or more [MEDIUM]+ concerns with clear fix paths
-- RETHINK: any [HIGH] concern indicating fundamental issue
+- PASS: no high- AND no medium-severity concerns
+- REVISE: one or more medium-or-higher concerns with clear fix paths
+- RETHINK: any high-severity concern indicating fundamental issue
 
 (Verdict capped at REVISE if any unresolved INSUFFICIENT CONTEXT — see 3.1.)
 ```
@@ -327,8 +317,8 @@ After 3.4a is appended, render the chat-channel template below. Project from the
 arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
 
 ### Findings
-- ❌ [HIGH] {arch|rca|both} {file:line} — {one-sentence issue, cite skill name inline if a skill rule is violated}. Fix: {one-sentence fix}.
-- ⚠️ [MEDIUM] ...
+- ❌ HIGH {arch|rca|both} {file:line} — {one-sentence issue, cite skill name inline if a skill rule is violated}. Fix: {one-sentence fix}.
+- ⚠️ MEDIUM ...
 
 ### Conflicts (omit section if none)
 - {one-line: both sides cited}
@@ -339,7 +329,7 @@ arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  {H} HIGH, {M} MEDIUM  ·  art
 ### Insufficient Context (omit section if none)
 - {dimension → what's missing in one line}
 
-(if any [LOW]/[UNVERIFIED] dropped that aren't critical-flagged or consensus-blind-spot:)
+(if any low-confidence/unverified findings dropped that aren't critical-flagged or consensus-blind-spot:)
 Dropped from chat: N low-confidence findings (see run file)
 ```
 
@@ -348,7 +338,7 @@ Hard rules:
 - Skill Compliance: cite skill name inline in the issue sentence; no separate section.
 - False Consensus / Debated Findings: no section header in chat — debated findings appear in Findings list with resolved severity; `[CONSENSUS-BLIND-SPOT]` findings appear in Findings like any other.
 - Empty sections: omit header entirely (no `N/A`).
-- Suppression escape hatch: drop `[LOW]/[UNVERIFIED]` from chat UNLESS 3.3 marked it "critical concern worth flagging" OR the finding has tag `[CONSENSUS-BLIND-SPOT]`. Never silently drop those two classes.
+- Suppression escape hatch: drop low-confidence/unverified findings from chat UNLESS 3.3 marked it "critical concern worth flagging" OR the finding has tag `[CONSENSUS-BLIND-SPOT]`. Never silently drop those two classes.
 
 ---
 
@@ -360,14 +350,14 @@ Branch on `mode` from Step 1.0. No later step re-checks mode.
 
 Treat the Step 3 report as a hostile audit, not a list of suggestions. Default disposition is "the reviewer is right" — flip that only with evidence.
 
-For every `[HIGH]` and `[MEDIUM]` finding (including `[CONSENSUS-BLIND-SPOT]`), pick exactly one of four dispositions:
+For every high- and medium-severity finding (severity judged from the prose, including any `[CONSENSUS-BLIND-SPOT]`), pick exactly one of four dispositions:
 
 1. **Fix** — modify the plan or diff so the finding no longer applies. State what changed and where (`file:line` for impl, plan section for plan mode).
 2. **Rebut (cite)** — explain why the finding is wrong, with concrete evidence: file references, prior decisions in git history, constraints the reviewer didn't see, or domain rules from Step 1.5. A rebuttal without citable evidence does not count — convert to Fix.
-3. **Rebut (judgment)** — eligible only when EITHER the original reviewer's finding `Classification` is `Tradeoff Point` OR the concern's scope is naming / style / local readability. Requires:
+3. **Rebut (judgment)** — eligible only when EITHER the original reviewer described the finding as a tradeoff point (architectural-reviewer names tradeoff points explicitly in its prose) OR the concern's scope is naming / style / local readability. Requires:
    - Explicit tradeoff statement (`accepting X cost for Y benefit`)
    - Acknowledgment of the reviewer's point as legitimate before overriding
-   - On a `[HIGH]` JUDGMENT rebuttal: sibling-instance check — grep for other places the same judgment was made; document the consistency.
+   - On a high-severity JUDGMENT rebuttal: sibling-instance check — grep for other places the same judgment was made; document the consistency.
    - There is no fixed percentage cap; misuse is caught by the next round's reviewer pass (see Step 5).
 4. **Defer** — the finding is real but genuinely out of scope. Requires a follow-up reference (ticket, task, or `/schedule` agent). "Out of scope" is not a synonym for "hard."
 
@@ -382,10 +372,10 @@ Run file (`### Round N Changes` — multi-line allowed):
 
 ```
 ### Round N Changes
-- [HIGH] {file:line} — {one-line finding}: FIXED — {what changed, where}
-- [MEDIUM] {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
-- [MEDIUM] {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
-- [MEDIUM] {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
+- HIGH {file:line} — {one-line finding}: FIXED — {what changed, where}
+- MEDIUM {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
+- MEDIUM {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
+- MEDIUM {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
 ```
 
 Chat render (one line per finding, hard cap):
@@ -400,17 +390,17 @@ Multi-line disposition prose belongs in the run file only. The chat emits the on
 
 Skip Fix/Rebut/Defer entirely. The caller is not the implementer — they leave comments.
 
-Append `### PR Review Comments` to the run file with every `[HIGH]` and `[MEDIUM]` finding as a PR-review comment (verbose, includes code snippets):
+Append `### PR Review Comments` to the run file with every high- and medium-severity finding as a PR-review comment (verbose, includes code snippets):
 
 ```
 ### PR Review Comments
 
-**[HIGH]** {file}:{line} — {description}
+**HIGH** {file}:{line} — {description}
 
 {suggestion, including code snippet if available}
 
 ---
-**[MEDIUM]** {file}:{line} — {description}
+**MEDIUM** {file}:{line} — {description}
 ...
 ```
 
@@ -418,8 +408,8 @@ Then render the compact chat view (mirrors 3.4b chat discipline — same defect 
 
 ```
 ## PR Review Comments — N findings ready
-- ❌ [HIGH] {file:line}: {one-sentence issue}
-- ⚠️ [MEDIUM] {file:line}: {one-sentence issue}
+- ❌ HIGH {file:line}: {one-sentence issue}
+- ⚠️ MEDIUM {file:line}: {one-sentence issue}
 
 Full comments with code snippets in: <run_file>
 Use Bitbucket MCP to post, or copy from the file.
@@ -442,9 +432,9 @@ Re-run the challenge to verify changes hold. Keep looping until the plan/impl wo
 
    The reviewers' verify-first behavior is enabled by these sections (see Step 2).
 
-2. **Disposition rule enforcement**: instruct both reviewers to flag `[HIGH] Disposition rule violation` for any of:
-   - `REBUTTED-JUDGMENT` used outside the eligibility filter (not a Tradeoff Point AND not naming/style/local readability).
-   - `REBUTTED-JUDGMENT` of a `[HIGH]` without a documented sibling-instance check.
+2. **Disposition rule enforcement**: instruct both reviewers to flag a high-severity Disposition rule violation finding for any of:
+   - `REBUTTED-JUDGMENT` used outside the eligibility filter (not a tradeoff point AND not naming/style/local readability).
+   - `REBUTTED-JUDGMENT` of a high-severity finding without a documented sibling-instance check.
    - `DEFERRED` without a follow-up reference.
 
 3. **Re-synthesize** (Step 3) to produce a Round N+1 report. Append artifacts to the run file.
@@ -480,7 +470,7 @@ If the loop exited at round 3 OR via diminishing returns, prepend:
 ```
 🛑 HUMAN REVIEW REQUIRED — DO NOT MERGE WITHOUT MANUAL VERIFICATION
 Reason: <round-3-cap | diminishing-returns>
-Unresolved [HIGH]: N, Unresolved [MEDIUM]: M
+Unresolved high-severity: N, Unresolved medium-severity: M
 ```
 
 `N` and `M` are the count of findings whose latest disposition is **not** `FIXED`, judged from the run file's `### Round N Changes` blocks.

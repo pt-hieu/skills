@@ -35,7 +35,7 @@ Examples NOT to flag (WHY-comments are allowed and encouraged):
 
 Decision rule: would deleting the comment confuse a future reader who knows the language? If no → WHAT-comment, flag it. If yes → WHY-comment, keep it.
 
-Map to `defect_class=Comment Hygiene Drift`.
+Name the defect class in plain words — e.g. "comment hygiene drift".
 
 ### 2. Backward-compat shim residue
 
@@ -47,7 +47,7 @@ Code paths kept alive solely for backward compatibility that is no longer needed
 - Feature-flag residue: code branches gated on flags that no longer exist in the flag registry (grep the flag name in config files).
 - New code in this diff that adds a backward-compat shim without naming the migration path and the removal date.
 
-Map to `defect_class=Configuration Drift`.
+Name the defect class in plain words — e.g. "configuration drift".
 
 ### 3. Reuse (duplication / reimplementing existing utilities)
 
@@ -65,7 +65,7 @@ Examples NOT to flag:
 
 Decision rule: name the concrete cost — quote BOTH copies (the diff copy and the existing on-disk original at `file:line`), and state what must now be edited in two places. If you cannot cite the second copy on disk, you have a "could refactor" advisory, not a defect — drop it.
 
-Map to `defect_class=Redundant Work`.
+Name the defect class in plain words — e.g. "redundant work (duplication)".
 
 ### 4. Simplification (over-complicated code that could be simpler)
 
@@ -84,7 +84,7 @@ Examples NOT to flag:
 
 Decision rule (abstention-biased): name the concrete cost — quote the over-complicated snippet at `file:line`, state the simpler equivalent in the Fix, AND give a one-sentence equivalence argument naming the semantics preserved (evaluation order, short-circuit, null/throw handling, side-effect order). Behavior-preservation here is *asserted from the diff, not verified by running it* — so if your equivalence argument needs any "assuming X doesn't…" clause, ABSTAIN and emit nothing. If you cannot show a concrete simpler equivalent, drop it.
 
-Map to `defect_class=Simplification Gap`.
+Name the defect class in plain words — e.g. "simplification gap".
 
 ### 5. Efficiency (wasted work — redundant computation, passes, or lookups)
 
@@ -103,7 +103,7 @@ Examples NOT to flag:
 
 Decision rule: name the concrete cost — quote the wasted-work snippet at `file:line` and state what is recomputed/re-passed/re-looked-up and how often (cite the loop bound or call count from the code; per House Rule #5 do not invent counts). If you cannot point at the concrete wasted work in the changed lines, drop it.
 
-Map to `defect_class=Redundant Work`.
+Name the defect class in plain words — e.g. "redundant work (wasted computation)".
 
 ### 6. Altitude (over-compressed code shape — within the changed lines)
 
@@ -121,7 +121,7 @@ Examples NOT to flag:
 
 Decision rule (abstention-biased): name the concrete cost — quote the over-compressed snippet at `file:line`, state in one sentence what the reader must decode, and show the inline/split fix. Give the one-sentence equivalence argument (the split preserves evaluation order / short-circuit / side-effect order); if you cannot, ABSTAIN. If the fix you want to write is an *extraction*, this is not your finding — drop it.
 
-Map to `defect_class=Simplification Gap`. **Never emit `Missing Abstraction` from this axis** — the earlier "emit only if architectural is not dispatched" routing was a runtime gate this reviewer cannot observe (it has no visibility into which sibling axes were dispatched), so structural-abstraction findings are dropped here unconditionally; architectural-reviewer owns them.
+Name the defect class in plain words — e.g. "simplification gap (over-compressed code shape)". **Cleanness never reports structural-abstraction defects** — that is architectural-reviewer's territory, and reporting one here would collide with the architecture axis at synthesis. (This is unconditional: this reviewer has no visibility into which sibling axes were dispatched, so it never tries to gate on whether architecture ran.)
 
 ## Out of scope (do NOT emit findings for any of these)
 
@@ -151,6 +151,6 @@ Rely on synthesis dedupe (Step E.3) for residual same-line overlap; do not pre-s
 
 ## Output
 
-Emit findings using the injected `## Output Contract` schema. If no findings, emit `NO FINDINGS`. Run the Verification step before returning.
+Emit findings in the form the injected `## Output Contract` describes — a Finding Anchor followed by a prose body. If no findings, emit `NO FINDINGS`. Run the Verification step before returning.
 
 House Rule #4 (root-cause framing) applies to correctness/reliability/security only — the quality angles use **cost framing** instead: the Claim names the concrete cost (what is duplicated, wasted, or harder to read) rather than predicting a failure mode.

@@ -8,7 +8,7 @@
 | RAG grounds claims in retrieved data | [CFA Institute](https://rpc.cfainstitute.org/research/the-automation-ahead-content-series/retrieval-augmented-generation) | 42% hallucination reduction |
 | LLMs exhibit systematic confirmation bias in analysis | [StockBench](https://arxiv.org/html/2510.02209v1) + [arXiv bias study](https://arxiv.org/html/2602.14233) | Systematic overweight of supporting evidence |
 | Few-shot examples (20) dramatically improve classification | [Springer](https://link.springer.com/article/10.1007/s10791-025-09573-7) | 84% accuracy vs 52% baseline |
-| JSON schema placement improves structured output compliance | [aionda.blog](https://aionda.blog/en/posts/json-schema-llm-financial-analysis-precision) | Higher schema compliance |
+| JSON schema placement improves structured output compliance (relevant only when targeting a strict machine parser — not for LLM/human-read output) | [aionda.blog](https://aionda.blog/en/posts/json-schema-llm-financial-analysis-precision) | Higher schema compliance |
 | Graph-of-Thought reasoning improves multi-step analysis | [SSRN review](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5339795) | 20-25% higher accuracy |
 | Multi-agent debate produces better decisions than single agent | [TradingAgents (UCLA/MIT)](https://github.com/TauricResearch/TradingAgents) | Significant quality improvement |
 | Calibrated confidence levels reduce overconfidence | [ETH Zurich, arXiv 2412.14737](https://arxiv.org/abs/2412.14737) | 7-10% deviation at scale |

@@ -22,8 +22,8 @@ For each changed production file:
 
 1. **Locate its tests.** Grep for the file's basename in test directories (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`, `*_test.{go,py}`, `*_spec.rb`). Read the matching test file(s) from disk.
 2. **Trace pinned behaviors.** For each public function changed in the diff, identify the assertion(s) that pin its behavior. If a function changed and no assertion exercises the changed branch, that is a finding.
-3. **New error branches.** For each new `throw`, `reject`, `return err`, or new validation gate added in the diff: is there a test that fires it? If not, `defect_class=Test Coverage Gap`, severity reflects risk of the branch.
-4. **Test inflation / cosmetic tests** — flag tests that look like coverage but verify nothing of value. These are HIGH findings when added in the diff, because they inflate the suite, slow CI, and create false confidence. Map to `defect_class=Test Coverage Gap` (the gap is the same — a real behavior remains unpinned despite the test's presence).
+3. **New error branches.** For each new `throw`, `reject`, `return err`, or new validation gate added in the diff: is there a test that fires it? If not, name the defect class as a test-coverage gap in plain words; severity reflects the risk of the branch.
+4. **Test inflation / cosmetic tests** — flag tests that look like coverage but verify nothing of value. These are a mandated floor: emit them with the literal `Confidence: [HIGH]` tag (prose confidence with a default-to-low rule must NOT demote a mandated finding below the severity gate), because they inflate the suite, slow CI, and create false confidence. Name the defect class as a test-coverage gap in plain words (the gap is the same — a real behavior remains unpinned despite the test's presence).
 
    Specific anti-patterns to flag:
    - **Implementation-mirroring assertions** — the test re-derives the expected value using the same logic the function uses (e.g. `expect(add(2,3)).toBe(2+3)`, `expect(formatName(u)).toBe(u.first + " " + u.last)` when the function does exactly that concatenation). The assertion will pass for any implementation — including a broken one — because it computes the expected value the same wrong way.
@@ -42,14 +42,18 @@ For each changed production file:
 When `## Zero Tests Flag` is `true`:
 
 - Identify the changed production function with the highest blast radius (public API entry point, shared utility imported in ≥3 places, security-relevant code).
-- Emit AT LEAST ONE finding with `Confidence: [HIGH]` and `defect_class=Test Coverage Gap`.
+- Emit AT LEAST ONE finding carrying the literal `Confidence: [HIGH]` tag (this is a mandated floor — keep the literal tag here so prose confidence can never demote it) and naming the defect class as a test-coverage gap in plain words.
 - The Claim line names what concrete regression class is now uncatchable: "Any future refactor of `parseToken` can break signature verification with no failing test; this is the entry point that all authenticated routes flow through."
 
-## Finding mapping
+## Naming the defect class
 
-- `Test Coverage Gap` — new behavior, new branch, or modified contract with no test exercising it.
-- `Implicit Assumption` — test relies on shared state or ordering not declared in setup.
+Name each finding's defect class in a short plain-words phrase. The common shapes in this axis, as illustration only:
+
+- a test-coverage gap — new behavior, new branch, or modified contract with no test exercising it.
+- an implicit assumption — test relies on shared state or ordering not declared in setup.
+
+Use whichever plain phrase best describes the underlying defect.
 
 ## Output
 
-Emit findings using the injected `## Output Contract` schema. If no findings, emit `NO FINDINGS` (note: incompatible with `Zero Tests Flag = true`). Run the Verification step before returning.
+Emit findings in the form the injected `## Output Contract` describes — a Finding Anchor followed by a prose body. If no findings, emit `NO FINDINGS` (note: incompatible with `Zero Tests Flag = true`). Run the Verification step before returning.

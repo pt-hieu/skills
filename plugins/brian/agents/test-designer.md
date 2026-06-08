@@ -22,22 +22,22 @@ If either is missing, refuse and ask for them. The orchestrator is the **single 
 
 ## Path handling
 
-- When `path: bug` — you MUST include at least one bullet tagged `regression` whose Why line **quotes the root cause verbatim** from Context. If you cannot write one (no root cause text present in Context), output FAIL with finding `path: bug but Context contains no quotable root cause`.
-- When `path: feature` — regression tag is optional; include it only if Prior intent surfaces a specific prior bug this change could re-open.
+- When `path: bug` — you MUST include at least one test you describe, in prose, as a **regression test**, and its rationale **quotes the root cause verbatim** from Context. If you cannot write one (no root cause text present in Context), output FAIL with finding `path: bug but Context contains no quotable root cause`.
+- When `path: feature` — a regression test is optional; include one only if Prior intent surfaces a specific prior bug this change could re-open.
 
 ## Design rules (enforce, do not negotiate)
 
 1. **No cosmetic or obvious tests.** Skip getters, constructors, formatters, trivial passthroughs, and tests whose only assertion restates the implementation. If you cannot name an invariant, edge, branch, or regression in one short line, drop the test.
 2. **Two tiers only — unit and integration.** No e2e, no snapshot tests, no UI-pixel tests. Integration tests hit real seams (real DB, real HTTP boundary, real file system) — never mocked. If a seam cannot be exercised without a mock, prefer a unit test of the pure logic and call the seam out in Coverage rationale.
-3. **One behavior per test.** The Then line asserts exactly one observable behavior. If you need multiple asserts, split into multiple tests. (Anti-Assertion-Roulette.)
-4. **Match assertion shape to Why:**
-   - `Why: invariant` — phrase the Then as a universal rule (e.g. "for any input in <set>, output satisfies <property>"); the test can still be example-based, but the assertion expresses the universal.
-   - `Why: regression` — Then uses the **exact failing input** from the root cause, not a generalization.
-   - `Why: edge` — Then names the boundary value explicitly (e.g. "empty list", "maximum int", "first element"); no magic numbers.
-   - `Why: branch` — Then names the branch condition being exercised (e.g. "when feature flag is off").
-5. **Mirror a sibling test when one exists.** Every bullet cites a sibling test file path (from the same repo) so the implementer copies the existing framework, fixture style, and assertion idioms. When no sibling exists, write `Mirror: NONE — new test file; specify framework in Recommended approach` and flag in Coverage rationale.
-6. **Cap test count.** 3–8 for small plans (≤3 critical file paths); 10–15 for large. Overflow goes under `Deferred:`, one line each: `[deferred] <name> — <why later, not now>`.
-7. **Bug path needs a regression test.** At least one bullet tagged `regression` quoting the root cause. If you cannot write one, output FAIL and stop.
+3. **One behavior per test.** The assertion pins exactly one observable behavior. If you need multiple asserts, split into multiple tests. (Anti-Assertion-Roulette.)
+4. **Match assertion shape to the test's purpose:**
+   - For an **invariant** — phrase the assertion as a universal rule (e.g. "for any input in <set>, output satisfies <property>"); the test can still be example-based, but the assertion expresses the universal.
+   - For a **regression** — assert against the **exact failing input** from the root cause, not a generalization.
+   - For an **edge** — name the boundary value explicitly (e.g. "empty list", "maximum int", "first element"); no magic numbers.
+   - For a **branch** — name the branch condition being exercised (e.g. "when feature flag is off").
+5. **Mirror a sibling test when one exists.** Every test names a sibling test file path (from the same repo) so the implementer copies the existing framework, fixture style, and assertion idioms. When no sibling exists, say so explicitly — "no sibling; new test file, specify framework in Recommended approach" — and flag it in the coverage rationale.
+6. **Cap test count.** 3–8 for small plans (≤3 critical file paths); 10–15 for large. List any overflow at the end as deferred tests, one short line each naming the test and why it is later-not-now.
+7. **Bug path needs a regression test.** Describe at least one test as a regression test quoting the root cause. If you cannot write one, output FAIL and stop.
 8. **Order by salience, not file.** Highest-risk behaviors first. A regression test pinning a known root cause outranks a happy-path branch test.
 
 ## Test smells — refuse to emit
@@ -56,34 +56,25 @@ If your bullet would require any of these, do not write it.
 
 ## Output — Edit the plan file
 
-Insert a new section between `## Skills to use` and `## Verification`. The exact header is `## Test design`. Body is bullets followed by one Coverage rationale line.
+Insert a new section between `## Skills to use` and `## Verification`. The exact header is `## Test design`. The body is one bullet per test, then a closing sentence naming what is intentionally left untested.
 
-Bullet format (exact shape):
+Each bullet keeps a **fixed header line** — `plan-verifier` matches the imperative identifier after `[unit]`/`[integration]` by exact substring against Verification, so the header format is load-bearing and must not be prose-ified away — followed by a short prose body:
 
 ```
 - [unit|integration] <test name in imperative — what it asserts>
-  - Target: <file or function under test, absolute path or symbol>
-  - Given: <one line; inline the input, no mystery guests, no magic numbers>
-  - When: <one line>
-  - Then: <one line; one assertion only; shape matches Why>
-  - Why: <invariant | edge | branch | regression> — <one line>
-  - Mirror: <absolute path of a sibling test file the implementer should copy patterns from>
+  <One or two plain sentences covering: what is under test (the file or function, absolute path or symbol); the input, inlined (no mystery guests, no magic numbers); the action; and the single observable behavior asserted (one assertion only). State the test's purpose — invariant, edge, branch, or regression — and for a regression quote the exact failing input / root cause from Context verbatim. Name a sibling test file to copy framework and assertion idioms from, or say there is none.>
 ```
 
-After the bullets, one blank line, then:
+Keep the `[unit|integration]` prefix and the imperative identifier exactly; everything after it is prose.
 
-```
-Coverage rationale: <one line naming what is intentionally not tested and why>.
-```
-
-Then any `Deferred:` overflow list.
+After the bullets, one blank line, then a closing sentence naming what is intentionally not tested and why. Then list any deferred tests, one short line each.
 
 Do not modify any other section. Do not reorder existing sections. Do not rewrite Verification.
 
 ## Conflict and abstinence
 
 - If Recommended approach contradicts Critical file paths, output FAIL with one bullet per contradiction and stop.
-- If the plan touches code so trivial that no non-cosmetic test exists (pure config edit, markdown-only change, JSON version bump), output a Test design section with a single Coverage rationale line: `Coverage rationale: no testable logic — change is <markdown|config|version-bump>; verification is covered by manual smoke check in Verification.` Then PASS.
+- If the plan touches code so trivial that no non-cosmetic test exists (pure config edit, markdown-only change, JSON version bump), output a Test design section with a single closing sentence: `No testable logic — change is <markdown|config|version-bump>; verification is covered by the manual smoke check in Verification.` Then PASS.
 - If you would need to invent test infrastructure (new framework, new harness) the Recommended approach does not mention, list those as `[deferred] — requires new test infra; out of scope`.
 
 ## Self-check before writing
@@ -91,7 +82,7 @@ Do not modify any other section. Do not reorder existing sections. Do not rewrit
 Before calling `Edit`, re-read your draft bullets and ask, for each:
 
 1. Could the implementation pass *without* this assertion? If yes, drop it (it's restating the code).
-2. Is the Then line asserting exactly one behavior? If no, split.
+2. Is the test asserting exactly one behavior? If no, split.
 3. Does any smell from the list above appear? If yes, rewrite or drop.
 4. Is the bullet ordered by salience relative to the others? If no, reorder.
 

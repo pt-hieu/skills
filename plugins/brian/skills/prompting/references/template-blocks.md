@@ -48,7 +48,9 @@ After generating your analysis:
 4. If >30% of claims are UNVERIFIED: output "INSUFFICIENT DATA" for this item
 ```
 
-### 8. Structured Output Schema (Pydantic)
+### 8. Structured Output Schema (Pydantic) — for machine-to-machine handoffs only
+
+Use this **only when a non-LLM consumer parses the output**. When an LLM or a human reads the result, prefer Block 8b (prose) instead — a schema read by another LLM buys rigidity without determinism and invites contract drift.
 
 ```python
 from pydantic import BaseModel, Field
@@ -65,6 +67,23 @@ class AnalysisOutput(BaseModel):
     conflicts_identified: list[str] = Field(description="Any contradictory signals found")
     conflict_resolution: str = Field(description="How conflicts were weighed")
 ```
+
+### 8b. Prose Output Guidance — for an LLM or human reader (default)
+
+When the consumer is an LLM or a human, ask for prose instead of a schema. Name the content you need, not a field list — the model carries the same information in natural language without a contract to drift.
+
+```
+## OUTPUT
+Write a short, focused analysis in plain prose. Cover, in your own words:
+- the call you're making and why (state your confidence and its basis — high when grounded
+  in cited data, low when it rests on thin evidence; no fixed tag required)
+- the single strongest argument for it, and the single strongest argument against
+- which data you relied on (cite the tool/field inline)
+- any contradictory signals you found and how you weighed them
+Keep it to a few tight paragraphs. Brevity over a schema — do not pad to fill a structure.
+```
+
+Use this whenever the reader is another agent or a person. Drop to Block 8 only when a non-LLM downstream parses exact field values.
 
 ### 9. Few-Shot Example Block
 

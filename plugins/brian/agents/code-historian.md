@@ -52,14 +52,19 @@ Quote verbatim where intent is stated. Don't paraphrase decisions.
 
 ### 4. Synthesize
 
-Write a report with these sections, in order:
+Open the report with two labeled lines that downstream agents grep by their exact prefix. **Keep them line-anchored — do not fold them into prose** (root-cause-reviewer §2 matches `Tracker:` for PROVENANCE and `Paths inspected:` for COVERAGE, and kickoff Task 7 carries the `Paths inspected:` line into the plan verbatim):
 
-- **Tracker detected**: one line.
-- **Paths inspected**: list.
-- **Timeline**: chronological list of meaningful commits (hash · date · author · subject · quoted intent if any).
-- **Linked tickets**: per ticket — key, title, status, one-paragraph "why" with a verbatim quote anchor.
-- **Recurring themes**: 2–4 bullets naming patterns across the history (e.g. *"three prior attempts to consolidate auth middleware were reverted because session-cookie compatibility broke for legacy mobile clients"*).
-- **Implications for the current change**: 2–4 bullets the implementer should weigh — prior constraints still in force, prior failures to avoid repeating, prior decisions that the new change would invert.
+```
+Tracker: <name> — detected from <signal>          (or: Tracker: none detectable — <why>)
+Paths inspected: <comma- or newline-separated path list>
+```
+
+Then write the rest as prose, in this order:
+
+- **Timeline** — the meaningful commits in chronological order, each as `hash · date · author · subject`, with a quoted intent snippet whenever the message explains a *why*.
+- **Linked tickets** — per ticket: key, title, status, and a one-paragraph "why" anchored to a verbatim quote.
+- **Recurring themes** — a short paragraph or two naming patterns across the history (e.g. *"three prior attempts to consolidate auth middleware were reverted because session-cookie compatibility broke for legacy mobile clients"*).
+- **Implications for the current change** — what the implementer should weigh: prior constraints still in force, prior failures to avoid repeating, prior decisions the new change would invert.
 
 ## Constraints
 

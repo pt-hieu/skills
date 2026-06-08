@@ -16,7 +16,7 @@ Take a requirement to an open PR autonomously, with no human input mid-run. Regi
 Every run ends in exactly one of these — none of them prompt:
 
 - **Normal PR** (T12) — the happy path.
-- **`🛑 BLOCKED` draft PR** — work can't be made review-ready (tests won't go green within bound; an unfixable `[HIGH]`). Open a draft PR titled `🛑 BLOCKED: <reason>`, body leads with the blocker, do **not** mark ready-for-review, post to chat, halt.
+- **`🛑 BLOCKED` draft PR** — work can't be made review-ready (tests won't go green within bound; an unfixable high-severity finding). Open a draft PR titled `🛑 BLOCKED: <reason>`, body leads with the blocker, do **not** mark ready-for-review, post to chat, halt.
 - **Chat summary, no PR** — can't safely start or finish plumbing (dirty tree at entry; ineligible coin-flip assumption; no PR tooling). Emit a one-line chat summary, halt.
 
 ## Effort matrix
@@ -141,16 +141,16 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Goal**: stress-test the design with two reviewer agents in one round, using no step that would block on a human.
   > **Action**: do **NOT** invoke the `brian:challenge` skill. Spawn `brian:architectural-reviewer` and `brian:root-cause-reviewer` **directly** via the `Agent` tool — both `model: "sonnet"`, both as two tool-use blocks in the **same** message so they run in parallel, **ONE round only**. The review target is plan-mode — no diff exists yet (implementation is T8). Assemble the full agent user-turn; **the reviewer agents' input contracts require all of these or they stall requesting the missing section**:
-  > - `## Output Contract` — the Finding Anchor format + the injected `defect_class` enum + confidence tags. Read `plugins/brian/agents/_shared/defect-class-enum.md` and inline its content as the enum (do not restate from memory). The Finding Anchor format is:
-  >   `Finding Anchor: defect_class=<CATEGORY>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>`
-  >   plus a trailing `[HIGH] / [MEDIUM] / [LOW]` confidence tag per finding and the `INSUFFICIENT CONTEXT — [...]` abstinence rule.
+  > - `## Output Contract` — the Finding Anchor format plus the prose conventions. The Finding Anchor format is:
+  >   `Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>`
+  >   Name the defect class in plain words — there is no enum to load and no SSOT file to read. Each finding states its confidence and basis in plain prose (not a tag), and the `INSUFFICIENT CONTEXT — [...]` abstinence rule applies.
   > - `## Context` — the design's Recommended approach + Assumptions, inline.
   > - `## Affected Files` — the design's Critical file paths, **repo-relative**. This anchors the architectural reviewer's mandatory historical-coherence step on the files the design *will* change.
   > - `## Prior intent` — T1's prior-intent note (git log + any historian output) with a `Paths inspected:` line listing the Critical file paths. This satisfies the root-cause reviewer's PROVENANCE/COVERAGE checks so it records *reusing prior intent* and does NOT self-spawn `code-historian`. Instruct both reviewers explicitly: *do not spawn your own historian — prior intent is supplied inline.*
   > - `## Project Domain Knowledge` — emit a minimal inline block (the touched skill(s)' rules) OR the literal sentinel `No project-specific skills found. Review using general principles only.` Omitting this section fires the agents' "missing required section → request it" branch (a silent stall).
   >
-  > **Disposition inline (you own synthesis — no terminal question, no re-challenge loop)**: for each `[HIGH]` / `[MEDIUM]` finding, pick one — **Fix** the design in place, **Rebut** with citable evidence (file ref / git history / domain rule — a rebuttal without citable evidence converts to Fix), or — for a genuinely out-of-scope finding — **note it in the design's Assumptions ledger**.
-  > **Gate**: one review round complete; every `[HIGH]` / `[MEDIUM]` dispositioned; design updated; no reviewer stalled on a missing input section.
+  > **Disposition inline (you own synthesis — no terminal question, no re-challenge loop)**: for each high- and medium-severity finding (severity judged from the reviewer's prose), pick one — **Fix** the design in place, **Rebut** with citable evidence (file ref / git history / domain rule — a rebuttal without citable evidence converts to Fix), or — for a genuinely out-of-scope finding — **note it in the design's Assumptions ledger**.
+  > **Gate**: one review round complete; every high-/medium-severity finding dispositioned; design updated; no reviewer stalled on a missing input section.
 
 ---
 
@@ -191,10 +191,10 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Goal**: automated diff review before commit.
   > **Action**: invoke `brian:scrutinize` via the `Skill` tool on the working-tree diff (safe — chat-only, no terminal prompt, no internal loop). Treat findings as a hostile audit. Disposition each:
-  > - `[MEDIUM]` → **Fix**, **Rebut** with citable evidence, or **Defer** with a follow-up reference recorded into the design's Assumptions ledger (so it surfaces in the PR).
-  > - `[HIGH]` → **must Fix or Rebut with citable evidence. `[HIGH]` may NOT be deferred** (severity floor). A `[HIGH]` that can be neither fixed nor citably rebutted → fire the terminal: **`🛑 BLOCKED` draft PR** (title leads with the unresolved `[HIGH]`, do not mark ready-for-review, post to chat, halt).
-  > One scrutinize pass — do not re-run it after dispositioning. Apply the fixes and proceed to T11.
-  > **Gate**: no unaddressed `[HIGH]`; every `[MEDIUM]` dispositioned and ledger-surfaced (or a blocked terminal fired).
+  > - Medium-severity → **Fix**, **Rebut** with citable evidence, or **Defer** with a follow-up reference recorded into the design's Assumptions ledger (so it surfaces in the PR).
+  > - High-severity → **must Fix or Rebut with citable evidence. A high-severity finding may NOT be deferred** (severity floor). A high-severity finding that can be neither fixed nor citably rebutted → fire the terminal: **`🛑 BLOCKED` draft PR** (title leads with the unresolved finding, do not mark ready-for-review, post to chat, halt).
+  > One scrutinize pass — do not re-run it after dispositioning. Apply the fixes and proceed to T11. Severity is judged from each finding's prose.
+  > **Gate**: no unaddressed high-severity finding; every medium-severity finding dispositioned and ledger-surfaced (or a blocked terminal fired).
 
 ---
 
@@ -216,7 +216,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > **Action**:
   > 1. **Pre-draft coherence self-check**: re-read the design end-to-end and confirm Context → Assumptions → Recommended approach → Test plan describe ONE final approach. If T6's in-place revision left residue ("originally…/instead…", two names for one artifact, a superseded approach described as if current), collapse to the final state **before** drafting.
   > 2. Push the branch.
-  > 3. Draft the PR body with `voice:voice` (via the `Skill` tool) in plain language. The body **MUST lead with the Assumptions ledger, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred `[MEDIUM]` scrutinize findings.
+  > 3. Draft the PR body with `voice:voice` (via the `Skill` tool) in plain language. The body **MUST lead with the Assumptions ledger, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred medium-severity scrutinize findings.
   > 4. Open the PR via the Bitbucket MCP (`mcp__bitbucket__create_pull_request`; in the interface repo use workspace `drovacorp` / repo `interface` / target `master`) or `gh`, detected from the repo remotes / T3 scan.
   > **Fallback (terminal: chat summary)**: if neither PR tool resolves, push the branch and emit to chat the exact manual PR-creation command / compare-URL plus the drafted body, then halt — do not leave a dangling branch silently.
   > **Gate**: PR open (or the manual-PR fallback fired); body leads with the blast-radius-sorted ledger; the PR URL (or compare-URL) is posted to chat. **Terminus.**
