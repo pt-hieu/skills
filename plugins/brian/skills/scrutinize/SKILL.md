@@ -1,6 +1,6 @@
 ---
 name: scrutinize
-description: "Use to review local code changes against Brian's house rules — correctness, reliability, security, tests, architecture, and code-cleanness.
+description: "Use to review local code changes against Brian's house rules — correctness, reliability, security, tests, architecture, and code-cleanness (including reuse, simplification, efficiency, and altitude quality cleanups).
 ---
 
 # Scrutinize

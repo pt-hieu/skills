@@ -371,7 +371,7 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 
 | Token | Owner file |
 |---|---|
-| `defect_class` (and its 12-member closed enum) | `plugins/brian/agents/_shared/defect-class-enum.md` |
+| `defect_class` (and its 14-member closed enum) | `plugins/brian/agents/_shared/defect-class-enum.md` |
 | `Finding Anchor` | this file (Step D.1) + shared agents narrate the format |
 | `Output Contract` (block name) | this file (Step D.1) + agents' Input Contract sections |
 | `House Rules` (block name) | `plugins/brian/agents/_shared/reviewer-house-rules.md` |
@@ -380,4 +380,4 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 | `axis` (orchestrator-side per-agent metadata) | this file (Step E) |
 | `axes_dispatched`, `axes_skipped`, `axes_abstained`, `tier` (data-dict fields) | this file (Steps C, E, F) |
 
-The two enum members `Comment Hygiene Drift` and `Test Coverage Gap` are new in this skill (extended in `_shared/defect-class-enum.md`). Adding a member is a one-file edit; every Read-and-inject consumer (`scrutinize`, `challenge`) picks it up automatically.
+The enum members `Comment Hygiene Drift`, `Test Coverage Gap`, `Simplification Gap`, and `Redundant Work` are new in this skill (extended in `_shared/defect-class-enum.md`). `Simplification Gap` and `Redundant Work` carry the four behavior-preserving quality angles the widened `cleanness` axis covers via `review-cleanness.md`: `Redundant Work` = reuse + efficiency; `Simplification Gap` = simplification + local altitude. Adding a member is a one-file edit; every Read-and-inject consumer (`scrutinize`, `challenge`) picks it up automatically.
