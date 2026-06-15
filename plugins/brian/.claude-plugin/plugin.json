@@ -1,7 +1,7 @@
 {
   "name": "brian",
-  "version": "1.17.0",
-  "description": "Bundled skills: autopilot, challenge, commit, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize.",
+  "version": "1.18.0",
+  "description": "Bundled skills: autopilot, challenge, commit, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, up-to-speed.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"
@@ -18,6 +18,7 @@
     "workflow",
     "kickoff",
     "autopilot",
-    "scrutinize"
+    "scrutinize",
+    "up-to-speed"
   ]
 }
