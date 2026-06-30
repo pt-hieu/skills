@@ -1,6 +1,6 @@
 {
   "name": "voice",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Communication-style skills: write outbound team-facing messages in a warm, hedged, emoji-aware engineering voice; pitch plans in plain language before exiting plan mode.",
   "author": {
     "name": "Brian Pham",

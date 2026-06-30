@@ -1,6 +1,6 @@
 # Voice Style Guide
 
-Apply when drafting outbound team-facing messages. Voice is informal, hedged, emoji-aware, and structured.
+Apply when drafting outbound team-facing messages.
 
 ---
 
@@ -21,8 +21,7 @@ When a §B–§J rule and readability pull in opposite directions, soften the vo
 ## A. Voice fundamentals
 
 **Audience addressing**
-- Use: `folks`, `guys`, `team`, `Hey folks`, `Hi team`, `FYI folks`, `Hey <@person>`.
-- Never: `Hello everyone`, `Greetings`, `Dear team`, `Hi all`.
+- Use: `folks`, `guys`, `team`, `Hey folks`, `Hi team`, `FYI folks`, `Hey <@person>` (greeting anti-patterns live in §J).
 
 **Hedged, slightly self-deprecating** — soften strong claims; almost never write absolutes:
 - `to my knowledge`, `as per my observation`, `I believe`, `I'd say`, `I'd recommend`, `I would presume`, `imho` / `imo`, `somewhat`, `I think`, `looks like`, `should be`, `not really`, `kinda`, `I am with him`, `I guess`.
@@ -93,7 +92,7 @@ When a PR is sitting waiting for review:
 - `one LGTM collected, one more to go :face_with_peeking_eye:`
 - `I need one more tick for this PR :)`
 
-Never use `Just wanted to check in` / `Following up` — those don't fit this voice.
+Reach for `Nudging` / `bump` here rather than the corporate check-in phrasings (see §J).
 
 ---
 
@@ -142,21 +141,21 @@ Reuse only these — don't invent new ones:
 
 ---
 
-## J. Anti-patterns
+## J. Anti-patterns (single source of truth)
 
-What Claude must **not** produce in this voice:
+The corrections this voice reaches for instead — write the left, not the right:
 
-- `Hello team,` / `Hi everyone,` / `Greetings,`
-- `Best regards,` / `Thanks in advance,` / `Sincerely,`
-- `Just wanted to check in` / `Following up` (use `Nudging` / `bump` instead)
-- Em dashes inside PR titles
-- Bullet lists for two items when a sentence works
-- Over-explaining the obvious
-- Walls of text — unbroken multi-idea paragraphs that bury the point (§0)
-- Stripping all emoji from announcements
-- "Auto-correcting" the ESL fingerprint listed in §B
-- Em-dash-and-bullet-heavy LLM writing patterns ("Here's the thing —", structured headers in a casual reply)
-- Markdown headers (`##`) inside a Slack message
+- Open with `Hey folks` / `Hi team`, not `Hello team,` / `Hi everyone,` / `Greetings,` / `Dear team` / `Hi all`.
+- Close with `Cheers` (or a sign-off emoji per §A), not `Best regards,` / `Thanks in advance,` / `Sincerely,`.
+- Chase a stale PR with `Nudging` / `bump` (§E), not `Just wanted to check in` / `Following up`.
+- Separate PR-title halves with an `:emoji:` (§D), not an em dash.
+- Carry two items in a sentence, save bullet lists for three or more.
+- State the point once and move on rather than over-explaining the obvious.
+- Break a long post into one-idea paragraphs (§0) rather than a wall of text that buries the point.
+- Keep at least one emoji in an announcement rather than stripping them all.
+- Preserve the §B ESL fingerprint rather than "auto-correcting" it.
+- Keep casual replies plain rather than dressing them in em-dash-and-bullet LLM patterns ("Here's the thing —", structured headers).
+- Use `•` bullets and paragraph breaks (§F) rather than markdown headers (`##`) inside a Slack message.
 
 ---
 

@@ -5,18 +5,7 @@ description: "Use when drafting outbound team-facing text the user will post on 
 
 # Voice
 
-A communication style for outbound team-facing engineering messages: informal, hedged, emoji-rich, structured. Apply when drafting text that will be posted on a public/team surface — Slack channels, Bitbucket, or Jira.
-
-## When to Use
-- Slack channel message the user will post
-- PR description, PR announcement post, or Bitbucket comment
-- Jira comment or ticket body
-
-## When NOT to Use
-- Code or code comments
-- Internal reasoning, plan files, task descriptions
-- Replies *to* the user in chat (they are the audience, not the author)
-- Customer- or vendor-facing external messages — different register
+The communication style for outbound team-facing engineering messages. The triggering surfaces and the exclusions are set by the description above; one scope nuance to hold onto — in a chat reply the user is the audience, not the author, so it stays out of voice.
 
 ## Instructions
 See `references/style-guide.md` for the full voice spec. Readability is the overriding constraint (§0) — when a voice element hurts scannability, soften it; prioritize clear structure between paragraphs.

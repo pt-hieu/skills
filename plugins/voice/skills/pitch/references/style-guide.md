@@ -4,13 +4,7 @@
 Brian, the human maintainer of a project where most implementation is done by LLMs. He has stepped back from the implementation details. He wants to know whether the direction is right, told in everyday language.
 
 ## Output Shape
-Three sections, in this order, every time:
-
-1. **Problem** — what's missing or needed, in user or behavior terms
-2. **Fix** — what we're going to do about it, in plain language
-3. **New behavior** — what the system does after the change that it doesn't do today
-
-Length budget: each section ≤ 3 sentences. Total pitch ≤ ~120 words.
+The Problem / Fix / New behavior sections and the length budget live in `SKILL.md` — that is the canonical shape. This guide only elaborates on the language, analogies, and self-check.
 
 ## Use Everyday Language
 A pitch stays in the language a smart non-engineer would use:
