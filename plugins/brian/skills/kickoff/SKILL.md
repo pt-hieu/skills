@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: "Use when Brian invokes /kickoff or hands off a new requirement, ticket, or task description for planning."
+description: "Use when /kickoff is invoked or a new requirement, ticket, or task description is handed off for planning."
 ---
 
 # Kickoff

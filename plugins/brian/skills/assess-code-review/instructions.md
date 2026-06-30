@@ -12,8 +12,6 @@ Defaults (interface repo, per global CLAUDE.md): Bitbucket workspace `drovacorp`
 
 > **MCP tools are deferred.** Before the first Bitbucket call, run `ToolSearch` with `select:mcp__bitbucket__get_current_user,mcp__bitbucket__list_pull_requests,mcp__bitbucket__get_pull_request,mcp__bitbucket__get_comments,mcp__bitbucket__get_comment,mcp__bitbucket__resolve_comment,mcp__bitbucket__add_comment,mcp__bitbucket__get_diff` to load their schemas. Calling a deferred tool without loading its schema fails with InputValidationError.
 
-> **Inline calls are deliberate (post-challenge note).** This skill calls the Bitbucket MCP tools and applies edits *itself*, in the main loop — it does NOT delegate them to a subagent (the way `up-to-speed` delegates read-only MCP work). The reason: this loop interleaves a human gate (`AskUserQuestion`) and working-tree edits with the MCP calls, which a one-shot subagent cannot do. `ToolSearch`-then-call is the harness-standard mechanism for deferred tools; there is no in-repo skill precedent only because this is the first skill to drive Bitbucket *write* tools.
-
 | tool | signature | use |
 |---|---|---|
 | `get_current_user` | `()` | identify the author for self-comment filtering |
@@ -65,7 +63,7 @@ For each open comment, before deciding, pull the relevant code context: use the 
 Classify into exactly one disposition:
 
 - **AGREE** — the comment identifies a real problem or a clear improvement you'd make. Formulate a CONCRETE fix: the exact file and the change (what to edit, to what). Do NOT edit the working tree yet — only describe the fix. If the fix is non-trivial, state it precisely enough that applying it post-approval is mechanical.
-- **DISAGREE** — you have a defensible reason not to make the change. Draft a concise push-back reply. **Counter-argument discipline (load-bearing):** first restate the reviewer's point fairly in one clause so the reply doesn't read as dismissive, then give the reason, then (if relevant) the alternative. Keep it decisive and hedge-free — this is the Decisive-Minimalist register, not a debate.
+- **DISAGREE** — you have a defensible reason not to make the change. Draft a concise push-back reply. **Counter-argument discipline:** first restate the reviewer's point fairly in one clause so the reply doesn't read as dismissive, then give the reason, then (if relevant) the alternative. Keep it decisive and hedge-free — this is the Decisive-Minimalist register, not a debate.
 - **AMBIGUOUS** — you genuinely cannot classify (the comment is unclear, asks a question only Brian can answer, depends on product intent, or could go either way). **Abstain rather than guess** — surface it in the batch as AMBIGUOUS with a one-line note on what's unclear, and let Brian decide its disposition during approval.
 
 Bias note: do not inflate AGREE to look agreeable, and do not inflate DISAGREE to look rigorous. The honest disposition is the correct one. When a comment bundles several asks, split them into separate rows so each gets its own disposition.
@@ -94,7 +92,7 @@ Below the table, state the gate explicitly: "Approve to apply all AGREE fixes (s
 
 **Single-gate discipline (load-bearing):** present everything at once and wait for ONE approval. Do not action any row before approval. Do not ask per-comment. Brian may revise specific rows (flip a disposition, edit fix/reply text, drop a row); fold his changes in and proceed — re-present only if he asks. AMBIGUOUS rows MUST receive a disposition from Brian here; an AMBIGUOUS row that stays ambiguous after the gate is left untouched (no edit, no resolve, no reply), not guessed.
 
-**Disposition-flip rule (load-bearing):** if Brian flips a row to a disposition that has no drafted artifact yet — e.g. AMBIGUOUS/DISAGREE → AGREE (no fix was drafted), or AGREE → DISAGREE (no reply was drafted) — draft the missing fix or reply and re-present THAT single row for a quick confirmation before executing it. A disposition flip is not a mechanical edit, so it does not violate the "execution after the gate is mechanical" invariant — the freshly drafted artifact still gets one look. If Brian rejects or further changes that re-presented artifact, fold in his change and re-present it once more — that becomes the gate for the row. If he rejects it outright, leave the row untouched and surface it as unresolved in the final summary; never execute an artifact he declined.
+**Disposition-flip rule:** if Brian flips a row to a disposition that has no drafted artifact yet — e.g. AMBIGUOUS/DISAGREE → AGREE (no fix was drafted), or AGREE → DISAGREE (no reply was drafted) — draft the missing fix or reply and re-present THAT single row for a quick confirmation before executing it. A disposition flip is not a mechanical edit, so it does not violate the "execution after the gate is mechanical" invariant — the freshly drafted artifact still gets one look. If Brian rejects or further changes that re-presented artifact, fold in his change and re-present it once more — that becomes the gate for the row. If he rejects it outright, leave the row untouched and surface it as unresolved in the final summary; never execute an artifact he declined.
 
 ---
 
@@ -102,7 +100,7 @@ Below the table, state the gate explicitly: "Approve to apply all AGREE fixes (s
 
 Before posting, run every reply-and-leave-open draft (DISAGREE rows, plus answerable-question rows) through the `voice:voice` skill (invoke `voice:voice` via the `Skill` tool) — these are team-facing Bitbucket comments. Pass the drafted reply text; use the returned wording. The reply is authored as Claude Code on behalf of Brian Pham, per the interface rule. Do this for the approved set only (after the gate), so Brian's row edits are reflected in what gets voiced.
 
-**Register precedence (load-bearing — resolves a spec conflict).** `voice:voice` defaults to a warmer, more hedged register; Step C requires these replies stay concise, fair, and hedge-free. Step C's register wins: use `voice:voice` for surface conventions (Brian's phrasing, team-appropriate tone, no robotic stiffness) but keep the reply short and decisive — the fair-restatement→reason structure and the no-hedging rule from Step C override any softening voice would add. If the voiced result reads as wishy-washy or padded, tighten it back toward the Step C draft.
+**Register precedence (resolves a spec conflict).** `voice:voice` defaults to a warmer, more hedged register; Step C requires these replies stay concise, fair, and hedge-free. Step C's register wins: use `voice:voice` for surface conventions (Brian's phrasing, team-appropriate tone, no robotic stiffness) but keep the reply short and decisive — the fair-restatement→reason structure and the no-hedging rule from Step C override any softening voice would add. If the voiced result reads as wishy-washy or padded, tighten it back toward the Step C draft.
 
 ---
 
@@ -112,7 +110,7 @@ Execute the approved dispositions. Order: do the AGREE fixes first, then the DIS
 
 For each AGREE row:
 1. Apply the fix to the working tree (Edit/Write on the target file).
-2. **Outcome self-check before resolving (load-bearing):** confirm the edit you just made actually addresses the comment's ask. If it only partially addresses it, do NOT resolve — leave the thread open and note the gap in the summary. "Silent resolve" must never hide a fix that missed the point.
+2. **Outcome self-check before resolving:** confirm the edit you just made actually addresses the comment's ask. If it only partially addresses it, do NOT resolve — leave the thread open and note the gap in the summary. "Silent resolve" must never hide a fix that missed the point.
 3. Immediately `resolve_comment(repository, prId, commentId, resolve=true)` on that thread's root comment.
 4. **Silent on agree (load-bearing):** post NO reply on an agreed thread. The fix + resolve is the entire action.
 

@@ -1,6 +1,6 @@
 ---
 name: up-to-speed
-description: "Use when hands off any scope of existing work and needs a context briefing to start working."
+description: "Context briefing that explains how existing work fits together so you can start contributing."
 argument-hint: "[PR# | branch | code-area | topic]"
 disable-model-invocation: true
 ---
@@ -14,15 +14,7 @@ Onboards Brian onto existing work for a given scope — explains **how everythin
 - Depth is inferred from the request (e.g. "quick gist of …" vs "deep dive on …").
 
 ## Output
-An onboarding briefing in this fixed order (length matches the requested depth), followed by an interactive Q&A loop:
-1. One-line what & why (cites the driving ticket/PR).
-2. **How it works** — the mental model: what happens end-to-end and how the pieces fit, plus any source divergence worth knowing.
-3. **Key files & architecture** — where the work lives, entry points, and where to start reading.
-4. **Where to jump in** — orientation for starting (lay of the land, not a completion report).
-5. **Gotchas / open questions** — only if genuinely important before touching it.
-6. Sources footer — what was gathered, abstained, and could not be reached.
-
-Then the skill stays in an interactive Q&A loop, answering follow-up questions (re-querying sources on gaps, every answer cited) until Brian is up to speed.
+A chat-only onboarding briefing — what & why, How it works, Key files & architecture, Where to jump in, Gotchas / open questions, Sources footer — then an interactive Q&A loop. Step D of `instructions.md` is the single source of truth for the render template, section order, and depth-matched length.
 
 ## Instructions
 See `instructions.md` for the full execution guide (Steps A–E, Source Registry, scope-resolution rules, per-source prompt skeleton, synthesis contract, and the onboarding Q&A loop).

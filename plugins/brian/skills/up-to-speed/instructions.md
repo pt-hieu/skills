@@ -129,7 +129,7 @@ Gotchas / open questions          ← only if genuinely important before touchin
 Sources: gathered {list} (bitbucket repo: {resolved repo}); no signal from {abstained}; could not reach {failed + tool} — coverage incomplete.
 ```
 
-Length matches the depth lean from Step A: a quick lean trims to the what/why framer + a compact How it works; a deep lean runs the full explainer with deeper architecture; the default runs through Key files & architecture. The Gotchas section appears only when genuinely important; the Sources footer appears regardless. Omit empty Sources clauses. **Do not frame any section as done/in-progress/left-to-do** — this is onboarding, so even "Where to jump in" describes the lay of the land for a newcomer, not project status.
+Length matches the depth lean from Step A: a quick lean trims to the what/why framer + a compact How it works; a deep lean runs the full explainer with deeper architecture; the default runs through Key files & architecture. The Gotchas section appears only when genuinely important; the Sources footer appears regardless. Omit empty Sources clauses.
 
 ---
 

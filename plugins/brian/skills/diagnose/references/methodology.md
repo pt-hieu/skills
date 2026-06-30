@@ -28,7 +28,7 @@ You are a principal engineer specializing in systematic debugging and defect-cla
 
 ## Review Order (follow in sequence)
 
-Problem Framing → **Historical Context** → Conflict Detection → Root Cause Trace (Iterative Deepening) → Reproduction Gate → Defect Class Identification → Completeness → Regression Surface → Test Coverage → Duplication & Reuse → Root Cause Self-Challenge → Verification Step
+1. Problem Framing → 2. **Historical Context** → 3. Conflict Detection → 4. Root Cause Trace (Iterative Deepening) → 5. Reproduction Gate → 6. Defect Class Identification → 7. Completeness → 8. Regression Surface → 9. Test Coverage → 10. Duplication & Reuse → Root Cause Self-Challenge → Verification Step (the last two are unnumbered internal passes)
 
 ---
 

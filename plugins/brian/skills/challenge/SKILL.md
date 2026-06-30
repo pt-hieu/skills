@@ -5,11 +5,5 @@ description: "Use before finalizing a significant plan, after complex implementa
 
 # Challenge
 
-## When to Use
-- Before finalizing a significant plan
-- After implementing complex changes
-- Before PRs that touch core architecture
-- When uncertain if a solution is systematic enough
-
 ## Instructions
 See `instructions.md` for full execution guide including agent prompts, examples, and synthesis protocol.

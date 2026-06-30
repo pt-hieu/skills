@@ -1,6 +1,6 @@
 ---
 name: scrutinize
-description: "Use to review local code changes against Brian's house rules — correctness, reliability, security, tests, architecture, and code-cleanness (including reuse, simplification, efficiency, and altitude quality cleanups).
+description: "Use to review local code changes against Brian's house rules — correctness, reliability, security, tests, architecture, and code-cleanness."
 ---
 
 # Scrutinize
@@ -21,4 +21,4 @@ Dispatches axis-specialized opus reviewer subagents in parallel against the loca
 - Diff snapshot: `/tmp/scrutinize/<flattened-repo-path>/<sha>-<UTC-ISO>.diff` — lives outside the repo (no `.gitignore` entry needed); used by `--input <sha-ts>` to replay against the cached diff.
 
 ## Instructions
-See `instructions.md` for the full execution guide (Steps A–G, axis registry, smart-dispatch regexes).
+See `instructions.md` for the full execution guide (Steps A–F, axis registry, smart-dispatch regexes).

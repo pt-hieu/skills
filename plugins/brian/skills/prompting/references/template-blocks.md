@@ -50,7 +50,7 @@ After generating your analysis:
 
 ### 8. Structured Output Schema (Pydantic) — for machine-to-machine handoffs only
 
-Use this **only when a non-LLM consumer parses the output**. When an LLM or a human reads the result, prefer Block 8b (prose) instead — a schema read by another LLM buys rigidity without determinism and invites contract drift.
+Use this **only when a non-LLM consumer parses the output**. When an LLM or a human reads the result, prefer Block 8b (prose) instead — see *Prose-First vs. Structured Output* in `instructions.md` for why.
 
 ```python
 from pydantic import BaseModel, Field

@@ -56,7 +56,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > **Goal**: ground the work in real code.
   > **Action**:
   > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The Design task (T4) still runs and consumes this as input.
-  > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). Use `model: "haiku"` — these are scoped lookups; reserve heavier models for design.
+  > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
   > <!-- END VERBATIM COPY of kickoff Task 2. -->
   >
   > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve the historian's `Paths inspected:` line (or per-path commit anchors) — T6 reuses it.

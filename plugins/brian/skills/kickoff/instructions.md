@@ -61,7 +61,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > **Goal**: ground the plan in real code.
   > **Action**:
   > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The Plan-agent task still runs and consumes this as input.
-  > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). Use `model: "haiku"` — these are scoped lookups; reserve heavier models for design.
+  > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
   > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down.
 
 ---
@@ -71,7 +71,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Historian — gather prior intent from git history and ticket tracker`
 - description:
   > **Goal**: surface the *why* behind prior changes to the code about to be modified, so the implementer doesn't repeat past failures or invert past decisions blindly.
-  > **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "code-historian"`, `model: "sonnet"`. Pass it:
+  > **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "code-historian"` (model per the Effort matrix). Pass it:
   > - The file paths surfaced in the Explore task (preferred input).
   > - The topic / area description as fallback when paths are partial.
   > - A focusing question derived from the requirement (e.g. *"why does this module handle X this way?"*).
@@ -115,7 +115,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Run Plan agent — produce detailed implementation plan`
 - description:
   > **Goal**: produce a detailed implementation plan from a focused designer.
-  > **Action**: launch ONE `Plan` subagent at high effort (`model: "opus"`). Hand it:
+  > **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix). Hand it:
   > - Phase-1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape)
   > - Historian report (prior intent, recurring themes, implications)
   > - Requirements and constraints
@@ -159,7 +159,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
   > **Goal**: catch missed details and weak spots before pitching.
-  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Run its reviewer subagents on `opus` at **medium thinking effort** (not high). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
+  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Run its reviewer subagents at **medium thinking effort** (not high), on the model the Effort matrix assigns. Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
   > **Gate**: challenge round complete and the plan file on disk has been updated.
 
 ---
@@ -170,7 +170,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Goal**: leave the plan file with a concrete, salience-ordered, smell-free Test design section the implementer can drive TDD against. Challenge has finalized the approach; the test design pins the behaviors that approach must protect.
   > **Trade-off (documented)**: this task runs AFTER Challenge so Challenge's in-place revisions cannot orphan the Test design section (the failure mode plan-verifier exists to catch, commit `cee4f52`). The accepted cost is that Challenge's opus-level reviewers cannot critique the test commitments. The single authorized mitigation is the backward-edge escape hatch below.
-  > **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"`, `model: "sonnet"`. Pass two arguments:
+  > **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"` (model per the Effort matrix). Pass two arguments:
   > 1. **The absolute path of the plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
   > 2. **The path discriminator**: explicitly state `path: bug` when the requirement came in via `brian:diagnose` (Task 2 bug branch) — orchestrator already knows this from Task 2's actual execution. State `path: feature` otherwise. This removes the agent's prose-based bug-path detection ambiguity.
   >
@@ -196,7 +196,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Verify plan coherence and inject post-implementation protocol`
 - description:
   > **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
-  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "plan-verifier"`, `model: "sonnet"`. Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
+  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
   > The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
   > **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
 

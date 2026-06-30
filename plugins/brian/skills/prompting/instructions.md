@@ -8,7 +8,7 @@ Research synthesis from 20+ papers and industry sources on effective LLM prompti
 
 ### CRITICAL — block if missing
 - **Deterministic split** — code computes all numbers; LLM interprets only. This is independent of prose-vs-structured output and always binds.
-- **Prose-first communication** — when an LLM or a human reads the output, prefer free natural-language prose. Reserve structured output (Pydantic `Literal`/`Enum` schemas) for true machine-to-machine handoffs with a *non-LLM* consumer that parses the fields.
+- **Prose-first communication** — prefer free prose whenever an LLM or human reads the output; reserve schemas for non-LLM consumers that parse the fields. See *Prose-First vs. Structured Output* for the rationale.
 - **Abstinence rule** — `INSUFFICIENT DATA` output when data is missing or unverifiable
 - **Conflict detection** — explicit protocol to enumerate and resolve contradictory signals
 
@@ -102,15 +102,15 @@ it must be downgraded one level.
 
 ## Strict vs. Flexible Declarations
 
-Use this table when designing output. **The consumer type is the deciding column** — reach for an enum only when a non-LLM downstream actually parses the value:
+Use this table when designing output. **The consumer type is the deciding column** — reach for an enum only when a non-LLM downstream actually parses the value (rationale in *Prose-First vs. Structured Output*):
 
 | Field | Consumer | Strictness | Rationale |
 |-------|----------|-----------|-----------|
 | `action` / `decision` | non-LLM automation | **STRICT** | Code branches on the exact value |
-| `confidence` (HIGH/MEDIUM/LOW) | depends | **STRICT only when a non-LLM parses it**; for an LLM/human consumer, prose confidence + its basis is sufficient | A tag earns its rigidity only at a machine parser; otherwise it's drift risk for no gain |
+| `confidence` (HIGH/MEDIUM/LOW) | depends | **STRICT only when a non-LLM parses it**; for an LLM/human consumer, prose confidence + its basis is sufficient | Drift risk for no gain unless a machine parser reads it |
 | `reasoning` / `thesis` | LLM / human | **PROSE** | Qualitative judgment |
 | `key_risk` / `counter_argument` | LLM / human | **PROSE, but mandatory** | Must genuinely challenge the thesis — required content, not a rigid field |
-| `conflicts_identified` | depends | **STRICT list only for a non-LLM**; otherwise enumerate in prose | Must enumerate, not summarize — but a schema buys nothing if an LLM/human reads it |
+| `conflicts_identified` | depends | **STRICT list only for a non-LLM**; otherwise enumerate in prose | Must enumerate, not summarize |
 
 **Rule:** The consumer type decides. A field parsed by non-LLM code → `Literal`/`Enum` with exact values. A field read by an LLM or a human → prose with descriptive guidance.
 
@@ -139,7 +139,7 @@ This chain should appear as mandatory steps in system prompts for any decision-m
 | No conflict enumeration | LLM papers over contradictions | Force explicit listing |
 | Missing counter-argument | Confirmation bias from training data | Always require KEY RISK / con case |
 | Stale parametric knowledge | Model's knowledge is months old | Always inject fresh data via tools |
-| Forcing prose into rigid JSON for an LLM/human reader | Contract drift — a consumer parses a field the producer renamed or never emits; producer hallucinates fields to satisfy a contract no one reads (commit `6652d78`) | Use prose; reserve schemas for non-LLM parsers |
+| Forcing prose into rigid JSON for an LLM/human reader | Contract drift (see *Prose-First vs. Structured Output*) | Use prose; reserve schemas for non-LLM parsers |
 | Unbounded rambling output | More words = more speculation | Ask for a short, focused paragraph — brevity, not a schema |
 | Vague confidence | "fairly confident" tells you nothing | State confidence AND its basis in plain words (calibrated HIGH/MEDIUM/LOW only when a non-LLM parses it) |
 | No abstinence path | Agent generates analysis when data is absent | Explicit INSUFFICIENT DATA output |
