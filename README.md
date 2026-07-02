@@ -54,10 +54,32 @@ Three plugins, each a coherent domain:
 
 | Skill | Purpose |
 | --- | --- |
+| `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
+| `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
 | `challenge` | Audit a plan or implementation with two independent opus subagents. |
 | `commit` | Structured commit workflow. |
 | `diagnose` | Systematic root-cause debugging methodology. |
+| `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
+| `resolve-merge-conflicts` | Resolve Git merge conflicts. |
+| `scrutinize` | Review local code changes against Brian's house rules across correctness, reliability, security, tests, architecture, and cleanness axes. |
+| `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
+| `writing-skills` | Principles and vocabulary for writing and editing skills that make an agent's behaviour predictable. |
+
+**Agents** (dispatched by the skills above, not invoked directly):
+
+| Agent | Purpose |
+| --- | --- |
+| `architectural-reviewer` | Stress-tests a plan or diff for architectural drift, coupling, expandability, and historical coherence. |
+| `code-historian` | Gathers historical "why" context from git history and the ticket tracker. |
+| `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
+| `review-cleanness` | Local code-shape hygiene and behavior-preserving quality angles. |
+| `review-correctness-reliability` | Adversarial reviewer for correctness and reliability defects. |
+| `review-security` | Application-security reviewer for a diff. |
+| `review-spec` | Checks a diff against what its originating ticket / PRD asked for — missing, extra, or wrongly-implemented requirements. |
+| `review-tests` | Test-coverage reviewer for a diff. |
+| `root-cause-reviewer` | Validates that a fix addresses the root cause rather than a symptom. |
+| `test-designer` | Designs the Test design section of a kickoff plan file. |
 
 ### `voice` — outbound communication
 
@@ -81,10 +103,28 @@ plugins/
   brian/
     .claude-plugin/plugin.json
     skills/
+      assess-code-review/
+      autopilot/
       challenge/
       commit/
       diagnose/
+      kickoff/
       prompting/
+      resolve-merge-conflicts/
+      scrutinize/
+      up-to-speed/
+      writing-skills/
+    agents/
+      architectural-reviewer.md
+      code-historian.md
+      plan-verifier.md
+      review-cleanness.md
+      review-correctness-reliability.md
+      review-security.md
+      review-spec.md
+      review-tests.md
+      root-cause-reviewer.md
+      test-designer.md
   voice/
     .claude-plugin/plugin.json
     skills/

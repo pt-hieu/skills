@@ -41,6 +41,12 @@ Distilled from Matt Pocock's [writing-great-skills](https://github.com/mattpococ
 - **Single source of truth** — each meaning in exactly one authoritative place; **duplication** is its violation.
 - **Relevance** — whether a line still bears on what the skill does.
 
+## Prose craft
+
+- **Defining constraint** — the one plain declarative sentence opening a skill, stating what it does differently from the model's default; written as prose, never under a `The constraint:` label.
+- **It's working if** — a short checkable list of observable signals that a skill fired (a leading word recurring in the trace, an artifact written, a gate refused); confirms the skill ran, not just loaded.
+- **Refusal at the branch** — a short imperative placed at the exact step where the agent is tempted to rush, tied to the leading word ("no red loop, no Phase 2"); at the branch, not buried in a reference file.
+
 ## Failure modes
 
 - **Premature completion** _(failure mode)_ — ending a step before it is done; needs steps to occur, so a step-less skill that quits early is thin **legwork**, not this. Defence in order: sharpen the criterion, then split (across a real context boundary) to hide post-completion steps.

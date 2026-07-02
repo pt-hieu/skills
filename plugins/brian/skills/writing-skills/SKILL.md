@@ -44,7 +44,15 @@ Each split spends one of the two loads, so split only when the cut earns it:
 
 ## Leading words
 
-A **leading word** is a compact concept already in the model's pretraining (e.g. _lesson_, _fog of war_, _tracer bullets_) that the agent thinks with while running the skill. Repeated as a token, it accrues a distributed definition and anchors a region of behaviour in the fewest tokens — in the body it anchors execution, in the description it anchors invocation. Refactor restatements into one word ("fast, deterministic, low-overhead" → a _tight_ loop). Prefer a pretrained word over a coined one, which recruits no priors.
+A **leading word** is a compact concept already in the model's pretraining (e.g. _lesson_, _fog of war_, _tracer bullets_) that the agent thinks with while running the skill. Repeated as a token, it accrues a distributed definition and anchors a region of behaviour in the fewest tokens — in the body it anchors execution, in the description it anchors invocation. Refactor restatements into one word ("fast, deterministic, low-overhead" → a _tight_ loop). Prefer a pretrained word over a coined one, which recruits no priors. Give each skill **one** dominant leading word and name it before shipping; if you cannot name it, the skill has no spine.
+
+## Prose craft
+
+Sentence-level moves that make a skill read as one deliberate voice rather than a checklist. Each is a positive directive, applied while drafting:
+
+- **Defining constraint** — open every skill with one plain declarative sentence stating what it does differently from the model's default (`diagnose` reaches bedrock instead of stopping at the first plausible cause). Write it as prose in the first line of the body, never under a `The constraint:` label.
+- **It's working if** — where a skill has crisp tells, add a short checkable list of observable signals that it fired: a leading word reappearing in the trace, an artifact written to disk, a gate the agent refused to cross. These are how a reader confirms the skill ran, not just that it was loaded.
+- **Refusal at the branch** — when a skill exists to prevent one specific rush, write the refusal as a short imperative at the exact step where the agent is tempted, tied to the leading word ("no red loop, no Phase 2"). Put it at the branch, not buried in a reference file the agent reaches only after the temptation has passed.
 
 ## Failure modes
 

@@ -65,6 +65,8 @@ Examples NOT to flag:
 
 Decision rule: name the concrete cost — quote BOTH copies (the diff copy and the existing on-disk original at `file:line`), and state what must now be edited in two places. If you cannot cite the second copy on disk, you have a "could refactor" advisory, not a defect — drop it.
 
+This is Fowler's **Duplicated Code** smell at LOCAL scope — the one Fowler smell that lives in the shape of the changed lines and is yours. The other eleven Fowler smells (Feature Envy, Shotgun Surgery, Data Clumps, Message Chains, Middle Man, …) are module-level and belong to `architectural-reviewer`'s dimensions — do not report them here.
+
 Name the defect class in plain words — e.g. "redundant work (duplication)".
 
 ### 4. Simplification (over-complicated code that could be simpler)

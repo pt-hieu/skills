@@ -129,12 +129,38 @@ Report where on the FULL deepened chain the fix (proposed or actual) lands.
 A root cause you cannot reproduce is a hypothesis, not a conclusion. Before locking in the chain from §4, empirically tie the named root cause to the reported symptom.
 
 ### Mode A — Investigation (you can run code)
+
+**Investigation-mode gate — build the red-capable loop before committing to a single hypothesis.** A *red-capable loop* is any command that reproduces the failure on demand and turns green when it is fixed. Build it *first* — a hypothesis formed before a red loop exists is the exact failure this gate prevents: without a loop you are guessing, and the first plausible guess becomes the thing you defend. No red-capable command, no locking in a root cause. (This gate is investigation-mode only; Mode B below and the §4 silent-reasoning order are untouched.)
+
 Write or identify a test (or a minimal runnable script if no test harness fits) that:
 1. Targets the smallest unit that exhibits the failure.
 2. Fails today *because of* the hypothesized root cause — not just adjacent to it.
 3. Passes when (and only when) the root cause is removed.
 
 Run it. Cite `path::test name — failing assertion / error`. If the test fails for a reason other than the hypothesized cause, your chain is wrong — return to §4.
+
+**Loop-construction ladder.** Reach for the cheapest rung that reproduces the failure; climb only when the rung below cannot reach it:
+1. A failing unit/integration **test** in the existing harness.
+2. A **curl / HTTP** call against a running endpoint.
+3. A **CLI snapshot diff** — run the command, diff its output against a known-good capture.
+4. A **headless browser** script (Playwright/Puppeteer) for UI-triggered failures.
+5. **Replay a captured trace** — re-run a recorded request/log/HAR through the code path.
+6. A **throwaway harness** — a scratch script that wires up just enough to invoke the failing unit.
+7. **Property / fuzz** testing when the trigger input is unknown — let generated inputs find it.
+8. **Bisection** — `git bisect run <your red command>` to find the introducing commit.
+9. A **differential** run — same input through two versions/implementations, diff the results.
+10. **Human-in-the-loop** as the last resort — a scripted manual repro when nothing else observes the failure.
+
+**Tighten the loop.** Once a loop is red, invest in making it *faster, sharper-signal, and more deterministic* before you debug against it — a 2-second deterministic loop beats a 30-second flaky one many times over across an investigation. Shrink the input, pin the seed/clock, cut the setup to the minimum that still fails.
+
+**Non-deterministic failures.** When the bug reproduces only sometimes, do not chase a clean one-shot repro — raise the *reproduction rate* instead: loop the command, run it in parallel, or add stress (load, concurrency, resource pressure) until the failure is frequent enough to observe reliably. A 90%-reproducing loop is a working loop.
+
+**Instrumentation hygiene.**
+- **Debugger/REPL over logs** — one breakpoint that lets you inspect live state beats ten `print` lines guessing at it. Reach for the debugger or a REPL first.
+- **Tag every debug log** `[DEBUG-xxxx]` with a short unique token (e.g. `[DEBUG-a4f2]`) so cleanup is a single grep, never a hunt.
+- **Perf branch** — for slowness rather than wrongness, *measure first, fix second*: capture a baseline measurement, then bisect the hot path against it. Never optimize a line you have not measured.
+
+**Cleanup before declaring done.** Remove all tagged `[DEBUG-xxxx]` instrumentation (one grep) and delete any throwaway harness or scratch script before the investigation is complete — the fix ships, the scaffolding does not.
 
 ### Mode B — Review (auditing a diff/PR/plan, no execution)
 Verify the diff contains a regression test that exercises the named root cause and would have failed before the fix. The test must reach the cause, not just the symptom (see §9 Test Coverage). If no such test exists, raise it as a high-severity Test Coverage finding.

@@ -102,6 +102,28 @@ Historical Coherence → Module Depth → Side Effects → Coupling → Cohesion
 6. **Abstraction Level**: Are the right abstractions in place? Too many layers? Too few? Leaky abstractions?
 7. **Side Effects**: Could these changes break or subtly affect unrelated parts of the system? **Non-local-bug check**: when a pure helper is invoked from multiple call sites with subtly different preconditions, the helper's correctness is contingent on caller behaviour and bugs will manifest non-locally. Flag any newly-extracted pure function whose preconditions are not enforced at its own boundary — name it an implicit-assumption defect.
 
+## Smell baseline (Fowler)
+
+A checklist of module-level code smells to hold each change against, mapped to the dimension that owns the finding. Each is a **labelled judgement call**, never a hard violation — phrase it as a *possibility* ("possible Feature Envy in `X`"), and file the finding under the mapped dimension using that dimension's vocabulary. Format: **smell → what it is → how to fix**, `[owning dimension]`.
+
+- **Mysterious Name** → an identifier that doesn't say what the thing does or holds → rename to state intent. `[Consistency]`
+- **Feature Envy** → a method more interested in another module's data than its own → move it to the module whose data it uses. `[Coupling]`
+- **Data Clumps** → the same few fields travelling together through many signatures → a type is wanting to be born; introduce it and pass the whole. `[Abstraction Level]`
+- **Primitive Obsession** → domain concepts encoded as bare strings/ints/maps → replace with a small purpose-built type. `[Abstraction Level]`
+- **Repeated Switches** → the same `switch`/`if`-ladder on a type tag duplicated across sites → replace with polymorphism or a single dispatch table. `[Abstraction Level / Coupling]`
+- **Shotgun Surgery** → one conceptual change forces edits scattered across many modules → gather the scattered responsibility into one module. `[Cohesion]`
+- **Divergent Change** → one module changed for many unrelated reasons → split it so each reason lives in its own module. `[Cohesion]`
+- **Speculative Generality** → abstraction/hooks/parameters built for a need no caller has → remove the unused generality; add it back when a real second case arrives. `[Abstraction Level]`
+- **Message Chains** → callers navigating `a.b().c().d()` to reach data → hide the walk behind a method on the first object. `[Coupling]`
+- **Middle Man** → a module that mostly delegates, adding no invariant of its own → inline it into its callers (ties to the deletion test / shallow-interface signal). `[Module Depth]`
+- **Refused Bequest** → a subtype that inherits an interface it doesn't want and stubs/throws on part of it → prefer composition, or split the parent so nothing inherits what it can't honor. `[Abstraction Level]`
+
+**Two binding rules:**
+- **The repo overrides.** A documented standard or established in-repo pattern wins over the smell — suppress the smell wherever the two conflict, and cite the standard. The existing codebase's convention outranks Fowler.
+- **Always a judgement call.** Each entry is a heuristic, not a rule — label it as a possibility, weigh it in context, and **skip anything tooling already enforces** (a linter/formatter/type-checker finding is not an architectural finding). A smell you cannot tie to a concrete cost under the mapped dimension is not worth raising.
+
+(Duplicated Code — Fowler's twelfth smell — is LOCAL in scope and belongs to `review-cleanness`'s Reuse angle, not here.)
+
 ## PRO/CON BALANCE (MANDATORY)
 
 For every finding, you MUST also acknowledge what the change does WELL architecturally.

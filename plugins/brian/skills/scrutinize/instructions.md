@@ -15,6 +15,7 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 | `security` | `review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
 | `tests` | `review-tests` | `review-tests.md` | no | production-code file in diff | sonnet |
 | `architecture` | `architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
+| `spec` | `review-spec` | `review-spec.md` | no | spec source resolvable (Jira key in branch/commit messages, `--spec <path>`, or PRD file under `docs/`\|`specs/`\|`.scratch/`) | sonnet |
 
 Steps C, D, E, F all reference this table. Do not re-list axes in prose elsewhere in this file.
 
@@ -29,6 +30,7 @@ Extract from the user's `/scrutinize` invocation:
 - `mode ∈ {working-tree, branch, commit, base}` — driven by which flag is present (default: `working-tree`).
 - `axes_override ∈ {all, <comma-list>, default}` — from `--axes=...`.
 - `replay_input ∈ {<sha-ts> | none}` — from `--input <sha-ts>`.
+- `spec_source ∈ {<path> | none}` — from `--spec <path>` (explicit spec file to check the diff against).
 
 Reject incompatible combinations (e.g. `--branch` and `--commit` together) with a one-line error and exit non-zero.
 
@@ -185,6 +187,17 @@ Dispatch `architecture` if ANY of:
 
 The dispatch decision flows through to the chat-print step (Step F), which renders `axes_dispatched`, `axes_skipped`, and `axes_abstained` in the header line.
 
+### C.7 Spec trigger + resolution
+
+The `spec` axis verifies the diff builds what its originating ticket / PRD asked for — every other axis checks quality or house-rules; none checks whether the diff is the *right* change. Resolve the spec source in this priority order and capture `spec_text` and `spec_source_label` (what the text came from). Stop at the first branch that resolves:
+
+1. **`--spec <path>` present** → `Read` it. `spec_source_label = "--spec <path>"`.
+2. **Jira key in history** — search the branch name and `git log <base>..<head>` commit messages for the regex `\b[A-Z][A-Z0-9]+-\d+\b` (e.g. `GPT-1234`). On a match, fetch the issue best-effort via the Atlassian MCP (`getJiraIssue`); use the summary + description as `spec_text`, `spec_source_label = "Jira <KEY>"`. If the MCP is unavailable or the fetch fails, degrade to the next branch (do not hard-fail).
+3. **PRD/spec file on disk** — a file under `docs/`, `specs/`, or `.scratch/` whose name matches the branch/feature name → `Read` it. `spec_source_label = "<path>"`.
+4. **None resolved** → record `skipped[] = {axis: spec, reason: "no spec source resolved; pass --spec <path>"}` and do NOT dispatch the spec axis.
+
+The spec axis is dispatched only when one of branches 1–3 yields `spec_text`. Under `--axes=all` it is still subject to resolution: if no source resolves, it lands in `skipped[]` with the same reason rather than dispatching empty.
+
 ---
 
 ## Step D. Launch dispatched agents in parallel
@@ -276,6 +289,16 @@ After the common blocks above, append per-axis hint blocks. Each is conditional 
   {{trigger_reason}}    # one of: "path", "code-pattern", "mandatory-new-file"
   ```
 
+- **If `axis_name == spec`** — append the resolved spec text and its provenance (from Step C.7):
+  ```
+  ## Spec
+  {{spec_text}}
+
+  ## Spec Source
+  {{spec_source_label}}    # one of: "--spec <path>", "Jira <KEY>", "<PRD path>"
+  ```
+  The `review-spec` agent refuses if `## Spec` is missing, so this block is mandatory whenever the spec axis is dispatched.
+
 **Project Rules** is the concatenation (capped at 1500 words; trim lowest-priority whole blocks if over):
 - `<repo_root>/CLAUDE.md`
 - `<repo_root>/.claude/CLAUDE.md`
@@ -301,7 +324,7 @@ After dispatch, wait for harness notifications — do NOT poll. Emit at most one
 
 When all dispatched agents have returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+3). Two exceptions keep a literal floor: a finding that carries `review-tests`' explicit high-confidence floor tag from its mandatory-floor sites (the zero-tests obligation and test-inflation findings) is treated as HIGH regardless of the prose default — do not demote it.
+1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+3). Two exceptions keep a literal floor: a finding that carries `review-tests`' explicit high-confidence floor tag from its mandatory-floor sites (the zero-tests obligation and test-inflation findings) is treated as HIGH regardless of the prose default — do not demote it. A `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) carries a **MEDIUM severity floor** — never demote it below MEDIUM even when the prose is terse, so a single unmet requirement is never silently dropped by the LOW-grouping gate (rule 4). This mirrors the `review-tests` floor and encodes "don't let Standards mask Spec" without merging axes; dedupe and the rest of the severity logic are otherwise unchanged.
 2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
 3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
 4. **Severity gate**:
@@ -370,6 +393,9 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 | `House Rules` (block name) | `plugins/brian/agents/_shared/reviewer-house-rules.md` |
 | `Repo Root`, `Diff`, `Changed Files`, `Project Rules`, `Axis` (block names) | this file (Step D.1) |
 | `Zero Tests Flag` (per-axis hint) | this file (Step C.4) + `review-tests.md` |
+| `Spec`, `Spec Source` (per-axis hint block names) | this file (Steps C.7, D.2) + `review-spec.md` |
+| `spec_source`, `spec_text`, `spec_source_label` (run-state) | this file (Steps A, C.7, D.2) |
+| `review-spec` (agent) | `plugins/brian/agents/review-spec.md` |
 | `axis` (orchestrator-side per-agent metadata) | this file (Step E) |
 | `axes_dispatched`, `axes_skipped`, `axes_abstained`, `tier` (data-dict fields) | this file (Steps C, E, F) |
 

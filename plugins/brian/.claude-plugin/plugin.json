@@ -1,6 +1,6 @@
 {
   "name": "brian",
-  "version": "1.20.1",
+  "version": "1.21.0",
   "description": "Bundled skills: assess-code-review, autopilot, challenge, commit, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, up-to-speed, writing-skills.",
   "author": {
     "name": "Brian Pham",
