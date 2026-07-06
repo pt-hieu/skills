@@ -1,5 +1,9 @@
 # Skills Marketplace
 
+## Authoring stance: no verbatim rigidity
+
+Skills prescribe the *process* (steps, gates), not the judgment — within a step, how to satisfy the gate is the agent's call. Don't have pipelines copy long instruction blocks verbatim into runtime state (task descriptions) or into sibling skills; register short pointers back to the canonical section instead, so each meaning keeps a single source of truth.
+
 ## Versioning (required before committing)
 
 For every touched plugin under `plugins/<name>/`, bump:
