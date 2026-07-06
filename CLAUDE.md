@@ -21,8 +21,6 @@ Size for the sweet spot — every inline line taxes every invocation, every extr
 - A `SKILL.md` drifting past ~150 lines is a smell, not a cap — push down the sections only some runs need; keep it whole when every line genuinely runs every time.
 - A reference file too thin to justify its hop (roughly under 20 lines) is fragmentation — inline it back.
 
-Existing `instructions.md` bodies are grandfathered: fold each into its `SKILL.md` the next time that skill is touched.
-
 ## Before committing
 
 **Version bumps** — for every touched plugin, in the same commit as the change:
