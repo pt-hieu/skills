@@ -1,50 +1,6 @@
-# Autopilot — Execution Guide
+# Autopilot — per-task specs (T1–T12)
 
-Take a requirement to an open PR autonomously, with no human input mid-run. Register the pipeline as a TaskList (the working memory), work tasks in ID order, and advance only when each task's **Goal / Action / Gate** passes.
-
-## Hard rules
-
-- Check the clean-tree precondition, then register all autopilot tasks before doing any planning work. If `TaskList` already contains autopilot tasks for this requirement, skip registration and resume from the lowest-ID pending task.
-- Work tasks in ID order. Advance only when the gate passes.
-- The skill-scan task (T3) must be executed even when no skill applies — write down the scan output before completing it.
-- **Never work on master/main — T7 creates the feature branch before any edit.**
-- **Never call `AskUserQuestion`, `EnterPlanMode`, or `ExitPlanMode`, never wait for pre-implementation approval, and never invoke a skill/agent that will.** (This is why T6 drives the reviewer agents directly rather than invoking `brian:challenge`, which ends in an `AskUserQuestion`.)
-- **Always reach a terminal state.** Never loop past a defined bound and never stall silently. Where a human would normally be consulted, make a best-judgment call and record it (T2).
-
-## Terminal states
-
-Every run ends in exactly one of these — none of them prompt:
-
-- **Normal PR** (T12) — the happy path.
-- **`🛑 BLOCKED` draft PR** — work can't be made review-ready (tests won't go green within bound; an unfixable high-severity finding). Open a draft PR titled `🛑 BLOCKED: <reason>`, body leads with the blocker, do **not** mark ready-for-review, post to chat, halt.
-- **Chat summary, no PR** — can't safely start or finish plumbing (dirty tree at entry; ineligible coin-flip assumption; no PR tooling). Emit a one-line chat summary, halt.
-
-## Effort matrix
-
-Set spawned-subagent models per task via the `Agent` tool's `model` parameter. The only opus consumers are T4 (Design) and `brian:diagnose` on the bug path; everything else is sonnet/haiku.
-
-| Task | Subagent | Effort | Model |
-| --- | --- | --- | --- |
-| T1 Explore | `Explore` (×1–3) | low | `haiku` |
-| T1 Diagnose (bug path) | `brian:diagnose` (inline via `Skill` tool) | medium | — (runs inline; no model parameter) |
-| T1 Historian (conditional) | `brian:code-historian` | low | `sonnet` |
-| T4 Design | `general-purpose` (×1) | high | `opus` |
-| T6 Review (one round) | `brian:architectural-reviewer` + `brian:root-cause-reviewer` (direct, parallel) | medium | `sonnet` |
-| T8 Implement | implementation subagents (×N, optional) | medium | `sonnet` |
-| T10 Self-review | `brian:scrutinize` axes | (scrutinize default) | `sonnet` |
-
----
-
-## Step 0 — Precondition check, then register the pipeline as tasks (FIRST ACTION)
-
-- **Goal**: refuse to start on a dirty tree, then turn the pipeline into a checklist the harness enforces.
-- **Precondition (before any task registration)**: run `git status --porcelain`. It MUST be empty. **If the working tree is dirty, halt with a chat summary** — emit one line: *"autopilot needs a clean tree; commit or stash your existing changes first"* — and stop. Do not register tasks. (Prevents pre-existing edits being swept into the autopilot branch / commit / PR.)
-- **Action**: once the tree is clean, in a single message call `TaskCreate` once per task below (T1–T12), in order. Use each task's **subject** verbatim; write each **description** as a one-line pointer back to this file: `Execute per § "TN — <title>" of <absolute path of this instructions.md> — re-read that section and pass its Gate before completing.` After creation, call `TaskUpdate` to wire `addBlockedBy` so each task is blocked by the previous one (1←2←3…←12). Then call `TaskList`, claim Task 1, and begin.
-- **Gate**: working tree was clean, `TaskList` shows tasks T1–T12 in `pending` with pointer descriptions, dependencies wired 1←…←12, and Task 1 is claimed `in_progress`.
-
-### Tasks to register
-
-Each section below is the full spec for one task — the target of its pointer description. Read the section in full when picking up the task.
+Each section below is the full spec for one task — the target of its Step-0 pointer description. Read the section in full when picking up the task, and satisfy its **Goal / Action / Gate** before completing it. The always-on Hard rules, terminal states, and effort matrix live in `SKILL.md`.
 
 ---
 
@@ -52,7 +8,7 @@ Each section below is the full spec for one task — the target of its pointer d
 
 - subject: `Explore — gather Phase-1 findings and prior intent`
   > **Goal**: ground the work in real code.
-  > **Action**: execute the Explore **Action** exactly as specified in § "Task 2 — Explore (Phase 1 findings)" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/instructions.md` — Read that section before launching anything; kickoff owns the canonical text.
+  > **Action**: execute the Explore **Action** exactly as specified in § "Task 2 — Explore (Phase 1 findings)" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/references/task-specs.md` — Read that section before launching anything; kickoff owns the canonical text.
   >
   > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "brian:code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve the historian's `Paths inspected:` line (or per-path commit anchors) — T6 reuses it.
   > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down, **plus a prior-intent note** (inline git findings, and the historian report if escalation fired).
@@ -76,7 +32,7 @@ Each section below is the full spec for one task — the target of its pointer d
 
 - subject: `Skill scan — enumerate and apply`
   > **Goal**: ensure every applicable skill informs the work before designing.
-  > **Action**: execute the skill-scan **Action** (steps 1–3) exactly as specified in § "Task 5 — Skill scan" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/instructions.md` — Read that section before scanning; kickoff owns the canonical text (its "Common matches" line is kickoff-flavored; use the list below instead).
+  > **Action**: execute the skill-scan **Action** (steps 1–3) exactly as specified in § "Task 5 — Skill scan" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/references/task-specs.md` — Read that section before scanning; kickoff owns the canonical text (its "Common matches" line is kickoff-flavored; use the list below instead).
   > Common in-pipeline matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), plus the autopilot-pipeline skills `brian:commit` (T11), `voice:voice` (T12 PR body), and `verify`/`run` (T9 when the change is user-observable).
   > **Gate**: scan written down and every relevant skill applied.
 
@@ -127,7 +83,7 @@ Each section below is the full spec for one task — the target of its pointer d
   > **Goal**: stress-test the design with two reviewer agents in one round, using no step that would block on a human.
   > **Action**: do **NOT** invoke the `brian:challenge` skill. Spawn `brian:architectural-reviewer` and `brian:root-cause-reviewer` **directly** via the `Agent` tool — both `model: "sonnet"`, both as two tool-use blocks in the **same** message so they run in parallel, **ONE round only**. The review target is plan-mode — no diff exists yet (implementation is T8). Assemble the full agent user-turn; **the reviewer agents' input contracts require all of these or they stall requesting the missing section**:
   > - `## Output Contract` — the Finding Anchor format plus the prose conventions. The Finding Anchor format is:
-  >   `Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>`
+  >   `Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>`
   >   Name the defect class in plain words — there is no enum to load and no SSOT file to read. Each finding states its confidence and basis in plain prose (not a tag), and the `INSUFFICIENT CONTEXT — [...]` abstinence rule applies.
   > - `## Context` — the design's Recommended approach + Assumptions, inline.
   > - `## Affected Files` — the design's Critical file paths, **repo-relative**. This anchors the architectural reviewer's mandatory historical-coherence step on the files the design *will* change.

@@ -39,8 +39,7 @@ For each changed production file:
 
 ## Zero-tests obligation
 
-<!-- Compressed as House Rule 8 in skills/scrutinize/references/reviewer-house-rules.md; the Confidence tag carve-out lives in House Rule 2 — keep in sync -->
-When `## Zero Tests Flag` is `true`:
+House Rule 8 in the injected `## House Rules` block states the routing floor (a zero-tests diff forces a coverage finding); House Rule 2's carve-out delegates the literal tag requirement to this section, which is its canonical home. When `## Zero Tests Flag` is `true`:
 
 - Identify the changed production function with the highest blast radius (public API entry point, shared utility imported in ≥3 places, security-relevant code).
 - Emit AT LEAST ONE finding carrying the literal `Confidence: [HIGH]` tag (this is a mandated floor — keep the literal tag here so prose confidence can never demote it) and naming the defect class as a test-coverage gap in plain words.

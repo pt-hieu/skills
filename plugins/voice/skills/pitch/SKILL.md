@@ -7,6 +7,8 @@ description: "Use as the final step of plan-mode work, immediately before callin
 
 A plain-language summary of a plan, posted as a chat reply right before `ExitPlanMode`, so the user can make final course corrections before any code is written. On an explicit request outside plan mode ("pitch", "recap"), the same shape applies to whatever plan or piece of work is under discussion — still posted as a chat reply. The audience is the human maintainer who has stepped back from the details, and the pitch stays in everyday language.
 
+The audience is the user — the human maintainer of a project where most implementation is done by LLMs. They have stepped back from the implementation details. They want to know whether the direction is right, told in everyday language.
+
 ## Output Shape
 
 1. **Problem** — what's broken, missing, or needed, described in behavior or user terms
@@ -27,4 +29,12 @@ The pitch is done only when all of these hold:
 - Each piece of the system is named by what it does, not what it's called in the code.
 - The whole thing is under ~120 words.
 
-See `references/style-guide.md` for the full language guide (everyday-language moves and analogies).
+## Use Everyday Language
+
+A pitch stays in the language a smart non-engineer would use:
+
+- Talk about **behaviors**: what the system does, what a user sees, what a maintainer would observe.
+- Talk about **outcomes**: what changes for the person using the system or the person maintaining it.
+- Use **cause and effect** in plain words: "when X happens, Y now happens too".
+- Tell **concrete actions as a story**: "the system writes down the answer so it doesn't have to ask again the next time".
+- Reach for **everyday analogies** when a concept needs one: a sticky note on a desk, a filing cabinet, an ID check at the door.

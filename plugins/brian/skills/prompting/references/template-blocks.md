@@ -1,8 +1,51 @@
 # Prompting — Template Blocks Reference
 
-Full prompt template blocks for copy-paste into agent prompts. See `instructions.md` for blocks 1-3.
+Full prompt template blocks for copy-paste into agent prompts. Concepts and gates live in `SKILL.md`; this file holds the verbatim block text.
 
 ---
+
+### 1. Expert Role Assignment
+
+```
+You are a [specific expertise] specializing in [domain].
+Your analysis methodology:
+1. [Step 1 — what you assess first]
+2. [Step 2 — what you cross-reference]
+3. [Step 3 — how you resolve conflicts]
+4. [Step 4 — how you form final judgment]
+
+CONSTRAINTS:
+- All numerical calculations are pre-computed and provided below. Do NOT perform arithmetic.
+- Use ONLY the provided data. Do not reference external knowledge about current state.
+- Flag any data that appears inconsistent or anomalous.
+```
+
+### 2. Conflict Detection Protocol
+
+```
+## CONFLICT DETECTION (MANDATORY)
+Before writing any recommendation:
+1. LIST all signals per item across inputs (e.g., quantitative vs qualitative vs contextual)
+2. For each conflict: state it explicitly — "Conflict: metric A suggests X but metric B suggests Y"
+3. Resolution priority: [define your hierarchy, e.g., hard data > soft signals > context]
+4. If unresolvable: downgrade conviction and note "conflicting signals"
+FORBIDDEN: "on balance" or "taking everything into account" without listing conflicts first
+```
+
+### 3. Confidence Calibration Guide
+
+Use a calibrated tag like this **only when a non-LLM parses the confidence value**. When an LLM or a human reads the output, state confidence and its basis in prose instead (see Block 8b) — the prose default is "low" unless the claim is grounded in cited data.
+
+```
+## SIGNAL CONFIDENCE
+Append confidence tag in the analysis field:
+- [HIGH]:   All key indicators align (4/4 or domain-specific threshold)
+- [MEDIUM]: Most align, one minor conflict noted explicitly
+- [LOW]:    Only 2 indicators align — downgrade recommendation automatically
+
+If you cannot cite 3+ data points from the provided context supporting a recommendation,
+it must be downgraded one level.
+```
 
 ### 4. Pro/Con Balance Requirement
 
@@ -50,7 +93,7 @@ After generating your analysis:
 
 ### 8. Structured Output Schema (Pydantic) — for machine-to-machine handoffs only
 
-Use this **only when a non-LLM consumer parses the output**. When an LLM or a human reads the result, prefer Block 8b (prose) instead — see *Prose-First vs. Structured Output* in `instructions.md` for why.
+Use this **only when a non-LLM consumer parses the output**. When an LLM or a human reads the result, prefer Block 8b (prose) instead — see *Prose-First vs. Structured Output* in `SKILL.md` for why.
 
 ```python
 from pydantic import BaseModel, Field

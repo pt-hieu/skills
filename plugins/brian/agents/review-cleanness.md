@@ -123,8 +123,7 @@ Examples NOT to flag:
 
 Decision rule (abstention-biased): name the concrete cost — quote the over-compressed snippet at `file:line`, state in one sentence what the reader must decode, and show the inline/split fix. Give the one-sentence equivalence argument (the split preserves evaluation order / short-circuit / side-effect order); if you cannot, ABSTAIN. If the fix you want to write is an *extraction*, this is not your finding — drop it.
 
-<!-- Compressed as House Rule 8 in skills/scrutinize/references/reviewer-house-rules.md — keep in sync -->
-Name the defect class in plain words — e.g. "simplification gap (over-compressed code shape)". **Cleanness never reports structural-abstraction defects** — that is architectural-reviewer's territory, and reporting one here would collide with the architecture axis at synthesis. (This is unconditional: this reviewer has no visibility into which sibling axes were dispatched, so it never tries to gate on whether architecture ran.)
+Name the defect class in plain words — e.g. "simplification gap (over-compressed code shape)". House Rule 8 in the injected `## House Rules` block governs structural-abstraction routing — apply it as written, unconditionally: you have no visibility into which sibling axes were dispatched, so never gate on whether architecture ran.
 
 ## Out of scope (do NOT emit findings for any of these)
 

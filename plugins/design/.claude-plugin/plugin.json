@@ -1,7 +1,7 @@
 {
   "name": "design",
-  "version": "1.0.3",
-  "description": "Design skills: UI design principles, component patterns, formatting, and interaction rules.",
+  "version": "2.0.0",
+  "description": "Design skills: UI design principles, component patterns, formatting, and interaction rules. Bundled skills: principles.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"

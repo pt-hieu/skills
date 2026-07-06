@@ -66,7 +66,7 @@ If a draft "sounds too polished," reintroduce one of these.
 | Reaction / surprise | `:face_palm:`, `:face_with_peeking_eye:`, `:son_think:` |
 | PR-title prefix (Bitbucket convention, between link halves) | `:bug:`, `:sparkles:`, `:zap:`, `:recycle:`, `:wrench:`, `:ambulance:`, `:coffin:`, `:dumpster_fire:` |
 
-**Do not** drop emojis into outage / incident timelines or post-mortems where they read as flippant.
+Keep incident timelines and post-mortems emoji-free — plain and factual.
 
 ---
 
@@ -219,6 +219,8 @@ The corrections this voice reaches for instead — write the left, not the right
 ### K.8 — Counter-examples
 
 When Claude drafts something off-voice, append a `DRAFT → CORRECTED` pair below. **Cap: keep the most recent 10 entries; rotate the oldest out when adding the 11th.**
+
+CORRECTED entries must come from messages Brian actually posted to the team — self-DMs are Claude drafts, not voice samples, and never enter the log.
 
 ```
 DRAFT (off):  "Hi team, I wanted to follow up on the PR..."

@@ -33,7 +33,7 @@ Expand to full structured output when:
 - An orchestrator (e.g. `brian:kickoff` / `brian:autopilot` on the bug path) injects its own Output Contract — that contract supersedes this one.
 
 ## Core Principle
-Keep asking "why does THIS exist?" until you hit bedrock — see `references/methodology.md` for the full bedrock test and reproduction gate.
+Keep asking "why does THIS exist?" until you hit bedrock.
 
 ## Instructions
-See `references/methodology.md` for the full framework: problem framing, root cause trace (iterative deepening), reproduction gate, defect class identification, validation tests, sibling search, and self-challenge.
+On every invocation, run the full framework in `references/methodology.md` — it is the silent reasoning process behind the Output Contract: problem framing, bedrock test, root cause trace (iterative deepening), reproduction gate, defect class identification, validation tests, sibling search, and self-challenge.

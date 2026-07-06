@@ -1,49 +1,6 @@
-# Kickoff — Execution Guide
+# Kickoff — Task specs
 
-Gated pipeline for taking a new requirement from intake to a green-lit, pitched plan ready for implementation.
-
-**Execution model**: instead of trying to remember a 12-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. Each registered task carries a one-line pointer back to its section in this file; this file stays the single source of truth for every task's Goal / Action / Gate. The pipeline prescribes the *process*, not the judgment: within a task, how to satisfy the gate is the agent's call.
-
-## Hard rules
-
-- **Step 0 is mandatory and runs first.** Register all kickoff tasks before doing any planning work. If `TaskList` already contains kickoff tasks for this requirement, skip Step 0 and resume from the lowest-ID pending task.
-- Work the lowest-ID unblocked task. Re-read its section in this file when picking it up, mark `in_progress` before starting, mark `completed` only when the task's gate passes.
-- When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
-- The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
-- Treat this skill as the source of truth for the workflow — when CLAUDE.md drifts, follow this skill until they reconcile.
-
-## Effort matrix
-
-Set spawned-subagent models per task. The harness exposes the model via the `Agent` tool's `model` parameter.
-
-| Task | Subagent | Effort | Model |
-| --- | --- | --- | --- |
-| 2 Explore | `Explore` (×1–3) | low | `haiku` |
-| 2 Diagnose (bug path) | `brian:diagnose` (inline via `Skill` tool) | medium | — (runs inline; no model parameter) |
-| 3 Historian | `brian:code-historian` | medium | `sonnet` |
-| 6 Plan | `Plan` (×1) | high | `opus` |
-| 8 Challenge | reviewer subagents (spawned by `brian:challenge`) | medium | `opus` (pinned by challenge itself) |
-| 9 Design tests | `brian:test-designer` | medium | `sonnet` |
-| 11 Plan-verifier | `brian:plan-verifier` | medium | `sonnet` |
-
-The Challenge row is informational: `brian:challenge` pins its reviewers to `opus` in its own instructions and exposes no per-invocation model or effort knob — invoke it plainly and let it manage its reviewers.
-
----
-
-## Step 0 — Register the pipeline as tasks (FIRST ACTION)
-
-- **Goal**: turn the pipeline into a checklist the harness enforces.
-- **Action**: in a single message, call `TaskCreate` once per task below, in order. Use each task's **subject** verbatim; write each **description** as a one-line pointer back to this file: `Execute per § "Task N — <title>" of <absolute path of this instructions.md> — re-read that section and pass its Gate before completing.` Then call `TaskUpdate` to wire `addBlockedBy` where order genuinely matters (`A←B` means B is blocked by A):
-  - `1←2←3←4` — Explore feeds the historian; the historian's report informs interrogation.
-  - `2←5` — the skill scan needs only the Explore findings, so pick it up while the historian subagent is out.
-  - `4←6` and `5←6`, then `6←7←8←9←10←11←12` chained.
-
-  Then call `TaskList`, claim Task 1, and begin.
-- **Gate**: `TaskList` shows tasks 1–12 in `pending` with pointer descriptions, dependencies wired, and Task 1 is claimed `in_progress`.
-
-### Tasks to register
-
-Each section below is the full spec for one task — the target of its pointer description. Read the section in full when picking up the task.
+The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each section below is the canonical Goal / Action / Gate for one task — the target of that task's pointer description. Read the section in full when picking up the task; this file stays the single source of truth for every task's Goal / Action / Gate.
 
 ---
 
@@ -213,3 +170,5 @@ Each section below is the full spec for one task — the target of its pointer d
 > **Goal**: hand the plan back for technical-detail review.
 > **Action**: call `ExitPlanMode`.
 > **Gate**: plan mode exited.
+</content>
+</invoke>

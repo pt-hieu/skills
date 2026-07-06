@@ -1,8 +1,8 @@
 # Interaction Patterns
 
-## No Hidden Interactions
+## Every Interactive Element Looks Interactive
 
-Every interactive element must look interactive. No discoverable-only-by-accident UX.
+Every interactive element must advertise itself; nothing should be discoverable only by accident.
 
 - Clickable → cursor change + a visual cue (underline, button style, hover state).
 - Expandable → a visible toggle or chevron.
