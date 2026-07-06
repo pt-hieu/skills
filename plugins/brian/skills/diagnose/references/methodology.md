@@ -4,7 +4,7 @@ Systematic root cause analysis framework. Apply when you're about to fix a bug, 
 
 ---
 
-> Output shape: see `SKILL.md § Output Contract`. If an orchestrator (e.g. `/challenge`) injects its own Output Contract on the user turn, that supersedes. The framework below is the silent reasoning process; surface only the conclusions the active contract asks for.
+> Output shape: see `SKILL.md § Output Contract`. If an orchestrator (e.g. `brian:kickoff` / `brian:autopilot` on the bug path) injects its own Output Contract on the user turn, that supersedes. The framework below is the silent reasoning process; surface only the conclusions the active contract asks for.
 
 ## Role & Personality
 
@@ -56,13 +56,13 @@ Past commits and tickets often disprove a candidate problem framing or supply th
 
 **Skip clauses** — proceed without invoking the historian only when:
 - The change is a single uncommitted hunk with no surrounding git history to read, OR
-- The user-turn input already contains a `## Prior intent` block or a `Tracker:`-prefixed historian report that covers every path under analysis. On this branch, record `Historical Context: reusing prior intent from [section name]` and proceed. This protects standalone re-runs of diagnose against a plan that already carries `## Prior intent` (the post-kickoff path, or a `/challenge` round that re-invokes diagnose).
+- The user-turn input already contains a `## Prior intent` block or a `Tracker:`-prefixed historian report that covers every path under analysis. On this branch, record `Historical Context: reusing prior intent from [section name]` and proceed. This protects standalone re-runs of diagnose against a plan that already carries `## Prior intent` (the post-kickoff path).
 
 Otherwise, invoke the `code-historian` subagent via the `Agent` tool:
 
 ```
 Agent(
-  subagent_type: "code-historian",
+  subagent_type: "brian:code-historian",
   description: "Prior intent gathering for §2",
   prompt: <focusing question derived from §1's candidate root cause + the implicated paths>
 )
@@ -79,10 +79,10 @@ Pass the implicated paths (preferred) and the focusing question derived from §1
 
 **Empty-history fallback** — if the historian report contains no meaningful commits or tickets (`Tracker absence` or empty timeline), record `Historical Context: no prior history — bedrock candidate is "missing abstraction or pattern not yet built"` and proceed; empty history is itself a §4 bedrock signal, not a §2 failure. This marker is sticky across rounds — the reviewer's Round 2+ behavior retains it without re-invoking historian.
 
-**Ordering caveat — kickoff bug path**: when diagnose is invoked from kickoff Task 2 (`kickoff/instructions.md:55`), the `## Prior intent` artifact does not yet exist on disk — Task 3's historian and Task 7's plan-file restructure run later. The skip-clause cannot fire here. The resulting double-spawn with kickoff Task 3's historian is accepted by design: Task 2's diagnose-invoked historian scopes to the symptom paths §1 named; Task 3's historian scopes to the broader design surface from Explore. Different consumers, different scopes — neither subsumes the other.
+**Ordering caveat — kickoff bug path**: when diagnose is invoked from kickoff Task 2 (the Explore task in `kickoff/instructions.md`), the `## Prior intent` artifact does not yet exist on disk — Task 3's historian and Task 7's plan-file restructure run later. The skip-clause cannot fire here. The resulting double-spawn with kickoff Task 3's historian is accepted by design: Task 2's diagnose-invoked historian scopes to the symptom paths §1 named; Task 3's historian scopes to the broader design surface from Explore. Different consumers, different scopes — neither subsumes the other.
 
 **FORBIDDEN**:
-- Invoking the historian as a Skill. It is an agent — use the `Agent` tool with `subagent_type: "code-historian"`.
+- Invoking the historian as a Skill. It is an agent — use the `Agent` tool with `subagent_type: "brian:code-historian"`.
 - Proceeding past §4 without either a historian report or an explicit `Historical Context SKIPPED — [reason]` line.
 
 ---

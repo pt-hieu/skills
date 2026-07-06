@@ -26,8 +26,8 @@ Set spawned-subagent models per task via the `Agent` tool's `model` parameter. T
 | Task | Subagent | Effort | Model |
 | --- | --- | --- | --- |
 | T1 Explore | `Explore` (×1–3) | low | `haiku` |
-| T1 Diagnose (bug path) | `brian:diagnose` | medium | `opus` |
-| T1 Historian (conditional) | `code-historian` | low | `sonnet` |
+| T1 Diagnose (bug path) | `brian:diagnose` (inline via `Skill` tool) | medium | — (runs inline; no model parameter) |
+| T1 Historian (conditional) | `brian:code-historian` | low | `sonnet` |
 | T4 Design | `general-purpose` (×1) | high | `opus` |
 | T6 Review (one round) | `brian:architectural-reviewer` + `brian:root-cause-reviewer` (direct, parallel) | medium | `sonnet` |
 | T8 Implement | implementation subagents (×N, optional) | medium | `sonnet` |
@@ -55,11 +55,11 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   <!-- VERBATIM COPY of kickoff Task 2 — edit both in lockstep. -->
   > **Goal**: ground the work in real code.
   > **Action**:
-  > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The Design task (T4) still runs and consumes this as input.
+  > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The design task (kickoff Task 6 / autopilot T4) still runs and consumes this as input.
   > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
   > <!-- END VERBATIM COPY of kickoff Task 2. -->
   >
-  > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve the historian's `Paths inspected:` line (or per-path commit anchors) — T6 reuses it.
+  > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "brian:code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve the historian's `Paths inspected:` line (or per-path commit anchors) — T6 reuses it.
   > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down, **plus a prior-intent note** (inline git findings, and the historian report if escalation fired).
 
 ---
@@ -89,7 +89,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > 2. Write one line per skill: `skill-name: relevant? (yes/no — one-sentence reason)`. Post the list to chat or save it in your working notes.
   > 3. Invoke each skill marked relevant, in order, via the `Skill` tool.
   > <!-- END VERBATIM COPY of kickoff Task 5. -->
-  > Common in-pipeline matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), `neon:neon-postgres` (Neon), design skills (UI), plus the autopilot-pipeline skills `brian:commit` (T11), `voice:voice` (T12 PR body), and `verify`/`run` (T9 when the change is user-observable).
+  > Common in-pipeline matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), plus the autopilot-pipeline skills `brian:commit` (T11), `voice:voice` (T12 PR body), and `verify`/`run` (T9 when the change is user-observable).
   > **Gate**: scan written down and every relevant skill applied.
 
 ---

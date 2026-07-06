@@ -30,7 +30,7 @@ Default shape (≤ 11 lines + 1 line per cited sibling beyond the first 3):
 
 Expand to full structured output when:
 - The user asks "explain" / "show your work", OR
-- An orchestrator (e.g. `/challenge`) injects its own Output Contract — that contract supersedes this one.
+- An orchestrator (e.g. `brian:kickoff` / `brian:autopilot` on the bug path) injects its own Output Contract — that contract supersedes this one.
 
 ## Core Principle
 Keep asking "why does THIS exist?" until you hit bedrock — see `references/methodology.md` for the full bedrock test and reproduction gate.

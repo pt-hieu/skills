@@ -2,7 +2,7 @@
 
 Deterministic pipeline for taking a new requirement from intake to a green-lit, pitched plan ready for implementation.
 
-**Execution model**: instead of trying to remember an 11-step pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. The agent picks up tasks in ID order, marks `in_progress` before starting, marks `completed` only when the task's gate passes.
+**Execution model**: instead of trying to remember a 12-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. The agent picks up tasks in ID order, marks `in_progress` before starting, marks `completed` only when the task's gate passes.
 
 ## Hard rules
 
@@ -19,14 +19,14 @@ Set spawned-subagent models per task. The harness exposes the model via the `Age
 | Task | Subagent | Effort | Model |
 | --- | --- | --- | --- |
 | 2 Explore | `Explore` (×1–3) | low | `haiku` |
-| 2 Diagnose (bug path) | `brian:diagnose` | medium | `opus` |
-| 3 Historian | `code-historian` | medium | `sonnet` |
+| 2 Diagnose (bug path) | `brian:diagnose` (inline via `Skill` tool) | medium | — (runs inline; no model parameter) |
+| 3 Historian | `brian:code-historian` | medium | `sonnet` |
 | 6 Plan | `Plan` (×1) | high | `opus` |
-| 8 Challenge | reviewer subagents | medium | `opus` |
+| 8 Challenge | reviewer subagents (spawned by `brian:challenge`) | medium | `opus` (pinned by challenge itself) |
 | 9 Design tests | `brian:test-designer` | medium | `sonnet` |
-| 11 Plan-verifier | `plan-verifier` | medium | `sonnet` |
+| 11 Plan-verifier | `brian:plan-verifier` | medium | `sonnet` |
 
-For the Challenge task, the `brian:challenge` orchestrator spawns its reviewers on `opus` — keep that, but request **medium thinking effort** for those subagents so they stay focused without burning the budget.
+The Challenge row is informational: `brian:challenge` pins its reviewers to `opus` in its own instructions and exposes no per-invocation model or effort knob — invoke it plainly and let it manage its reviewers.
 
 ---
 
@@ -60,7 +60,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Goal**: ground the plan in real code.
   > **Action**:
-  > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The Plan-agent task still runs and consumes this as input.
+  > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The design task (kickoff Task 6 / autopilot T4) still runs and consumes this as input.
   > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
   > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down.
 
@@ -71,7 +71,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Historian — gather prior intent from git history and ticket tracker`
 - description:
   > **Goal**: surface the *why* behind prior changes to the code about to be modified, so the implementer doesn't repeat past failures or invert past decisions blindly.
-  > **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "code-historian"` (model per the Effort matrix). Pass it:
+  > **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "brian:code-historian"` (model per the Effort matrix). Pass it:
   > - The file paths surfaced in the Explore task (preferred input).
   > - The topic / area description as fallback when paths are partial.
   > - A focusing question derived from the requirement (e.g. *"why does this module handle X this way?"*).
@@ -103,9 +103,9 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > **Goal**: ensure every applicable skill informs the plan before designing.
   > **Action**:
   > 1. Enumerate every skill in the current system reminder's available-skills list, plus any project skills under `.claude/skills/` and `<git-root>/plugins/*/skills/`.
-  > 2. Write one line per skill: `skill-name: relevant? (yes/no — one-sentence reason)`. Post the list to chat or save it in the plan scratch area.
+  > 2. Write one line per skill: `skill-name: relevant? (yes/no — one-sentence reason)`. Post the list to chat or save it in your working notes.
   > 3. Invoke each skill marked relevant, in order, via the `Skill` tool.
-  > Common matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), `neon:neon-postgres` (Neon), design skills (UI), `brian:commit` (later, out of kickoff scope).
+  > Common matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), `brian:commit` (later, out of kickoff scope).
   > **Gate**: scan written down and every relevant skill applied.
 
 ---
@@ -139,7 +139,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
-  > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:pr`). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
+  > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:voice` for the PR body). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
   > - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing tests defined in the Test design section below by quoting their identifier verbatim inside backticks). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference test names here; describe what each pins there.
   > <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
   >
@@ -159,7 +159,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - description:
   > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
   > **Goal**: catch missed details and weak spots before pitching.
-  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Run its reviewer subagents at **medium thinking effort** (not high), on the model the Effort matrix assigns. Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
+  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will (challenge pins its own reviewer models — see the Effort matrix note). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
   > **Gate**: challenge round complete and the plan file on disk has been updated.
 
 ---
@@ -175,7 +175,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
   > 2. **The path discriminator**: explicitly state `path: bug` when the requirement came in via `brian:diagnose` (Task 2 bug branch) — orchestrator already knows this from Task 2's actual execution. State `path: feature` otherwise. This removes the agent's prose-based bug-path detection ambiguity.
   >
   > The agent inserts a `## Test design` section between `## Skills to use` and `## Verification`, edits in place, and touches no other section.
-  > **Backward-edge escape hatch (the only authorized backward edge in the post-Challenge tail)**: if `test-designer` returns `verification: FAIL` with findings indicating **untestability of the chosen approach** (e.g. all bullets land in `[deferred]` because the approach renders load-bearing behavior unobservable, or test-designer cannot write a regression test that pins the diagnosed root cause), the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input. Reopening Task 6 **cascades through Tasks 7 (Write the plan file) and 8 (Challenge)** so the on-disk plan file reflects the revised approach before Task 9 re-runs; the doubled Challenge cost is part of the accepted trade-off for testability failures. This is the only authorized backward edge in the post-Challenge tail and is invoked only on testability failures — not on the routine `FAIL` cases (e.g. Recommended-approach ↔ Critical-file-paths contradiction), which are fixed in place via re-invocation.
+  > **Backward-edge escape hatch (the only authorized backward edge in the post-Challenge tail)**: if `test-designer` returns `verification: FAIL` with findings indicating **untestability of the chosen approach** (the finding `untestable approach — all tests deferred` from its conflict-and-abstinence rules, or test-designer cannot write a regression test that pins the diagnosed root cause), the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input. Reopening Task 6 **cascades through Tasks 7 (Write the plan file) and 8 (Challenge)** so the on-disk plan file reflects the revised approach before Task 9 re-runs; the doubled Challenge cost is part of the accepted trade-off for testability failures. This is the only authorized backward edge in the post-Challenge tail and is invoked only on testability failures — not on the routine `FAIL` cases (e.g. Recommended-approach ↔ Critical-file-paths contradiction), which are fixed in place via re-invocation.
   > On routine `verification: FAIL` (not a testability failure), read the agent's findings, fix the upstream cause in the plan file, and re-invoke the agent on the same path. Repeat until `verification: PASS`.
   > **Gate**: `test-designer` returns `verification: PASS` and the plan file on disk contains a `## Test design` section sitting between Skills to use and Verification.
 
@@ -196,7 +196,7 @@ Register each entry below as one `TaskCreate` call. Copy the description verbati
 - subject: `Verify plan coherence and inject post-implementation protocol`
 - description:
   > **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
-  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
+  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "brian:plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
   > The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
   > **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
 
