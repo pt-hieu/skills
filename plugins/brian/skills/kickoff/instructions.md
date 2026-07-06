@@ -1,13 +1,13 @@
 # Kickoff — Execution Guide
 
-Deterministic pipeline for taking a new requirement from intake to a green-lit, pitched plan ready for implementation.
+Gated pipeline for taking a new requirement from intake to a green-lit, pitched plan ready for implementation.
 
-**Execution model**: instead of trying to remember a 12-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. The agent picks up tasks in ID order, marks `in_progress` before starting, marks `completed` only when the task's gate passes.
+**Execution model**: instead of trying to remember a 12-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. Each registered task carries a one-line pointer back to its section in this file; this file stays the single source of truth for every task's Goal / Action / Gate. The pipeline prescribes the *process*, not the judgment: within a task, how to satisfy the gate is the agent's call.
 
 ## Hard rules
 
 - **Step 0 is mandatory and runs first.** Register all kickoff tasks before doing any planning work. If `TaskList` already contains kickoff tasks for this requirement, skip Step 0 and resume from the lowest-ID pending task.
-- Work tasks in ID order. Each task's description contains its **Goal / Action / Gate** — advance only when the gate passes.
+- Work the lowest-ID unblocked task. Re-read its section in this file when picking it up, mark `in_progress` before starting, mark `completed` only when the task's gate passes.
 - When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
 - The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
 - Treat this skill as the source of truth for the workflow — when CLAUDE.md drifts, follow this skill until they reconcile.
@@ -33,179 +33,183 @@ The Challenge row is informational: `brian:challenge` pins its reviewers to `opu
 ## Step 0 — Register the pipeline as tasks (FIRST ACTION)
 
 - **Goal**: turn the pipeline into a checklist the harness enforces.
-- **Action**: in a single message, call `TaskCreate` once per task below, in order. Use the **subject** and **description** verbatim — the description carries the Goal / Action / Gate the agent needs to execute that task. After creation, call `TaskUpdate` to wire `addBlockedBy` so each task is blocked by the previous one (1←2←3…←12). Then call `TaskList`, claim Task 1, and begin.
-- **Gate**: `TaskList` shows tasks 1–12 in `pending`, dependencies wired, and Task 1 is claimed `in_progress`.
+- **Action**: in a single message, call `TaskCreate` once per task below, in order. Use each task's **subject** verbatim; write each **description** as a one-line pointer back to this file: `Execute per § "Task N — <title>" of <absolute path of this instructions.md> — re-read that section and pass its Gate before completing.` Then call `TaskUpdate` to wire `addBlockedBy` where order genuinely matters (`A←B` means B is blocked by A):
+  - `1←2←3←4` — Explore feeds the historian; the historian's report informs interrogation.
+  - `2←5` — the skill scan needs only the Explore findings, so pick it up while the historian subagent is out.
+  - `4←6` and `5←6`, then `6←7←8←9←10←11←12` chained.
+
+  Then call `TaskList`, claim Task 1, and begin.
+- **Gate**: `TaskList` shows tasks 1–12 in `pending` with pointer descriptions, dependencies wired, and Task 1 is claimed `in_progress`.
 
 ### Tasks to register
 
-Register each entry below as one `TaskCreate` call. Copy the description verbatim — it is what future-you will read when picking up the task.
+Each section below is the full spec for one task — the target of its pointer description. Read the section in full when picking up the task.
 
 ---
 
 **Task 1 — Enter plan mode**
 
 - subject: `Enter plan mode`
-- description:
-  > **Goal**: ensure planning happens in plan mode.
-  > **Action**: when already in plan mode, continue. Otherwise call the `EnterPlanMode` tool.
-  > **Gate**: plan mode is active.
+
+> **Goal**: ensure planning happens in plan mode.
+> **Action**: when already in plan mode, continue. Otherwise call the `EnterPlanMode` tool.
+> **Gate**: plan mode is active.
 
 ---
 
 **Task 2 — Explore (Phase 1 findings)**
 
-<!-- VERBATIM COPY in plugins/brian/skills/autopilot/instructions.md T1 — edit both in lockstep. -->
+<!-- Canonical text — autopilot T1 points at this section's Action; keep the heading stable. -->
 
 - subject: `Explore — gather Phase-1 findings`
-- description:
-  > **Goal**: ground the plan in real code.
-  > **Action**:
-  > - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The design task (kickoff Task 6 / autopilot T4) still runs and consumes this as input.
-  > - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
-  > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down.
+
+> **Goal**: ground the plan in real code.
+> **Action**:
+> - For **bugs / regressions / "why is X broken"**: invoke `brian:diagnose` via the `Skill` tool to drive root-cause exploration. Treat its output (root cause + defect class + fix-shape suggestion) as **Phase-1 findings**, not as a finished design. The design task (kickoff Task 6 / autopilot T4) still runs and consumes this as input.
+> - For everything else: launch up to 3 `Explore` subagents in parallel, each scoped to a specific search area (existing implementations, related components, tests/patterns, etc.). These are scoped lookups — use the Effort-matrix model and reserve heavier models for design.
+> **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down.
 
 ---
 
 **Task 3 — Historian (gather "why" from git + tickets)**
 
 - subject: `Historian — gather prior intent from git history and ticket tracker`
-- description:
-  > **Goal**: surface the *why* behind prior changes to the code about to be modified, so the implementer doesn't repeat past failures or invert past decisions blindly.
-  > **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "brian:code-historian"` (model per the Effort matrix). Pass it:
-  > - The file paths surfaced in the Explore task (preferred input).
-  > - The topic / area description as fallback when paths are partial.
-  > - A focusing question derived from the requirement (e.g. *"why does this module handle X this way?"*).
-  >
-  > The agent auto-detects the ticket tracker (Jira / Linear / Bitbucket PRs) from commit-message patterns, remotes, and `CLAUDE.md` — do not hand it a tracker choice.
-  > **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change.
+
+> **Goal**: surface the *why* behind prior changes to the code about to be modified, so the implementer doesn't repeat past failures or invert past decisions blindly.
+> **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "brian:code-historian"` (model per the Effort matrix). Pass it:
+> - The file paths surfaced in the Explore task (preferred input).
+> - The topic / area description as fallback when paths are partial.
+> - A focusing question derived from the requirement (e.g. *"why does this module handle X this way?"*).
+>
+> The agent auto-detects the ticket tracker (Jira / Linear / Bitbucket PRs) from commit-message patterns, remotes, and `CLAUDE.md` — do not hand it a tracker choice.
+> **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change.
 
 ---
 
 **Task 4 — Interrogate (architecture-level only)**
 
 - subject: `Interrogate — close architecture-level ambiguity`
-- description:
-  > **Goal**: close any gap that would change the chosen approach.
-  > **Action**: focus on **architecture- and approach-level** questions only — direction, trade-offs, scope boundaries, integration choices. Trust the Plan agent to handle implementation detail later. Use the report from the Historian task to inform which questions matter — prior failures or constraints surfaced there often *are* the architecture questions.
-  > - 1–3 questions max in a single batched `AskUserQuestion` call.
-  > - Phrase every question and option in **plain English** — describe the decision and its trade-offs the way you would to a smart non-engineer. Strip jargon, class names, and file paths from the question and option labels; if a technical term is unavoidable, gloss it in the description. Brian should be able to answer from the choice itself without reverse-engineering the codebase.
-  > - Skip the task entirely (mark completed with a one-line note "no architecture ambiguity") when the requirement is already unambiguous.
-  > **Gate**: remaining unknowns will not change the chosen approach.
+
+> **Goal**: close any gap that would change the chosen approach.
+> **Action**: focus on **architecture- and approach-level** questions only — direction, trade-offs, scope boundaries, integration choices. Trust the Plan agent to handle implementation detail later. Use the report from the Historian task to inform which questions matter — prior failures or constraints surfaced there often *are* the architecture questions.
+> - If a question can be answered by exploring the codebase, explore the codebase instead — ask only what the code cannot answer.
+> - 1–3 questions max in a single batched `AskUserQuestion` call, each with a recommended option placed first and labelled `(Recommended)`.
+> - Phrase every question and option in **plain English** — describe the decision and its trade-offs the way you would to a smart non-engineer. Strip jargon, class names, and file paths from the question and option labels; if a technical term is unavoidable, gloss it in the description. Brian should be able to answer from the choice itself without reverse-engineering the codebase.
+> - Skip the task entirely (mark completed with a one-line note "no architecture ambiguity") when the requirement is already unambiguous.
+> **Gate**: an `AskUserQuestion` round has been answered (or the no-ambiguity note recorded), and remaining unknowns will not change the chosen approach.
 
 ---
 
 **Task 5 — Skill scan (the task most often missed)**
 
-<!-- VERBATIM COPY in plugins/brian/skills/autopilot/instructions.md T3 — edit both in lockstep. -->
+<!-- Canonical text — autopilot T3 points at this section's Action steps 1–3; keep the heading stable. -->
 
 - subject: `Skill scan — enumerate and apply`
-- description:
-  > **Goal**: ensure every applicable skill informs the plan before designing.
-  > **Action**:
-  > 1. Enumerate every skill in the current system reminder's available-skills list, plus any project skills under `.claude/skills/` and `<git-root>/plugins/*/skills/`.
-  > 2. Write one line per skill: `skill-name: relevant? (yes/no — one-sentence reason)`. Post the list to chat or save it in your working notes.
-  > 3. Invoke each skill marked relevant, in order, via the `Skill` tool.
-  > Common matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), `brian:commit` (later, out of kickoff scope).
-  > **Gate**: scan written down and every relevant skill applied.
+
+> **Goal**: ensure every applicable skill informs the plan before designing.
+> **Action**:
+> 1. Enumerate every skill in the current system reminder's available-skills list, plus any project skills under `.claude/skills/` and `<git-root>/plugins/*/skills/`.
+> 2. Write one line per skill: `skill-name: relevant? (yes/no — one-sentence reason)`. Post the list to chat or save it in your working notes.
+> 3. Invoke each skill marked relevant, in order, via the `Skill` tool.
+> Common matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), `brian:commit` (later, out of kickoff scope).
+> **Gate**: scan written down and every relevant skill applied.
 
 ---
 
 **Task 6 — Plan agent (HARD GATE)**
 
 - subject: `Run Plan agent — produce detailed implementation plan`
-- description:
-  > **Goal**: produce a detailed implementation plan from a focused designer.
-  > **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix). Hand it:
-  > - Phase-1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape)
-  > - Historian report (prior intent, recurring themes, implications)
-  > - Requirements and constraints
-  > - Skill-scan output and any skill-derived patterns to follow
-  > - Architecture decisions confirmed in the Interrogate task
-  >
-  > **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the plan file path specified by the plan-mode system prompt (create the file if absent). This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file exists on disk and contains the Plan agent's return.
-  > **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the plan file on disk. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
+
+> **Goal**: produce a detailed implementation plan from a focused designer.
+> **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix). Hand it:
+> - Phase-1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape)
+> - Historian report (prior intent, recurring themes, implications)
+> - Requirements and constraints
+> - Skill-scan output and any skill-derived patterns to follow
+> - Architecture decisions confirmed in the Interrogate task
+>
+> **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the plan file path specified by the plan-mode system prompt (create the file if absent). This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file exists on disk and contains the Plan agent's return.
+> **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the plan file on disk. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
 
 ---
 
 **Task 7 — Write the plan file**
 
 - subject: `Write the plan file`
-- description:
-  > **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
-  > **Action**: the plan file already exists on disk with the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
-  > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
-  > <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The Prior intent restructure MUST preserve the historian's "Paths inspected:" line (or per-path commit anchors) so the reviewer's COVERAGE check has a structural target. -->
-  > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors, **plus the historian's `Paths inspected:` enumeration verbatim**. Quote prior decisions verbatim.
-  > - **Recommended approach** — the chosen path.
-  > - **Critical file paths** — every file that will change, absolute paths.
-  > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
-  > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:voice` for the PR body). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
-  > - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing tests defined in the Test design section below by quoting their identifier verbatim inside backticks). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference test names here; describe what each pins there.
-  > <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
-  >
-  > End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 11 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
-  > **Gate**: re-read the written plan file end-to-end and confirm in chat:
-  > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
-  > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
-  > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
-  > (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches).
-  > Confirm all checks pass before completing this task; fix any that fail first.
+
+> **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
+> **Action**: the plan file already exists on disk with the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
+> - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
+> <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The Prior intent restructure MUST preserve the historian's "Paths inspected:" line (or per-path commit anchors) so the reviewer's COVERAGE check has a structural target. -->
+> - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors, **plus the historian's `Paths inspected:` enumeration verbatim**. Quote prior decisions verbatim.
+> - **Recommended approach** — the chosen path.
+> - **Critical file paths** — every file that will change, absolute paths.
+> - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
+> - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:voice` for the PR body). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
+> - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing tests defined in the Test design section below by quoting their identifier verbatim inside backticks). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference test names here; describe what each pins there.
+> <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
+>
+> End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 11 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
+> **Gate**: re-read the written plan file end-to-end and confirm in chat:
+> (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
+> (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
+> (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
+> (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches).
+> Confirm all checks pass before completing this task; fix any that fail first.
 
 ---
 
 **Task 8 — Challenge**
 
 - subject: `Challenge the plan file`
-- description:
-  > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
-  > **Goal**: catch missed details and weak spots before pitching.
-  > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will (challenge pins its own reviewer models — see the Effort matrix note). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
-  > **Gate**: challenge round complete and the plan file on disk has been updated.
+
+> **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
+> **Goal**: catch missed details and weak spots before pitching.
+> **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will (challenge pins its own reviewer models — see the Effort matrix note). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
+> **Gate**: challenge round complete and the plan file on disk has been updated.
 
 ---
 
 **Task 9 — Design tests**
 
 - subject: `Design the Test design section of the plan file`
-- description:
-  > **Goal**: leave the plan file with a concrete, salience-ordered, smell-free Test design section the implementer can drive TDD against. Challenge has finalized the approach; the test design pins the behaviors that approach must protect.
-  > **Trade-off (documented)**: this task runs AFTER Challenge so Challenge's in-place revisions cannot orphan the Test design section (the failure mode plan-verifier exists to catch, commit `cee4f52`). The accepted cost is that Challenge's opus-level reviewers cannot critique the test commitments. The single authorized mitigation is the backward-edge escape hatch below.
-  > **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"` (model per the Effort matrix). Pass two arguments:
-  > 1. **The absolute path of the plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
-  > 2. **The path discriminator**: explicitly state `path: bug` when the requirement came in via `brian:diagnose` (Task 2 bug branch) — orchestrator already knows this from Task 2's actual execution. State `path: feature` otherwise. This removes the agent's prose-based bug-path detection ambiguity.
-  >
-  > The agent inserts a `## Test design` section between `## Skills to use` and `## Verification`, edits in place, and touches no other section.
-  > **Backward-edge escape hatch (the only authorized backward edge in the post-Challenge tail)**: if `test-designer` returns `verification: FAIL` with findings indicating **untestability of the chosen approach** (the finding `untestable approach — all tests deferred` from its conflict-and-abstinence rules, or test-designer cannot write a regression test that pins the diagnosed root cause), the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input. Reopening Task 6 **cascades through Tasks 7 (Write the plan file) and 8 (Challenge)** so the on-disk plan file reflects the revised approach before Task 9 re-runs; the doubled Challenge cost is part of the accepted trade-off for testability failures. This is the only authorized backward edge in the post-Challenge tail and is invoked only on testability failures — not on the routine `FAIL` cases (e.g. Recommended-approach ↔ Critical-file-paths contradiction), which are fixed in place via re-invocation.
-  > On routine `verification: FAIL` (not a testability failure), read the agent's findings, fix the upstream cause in the plan file, and re-invoke the agent on the same path. Repeat until `verification: PASS`.
-  > **Gate**: `test-designer` returns `verification: PASS` and the plan file on disk contains a `## Test design` section sitting between Skills to use and Verification.
+
+> **Goal**: leave the plan file with a concrete, salience-ordered, smell-free Test design section the implementer can drive TDD against. Challenge has finalized the approach; the test design pins the behaviors that approach must protect. (Why this task runs after Challenge, and the accepted trade-off: `references/testability-escape-hatch.md`.)
+> **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"` (model per the Effort matrix). Pass two arguments:
+> 1. **The absolute path of the plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
+> 2. **The path discriminator**: explicitly state `path: bug` when the requirement came in via `brian:diagnose` (Task 2 bug branch) — orchestrator already knows this from Task 2's actual execution. State `path: feature` otherwise. This removes the agent's prose-based bug-path detection ambiguity.
+>
+> The agent inserts a `## Test design` section between `## Skills to use` and `## Verification`, edits in place, and touches no other section.
+> On `verification: FAIL`: when the findings say the **chosen approach is untestable** (all tests deferred, or no regression test can pin the diagnosed root cause), stop and read `references/testability-escape-hatch.md` before acting — it authorizes the only backward edge in the post-Challenge tail. On any other `FAIL`, fix the upstream cause in the plan file and re-invoke the agent on the same path. Repeat until `verification: PASS`.
+> **Gate**: `test-designer` returns `verification: PASS` and the plan file on disk contains a `## Test design` section sitting between Skills to use and Verification.
 
 ---
 
 **Task 10 — Pitch**
 
 - subject: `Pitch the plan to Brian`
-- description:
-  > **Goal**: give the user a plain-language preview before exit.
-  > **Action**: invoke `voice:pitch` via the `Skill` tool to post the chat-reply pitch.
-  > **Gate**: pitch is posted.
+
+> **Goal**: give the user a plain-language preview before exit.
+> **Action**: invoke `voice:pitch` via the `Skill` tool to post the chat-reply pitch.
+> **Gate**: pitch is posted.
 
 ---
 
 **Task 11 — Verify the plan and inject post-implementation protocol**
 
 - subject: `Verify plan coherence and inject post-implementation protocol`
-- description:
-  > **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
-  > **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "brian:plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
-  > The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
-  > **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
+
+> **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
+> **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "brian:plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
+> The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
+> **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
 
 ---
 
 **Task 12 — ExitPlanMode**
 
 - subject: `ExitPlanMode`
-- description:
-  > **Goal**: hand the plan back for technical-detail review.
-  > **Action**: call `ExitPlanMode`.
-  > **Gate**: plan mode exited.
+
+> **Goal**: hand the plan back for technical-detail review.
+> **Action**: call `ExitPlanMode`.
+> **Gate**: plan mode exited.
