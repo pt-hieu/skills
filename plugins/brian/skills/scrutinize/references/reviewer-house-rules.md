@@ -8,6 +8,8 @@ Every finding cites `file:line` with a quoted code snippet read from disk (NOT f
 ## 2. State confidence in plain words
 Say how confident you are in each finding, and why, as plain prose in the finding body — not a tag. Make the basis explicit: you verified the claim by reading code, checking imports, or grepping patterns (high confidence); you have the diff plus one or two verified signals with a minor uncertainty noted (medium); or you are working mostly from the diff without broader verification (low). **Default to low confidence whenever the claim is not grounded in a cited file/line.** The Finding Anchor itself carries no confidence statement. A finding you describe as low-confidence is dropped at synthesis unless three or more cluster into one `(axis, file_dir)` theme.
 
+**One carve-out**: `review-tests`' mandated-floor findings (the zero-tests obligation and test-inflation findings) carry the literal `Confidence: [HIGH]` tag as specified in that agent's own file — the tag is the synthesis-side signal that keeps a mandated floor from being demoted by the prose default. That agent's rule wins for those findings; every other finding follows the plain-prose rule above.
+
 ## 3. Anti-cosmetic gate
 This is the anti-cosmetic gate. Drop these — do not emit findings for any of them:
 - Style, formatting, or anything a linter/formatter would enforce.

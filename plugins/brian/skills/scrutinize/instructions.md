@@ -10,16 +10,16 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 
 | axis | `subagent_type` (Agent tool) | agent file | always-on? | trigger (one-line) | default model |
 |---|---|---|---|---|---|
-| `correctness-reliability` | `review-correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
-| `cleanness` | `review-cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
-| `security` | `review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
-| `tests` | `review-tests` | `review-tests.md` | no | production-code file in diff | sonnet |
-| `architecture` | `architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
-| `spec` | `review-spec` | `review-spec.md` | no | spec source resolvable (Jira key in branch/commit messages, `--spec <path>`, or PRD file under `docs/`\|`specs/`\|`.scratch/`) | sonnet |
+| `correctness-reliability` | `brian:review-correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
+| `cleanness` | `brian:review-cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
+| `security` | `brian:review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
+| `tests` | `brian:review-tests` | `review-tests.md` | no | production-code file in diff | sonnet |
+| `architecture` | `brian:architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
+| `spec` | `brian:review-spec` | `review-spec.md` | no | spec source resolvable (Jira key in branch/commit messages, `--spec <path>`, or PRD file under `docs/`\|`specs/`\|`.scratch/`) | sonnet |
 
-Steps C, D, E, F all reference this table. Do not re-list axes in prose elsewhere in this file.
+Steps C, D, E, F all reference this table. This table is the only place axes are enumerated in this file — everywhere else refers back to it.
 
-**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column — never substitute `architectural-reviewer` (or any other value) as a default. If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
+**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column (note the `brian:` plugin prefix — the harness registers plugin agents under it) — never substitute `brian:architectural-reviewer` (or any other value) as a default. If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
 
 ---
 
@@ -129,10 +129,11 @@ tiny_diff_flag = (total_lines < 10 AND total_files < 2)
 
 If `tiny_diff_flag`:
 - Drop `cleanness` from always-on (record reason `tiny diff: <N> lines across <M> files`).
-- Downgrade any non-trigger-matched axis to `sonnet`. Triggered axes stay on `opus`.
-- Set `tier = sonnet-narrow` if every dispatched axis was downgraded; else `opus-narrow`.
+- Set `tier = narrow`.
 
-If not tiny: `tier = opus-full`.
+If not tiny: `tier = full`.
+
+Every axis runs on the Axis Registry's default-model column (`sonnet`); the tier controls axis breadth, not model choice.
 
 ### C.3 Security trigger
 
@@ -207,8 +208,10 @@ The spec axis is dispatched only when one of branches 1–3 yields `spec_text`. 
 Before the parallel dispatch, the orchestrator Reads the shared house-rules file. **This Read is load-bearing**; it is the single-source-of-truth substrate that gets injected into every reviewer.
 
 ```
-house_rules_txt   = Read("plugins/brian/agents/_shared/reviewer-house-rules.md")
+house_rules_txt   = Read("${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/reviewer-house-rules.md")
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory (the harness substitutes it); the path must resolve from any repo the skill runs in, so it is always plugin-root-relative, never repo-relative.
 
 The orchestrator NEVER restates the house rules literally — only via this Read-and-inject substitution.
 
@@ -312,7 +315,7 @@ If none exist, write the line: `No project rules found; review against general p
 Emit ALL dispatched-axis Agent calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call:
 
 - `subagent_type`: the **second column of the Axis Registry** for this axis — and only that column. Every dispatched axis MUST use a distinct `subagent_type`; if you are about to emit two Agent calls with the same value, stop and re-read the registry.
-- `model`: per the tier decision in Step C.2 (default `sonnet`; tier downgrade pins `sonnet`).
+- `model`: the Axis Registry's default-model column (`sonnet` for every axis).
 - `run_in_background: true`.
 - `prompt`: the assembled user-turn from D.1.
 
@@ -324,7 +327,7 @@ After dispatch, wait for harness notifications — do NOT poll. Emit at most one
 
 When all dispatched agents have returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+3). Two exceptions keep a literal floor: a finding that carries `review-tests`' explicit high-confidence floor tag from its mandatory-floor sites (the zero-tests obligation and test-inflation findings) is treated as HIGH regardless of the prose default — do not demote it. A `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) carries a **MEDIUM severity floor** — never demote it below MEDIUM even when the prose is terse, so a single unmet requirement is never silently dropped by the LOW-grouping gate (rule 4). This mirrors the `review-tests` floor and encodes "don't let Standards mask Spec" without merging axes; dedupe and the rest of the severity logic are otherwise unchanged.
+1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 6+4). Two exceptions keep a literal floor: a finding that carries `review-tests`' explicit high-confidence floor tag from its mandatory-floor sites (the zero-tests obligation and test-inflation findings) is treated as HIGH regardless of the prose default — do not demote it. A `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) carries a **MEDIUM severity floor** — never demote it below MEDIUM even when the prose is terse, so a single unmet requirement is never silently dropped by the LOW-grouping gate (rule 4). This mirrors the `review-tests` floor and encodes "don't let Standards mask Spec" without merging axes; dedupe and the rest of the severity logic are otherwise unchanged.
 2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
 3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
 4. **Severity gate**:
@@ -390,7 +393,7 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 | `defect_class` (free-prose phrase; the `(file, …)` merge key and render slot) | this file (Step D.1) + agents narrate it in their Input Contract |
 | `Finding Anchor` | this file (Step D.1) + shared agents narrate the format |
 | `Output Contract` (block name) | this file (Step D.1) + agents' Input Contract sections |
-| `House Rules` (block name) | `plugins/brian/agents/_shared/reviewer-house-rules.md` |
+| `House Rules` (block name) | `skills/scrutinize/references/reviewer-house-rules.md` (plugin-root-relative) |
 | `Repo Root`, `Diff`, `Changed Files`, `Project Rules`, `Axis` (block names) | this file (Step D.1) |
 | `Zero Tests Flag` (per-axis hint) | this file (Step C.4) + `review-tests.md` |
 | `Spec`, `Spec Source` (per-axis hint block names) | this file (Steps C.7, D.2) + `review-spec.md` |

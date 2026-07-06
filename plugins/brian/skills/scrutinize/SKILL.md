@@ -6,7 +6,7 @@ description: "Use to review local code changes against Brian's house rules — c
 # Scrutinize
 
 ## What it does
-Dispatches axis-specialized opus reviewer subagents in parallel against the local diff, synthesizes findings against Brian's house rules (citation-or-drop, severity gate, anti-cosmetic gate, root-cause framing), and prints a severity-ordered findings list to chat. The diff is also snapshotted under a per-repo directory in `/tmp` (outside the repo) for replay.
+Reviews a local diff by axis (correctness, cleanness, security, tests, architecture, spec) with parallel reviewer subagents instead of one generalist pass, then synthesizes their findings under Brian's house rules into a severity-ordered list in chat. The diff is also snapshotted under a per-repo directory in `/tmp` (outside the repo) for replay.
 
 ## Args
 - *(no args)* — working-tree mode: stages + unstaged + untracked files.
@@ -15,7 +15,8 @@ Dispatches axis-specialized opus reviewer subagents in parallel against the loca
 - `--base <ref>` — diff `<ref>..HEAD`.
 - `--axes=all` — force every axis (override smart-dispatch).
 - `--axes=<csv>` — force a specific axis set (always-on axes still run).
-- `--input <sha-ts>` — replay against a prior cached `.scrutinize/<sha-ts>.diff` snapshot.
+- `--spec <path>` — explicit spec/PRD file for the spec axis to check the diff against.
+- `--input <sha-ts>` — replay against a prior cached snapshot (see Output for the path).
 
 ## Output
 - Diff snapshot: `/tmp/scrutinize/<flattened-repo-path>/<sha>-<UTC-ISO>.diff` — lives outside the repo (no `.gitignore` entry needed); used by `--input <sha-ts>` to replay against the cached diff.
