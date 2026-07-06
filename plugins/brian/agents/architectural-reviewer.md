@@ -159,7 +159,7 @@ A skipped dimension is better than a fabricated concern.
 For each finding, the FIRST line MUST be the Finding Anchor specified in the orchestrator's `## Output Contract`:
 
 ```
-Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>
+Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 ```
 
 Fill `defect_class` with a short plain-words phrase naming the underlying defect — not a label from a fixed list. For cross-file findings (no single line anchor), set `line=cross`.

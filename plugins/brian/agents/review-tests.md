@@ -39,6 +39,7 @@ For each changed production file:
 
 ## Zero-tests obligation
 
+<!-- Compressed as House Rule 8 in skills/scrutinize/references/reviewer-house-rules.md; the Confidence tag carve-out lives in House Rule 2 — keep in sync -->
 When `## Zero Tests Flag` is `true`:
 
 - Identify the changed production function with the highest blast radius (public API entry point, shared utility imported in ≥3 places, security-relevant code).
