@@ -19,5 +19,5 @@ When a section has a header, keep the header visible above the error so the user
 
 Every async operation has visible feedback.
 
-- **Mutations** — disable the trigger and show progress on it (Can be either spinners or gerunds).
+- **Mutations** — disable the trigger and show progress on it, via a spinner or a gerund label (e.g. the button text becomes "Saving…").
 - **Queries** — use skeletons that match the eventual layout (same heights, gaps, padding). Never a bare spinner for a page-level load — it tells the user nothing about what's coming.
