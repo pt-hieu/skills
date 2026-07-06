@@ -5,7 +5,7 @@ description: "Use as the final step of plan-mode work, immediately before callin
 
 # Pitch
 
-A plain-language summary of a plan, posted as a chat reply right before `ExitPlanMode`, so the user can make final course corrections before any code is written. The audience is the human maintainer who has stepped back from the details, and the pitch stays in everyday language.
+A plain-language summary of a plan, posted as a chat reply right before `ExitPlanMode`, so the user can make final course corrections before any code is written. On an explicit request outside plan mode ("pitch", "recap"), the same shape applies to whatever plan or piece of work is under discussion — still posted as a chat reply. The audience is the human maintainer who has stepped back from the details, and the pitch stays in everyday language.
 
 ## Output Shape
 
@@ -27,4 +27,4 @@ The pitch is done only when all of these hold:
 - Each piece of the system is named by what it does, not what it's called in the code.
 - The whole thing is under ~120 words.
 
-See `references/style-guide.md` for the full language guide and worked examples.
+See `references/style-guide.md` for the full language guide (everyday-language moves and analogies).

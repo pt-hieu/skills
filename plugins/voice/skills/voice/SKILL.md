@@ -1,6 +1,6 @@
 ---
 name: voice
-description: "Use when drafting outbound team-facing text the user will post on a public/team surface: Slack channel messages, PR announcements/descriptions, Bitbucket PR comments, or Jira comments. Do NOT use for code, code comments, plan files, chat replies to the user, or messages to external recipients (customers, vendors)."
+description: "Use only when drafting outbound team-facing text the user will post on a public/team surface: Slack channel messages, PR announcements/descriptions, Bitbucket PR comments, or Jira comments. Code, code comments, plan files, chat replies to the user, and messages to external recipients (customers, vendors) all stay outside this voice."
 ---
 
 # Voice
