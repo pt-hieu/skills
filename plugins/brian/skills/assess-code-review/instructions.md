@@ -4,7 +4,7 @@
 
 You own the whole loop: PR resolution, fetching and filtering comments, classification, the single batched presentation, and the post-approval apply/resolve/reply sequence. There is exactly ONE human gate (the batched approval); everything before it is read-only assessment, everything after it is mechanical execution of the approved dispositions.
 
-Defaults (interface repo, per global CLAUDE.md): Bitbucket workspace `drovacorp`, repository `interface` (pass as `drovacorp/interface`), target branch `master`. PR comments are authored as Claude Code on behalf of Brian Pham. Do NOT escape `\n` in MCP payloads — a bare `\n` works.
+Defaults (interface repo, per global CLAUDE.md): Bitbucket workspace `drovacorp`, repository `interface` (pass as `drovacorp/interface`), target branch `master`. PR comments are authored as Claude Code on behalf of Brian Pham. Write MCP payloads with bare `\n` newlines — the API renders them directly, while escaped `\\n` prints literal backslashes.
 
 ---
 

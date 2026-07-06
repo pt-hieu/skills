@@ -1,6 +1,6 @@
 # Prompting Reference
 
-Research synthesis from 20+ papers and industry sources on effective LLM prompting for reliable agent systems.
+Research synthesis from the papers and industry sources catalogued in `references/research-sources.md` on effective LLM prompting for reliable agent systems.
 
 ---
 

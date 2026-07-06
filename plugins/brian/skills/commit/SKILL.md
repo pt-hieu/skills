@@ -8,6 +8,8 @@ allowed-tools: Bash(git *)
 
 # Commit Skill
 
+Commits with a strict `{JIRA} {emoji} {type}(scope): {description}` format and one concern per commit — splitting mixed diffs instead of batching them under a summary message.
+
 ## Behavior
 
 1. Auto-stage if nothing staged (`git add`)

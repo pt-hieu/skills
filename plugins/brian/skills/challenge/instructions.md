@@ -139,7 +139,7 @@ The orchestrator-injected contract goes into the user-turn `prompt` field. Ident
 
 Every finding MUST start with a structured Finding Anchor on its own line:
 
-  Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | "cross">; summary=<one-sentence canonical issue>
+  Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
 Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges findings by `(file, defect_class)`, so the phrase is load-bearing.
 
@@ -243,7 +243,7 @@ Count `INSUFFICIENT CONTEXT` dimensions across both agents.
 - If the gap is **closable** (file path / ticket / grep pattern reachable from the orchestrator): fetch the missing context (`Read` the file, `WebFetch` the ticket, run the grep), then re-launch **only the affected agent** with an extra `## Resolved Gaps` block. Cap at 1 retry per round. After retry, re-run 3.0 and re-evaluate the gate.
 - If the gap is **non-closable** OR remains unresolved after retry: verdict is capped at `REVISE` regardless of finding count. Cannot `PASS` with unresolved gaps. The "Insufficient Context Areas" section in the report becomes a top-level callout, not a footnote.
 
-### 3.3 Merge / dedupe / prioritize
+### 3.2 Merge / dedupe / prioritize
 
 1. Collect both agents' closing keywords and read each finding's confidence from its prose.
 2. **Discard unverified and low-confidence findings** (confidence judged from the finding's prose) unless they represent a potentially critical concern worth flagging.
@@ -258,19 +258,19 @@ Count `INSUFFICIENT CONTEXT` dimensions across both agents.
 
 The merged finding list is held verbally for the duration of one synthesis pass; that's all that's needed.
 
-### 3.4 Render the unified report
+### 3.3 Render the unified report
 
 Synthesis goes two places: appended verbatim to the run file (forensic), and rendered compactly in chat (user-facing). Don't dump JSON, don't write `N/A` for empty sections, don't repeat agent paragraphs verbatim — the orchestrator condenses.
 
-3.4a runs only after 3.1 resolves (retries complete or aborted); 3.4b runs only after 3.4a is appended to the run file.
+3.3a runs only after 3.1 resolves (retries complete or aborted); 3.3b runs only after 3.3a is appended to the run file.
 
-On the aborted-round path (both agents failed twice): skip both 3.4a and 3.4b; emit only one line to chat:
+On the aborted-round path (both agents failed twice): skip both 3.3a and 3.3b; emit only one line to chat:
 
 ```
 Round N: ABORTED — both agents failed twice. See <run_file>.
 ```
 
-### 3.4a Persist verbose synthesis (run file)
+### 3.3a Persist verbose synthesis (run file)
 
 Append `### Synthesis` under the current `## Round N` heading using the template below.
 
@@ -308,9 +308,9 @@ Append `### Synthesis` under the current `## Round N` heading using the template
 (Verdict capped at REVISE if any unresolved INSUFFICIENT CONTEXT — see 3.1.)
 ```
 
-### 3.4b Render compact synthesis to chat
+### 3.3b Render compact synthesis to chat
 
-After 3.4a is appended, render the chat-channel template below. Project from the same merged finding list — fields are NOT re-derived.
+After 3.3a is appended, render the chat-channel template below. Project from the same merged finding list — fields are NOT re-derived.
 
 ```
 ## Challenge Report — Round N — {VERDICT}{ — confidence: {HIGHER|LOWER}}
@@ -338,7 +338,7 @@ Hard rules:
 - Skill Compliance: cite skill name inline in the issue sentence; no separate section.
 - False Consensus / Debated Findings: no section header in chat — debated findings appear in Findings list with resolved severity; `[CONSENSUS-BLIND-SPOT]` findings appear in Findings like any other.
 - Empty sections: omit header entirely (no `N/A`).
-- Suppression escape hatch: drop low-confidence/unverified findings from chat UNLESS 3.3 marked it "critical concern worth flagging" OR the finding has tag `[CONSENSUS-BLIND-SPOT]`. Never silently drop those two classes.
+- Suppression escape hatch: drop low-confidence/unverified findings from chat UNLESS 3.2 marked it "critical concern worth flagging" OR the finding has tag `[CONSENSUS-BLIND-SPOT]`. Never silently drop those two classes.
 
 ---
 
@@ -362,8 +362,8 @@ For every high- and medium-severity finding (severity judged from the prose, inc
 4. **Defer** — the finding is real but genuinely out of scope. Requires a follow-up reference (ticket, task, or `/schedule` agent). "Out of scope" is not a synonym for "hard."
 
 Hard rules:
-- Do NOT silently drop findings.
-- Do NOT mark a finding "addressed" by restating the same approach the reviewer flagged in different words.
+- Every finding gets exactly one recorded disposition — a finding with no disposition line is a contract violation.
+- A "Fix" disposition must change the approach the reviewer flagged; restating the same approach in different words counts as no disposition.
 - Cross-agent conflicts from Step 3 must be resolved (pick a side with evidence) before proceeding.
 
 Append the **Round N Changes** block to the run file under the current `## Round N` heading. The forensic record (multi-line dispositions allowed) lives in the run file; the chat render is one line per finding — **hard cap**.
@@ -404,7 +404,7 @@ Append `### PR Review Comments` to the run file with every high- and medium-seve
 ...
 ```
 
-Then render the compact chat view (mirrors 3.4b chat discipline — same defect class):
+Then render the compact chat view (mirrors 3.3b chat discipline — same defect class):
 
 ```
 ## PR Review Comments — N findings ready
@@ -458,7 +458,7 @@ The run file IS the final report. Chat emits a single turn:
 ## Challenge Complete — {VERDICT progression: R1 → R2 → R3}
 arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  artifact: <run_file>
 {escalation banner if round-3-cap or diminishing-returns}
-{last round's compact synthesis (3.4b template)}
+{last round's compact synthesis (3.3b template)}
 {last round's Round N Changes one-liners (4a chat-render format)}
 {deferred findings inline if any}
 ```
