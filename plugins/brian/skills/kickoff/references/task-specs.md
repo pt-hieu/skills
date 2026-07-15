@@ -124,8 +124,8 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
 > **Goal**: catch missed details and weak spots before pitching.
-> **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will (challenge pins its own reviewer models — see the Effort matrix note). Revise the plan **file in place** with each round of feedback until challengers pass or any remaining red flag is explicitly accepted in writing inside the plan file.
-> **Gate**: challenge round complete and the plan file on disk has been updated.
+> **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Revise the plan **file in place** with each round of feedback.
+> **Gate**: challengers pass, or every remaining red flag is explicitly accepted in writing inside the plan file — and the accepting/revising edits are on disk. A completed round with unresolved, unaccepted red flags does not clear this gate.
 
 ---
 
