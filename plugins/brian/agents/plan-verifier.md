@@ -39,9 +39,10 @@ Flag anything that breaks the single narrative:
 
 ### Understandability
 
-- Every section the kickoff skill requires is present and non-empty: Context, Prior intent, Recommended approach, Critical file paths, Reused utilities, Skills to use, Test design, Verification.
+- Every section the kickoff skill requires is present and non-empty: Context, Prior intent, Recommended approach, Load-bearing premises, Critical file paths, Reused utilities, Skills to use, Test design, Verification.
 - A fresh-context implementer can act on it: file paths are absolute, the approach is concrete (not "refactor as needed"), Verification is runnable.
 - No unresolved kickoff scaffolding — no "TODO from Challenge", no placeholder, no note addressed to the orchestrator rather than the implementer.
+- **Premise verification check.** Every bullet in Load-bearing premises must carry either a `verified by:` note naming the concrete check (a command, grep, or file read) or an explicit `unverified — checkable by:` note. A premise stated as bare assertion — no note, or a note like "verified by: inspection" that names no reproducible check — is a finding: `Load-bearing premises — premise lacks a reproducible verification`.
 - **Bug-path regression invariant.** If Context references a diagnosed root cause or names a defect class (signals `brian:diagnose` ran upstream), the Test design section MUST contain at least one test described, in prose, as a regression test whose stated rationale quotes a substring of the Context root cause. If absent, fail the plan with finding `Test design — missing regression test on bug path`.
 - **Verification ↔ Test design dangling-reference check.** Each Test design bullet's identifier is the imperative phrase after `[unit]`/`[integration]` on the bullet's header line — this is its canonical name. Verification MUST cite tests by quoting that identifier verbatim inside backticks. Fail the plan with one finding per: (a) backtick-quoted test name in Verification with no matching Test design identifier; (b) Test design bullet whose identifier appears nowhere (backtick-quoted) in Verification. Matching is exact literal substring match on the identifier text — no token overlap, no fuzzy match.
 

@@ -8,7 +8,7 @@ Runs after the verbose synthesis (3.3a) is appended to the run file. Don't dump 
 
 ```
 ## Challenge Report — Round N — {VERDICT}{ — confidence: {HIGHER|LOWER}}
-arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  {lens}: {✅|⚠️|❌}}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
 
 ### Findings
 - ❌ HIGH {arch|rca|both} {file:line} — {one-sentence issue, cite skill name inline if a skill rule is violated}. Fix: {one-sentence fix}.
@@ -28,7 +28,8 @@ Dropped from chat: N low-confidence findings (see run file)
 ```
 
 Hard rules:
-- Source prefix: `arch`, `rca`, or `both` (when merged).
+- The `facts` mark renders in plan mode only; one extra mark per launched wildcard lens, named by the lens.
+- Source prefix: `arch`, `rca`, `facts`, a lens name, or `both` (when merged across two sources).
 - Skill Compliance: cite skill name inline in the issue sentence; no separate section.
 - False Consensus / Debated Findings: no section header in chat — debated findings appear in Findings list with resolved severity; `[CONSENSUS-BLIND-SPOT]` findings appear in Findings like any other.
 - Empty sections: omit header entirely (no `N/A`).
@@ -46,7 +47,10 @@ Run file (`### Round N Changes` — multi-line allowed, appended under the curre
 - MEDIUM {file:line} — {one-line finding}: REBUTTED-CITE — {evidence: file:line / git ref / domain rule}
 - MEDIUM {file:line} — {one-line finding}: REBUTTED-JUDGMENT — {tradeoff: accepting X for Y; siblings: ...}
 - MEDIUM {file:line} — {one-line finding}: DEFERRED — {ticket / follow-up reference}
+- HIGH {file:line} — {one-line finding}: ESCALATED-CRUX — {the crux stated as a decision question}
 ```
+
+(`ESCALATED-CRUX` triggers Step 5's crux branch — at most one per round; see `references/crux-round.md`.)
 
 Chat render (one line per finding, hard cap — multi-line prose stays in the run file):
 
@@ -87,11 +91,18 @@ The run file IS the final report. Chat emits a single turn:
 
 ```
 ## Challenge Complete — {VERDICT progression: R1 → R2 → R3}
-arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}  ·  artifact: <run_file>
-{escalation banner if round-3-cap or diminishing-returns}
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  {lens}: {✅|⚠️|❌}}  ·  artifact: <run_file>
+{escalation banner if round-3-cap or diminishing-returns or crux-retreat}
+{crux recommendation line if a crux round ran}
 {last round's compact synthesis (3.3b template)}
 {last round's Round N Changes one-liners (4a chat-render format)}
 {deferred findings inline if any}
+```
+
+When a crux round ran, render its decision as one line directly under the banner (or under the header when not escalated):
+
+```
+Crux: {question} → {chosen option} — accepting {tradeoff}. Would change on: {evidence-that-would-change-it}.
 ```
 
 ### Salient escalation banner (implementer mode only)
@@ -100,9 +111,11 @@ If the loop exited at round 3 OR via diminishing returns, prepend:
 
 ```
 🛑 HUMAN REVIEW REQUIRED — DO NOT MERGE WITHOUT MANUAL VERIFICATION
-Reason: <round-3-cap | diminishing-returns>
+Reason: <round-3-cap | diminishing-returns | crux-retreat>
 Unresolved high-severity: N, Unresolved medium-severity: M
 ```
+
+On `crux-retreat` (the crux round's red-team retreat case won), the crux recommendation line below the banner carries the retreat recommendation and its grounds — the user gets a decided recommendation, never a bare "review required".
 
 `N` and `M` are the count of findings whose latest disposition is **not** `FIXED`, judged from the run file's `### Round N Changes` blocks.
 

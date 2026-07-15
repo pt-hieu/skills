@@ -21,7 +21,7 @@ Most of my work happens through Claude Code, where Claude does the typing and I 
 
 The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, two things happen:
 
-- **`challenge`** runs two fresh-context subagents — one for architecture fit, one for root cause — against the plan. Two green passes is a high bar; the first plan rarely clears it, which is the point.
+- **`challenge`** runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus optional deployment-risk and strategy red-team lenses. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
 - **`pitch`** then summarizes the surviving plan back to me in everyday language: problem, fix, new behavior, no jargon. That's where I catch direction-level mistakes that a technical plan would have hidden behind file names.
 
 Only after both do I approve and let implementation start.
@@ -56,7 +56,7 @@ Three plugins, each a coherent domain:
 | --- | --- |
 | `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
-| `challenge` | Audit a plan or implementation with two independent opus subagents. |
+| `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, wildcard lenses, and crux-round escalation. |
 | `commit` | Structured commit workflow. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
@@ -72,6 +72,7 @@ Three plugins, each a coherent domain:
 | --- | --- |
 | `architectural-reviewer` | Stress-tests a plan or diff for architectural drift, coupling, expandability, and historical coherence. |
 | `code-historian` | Gathers historical "why" context from git history and the ticket tracker. |
+| `plan-fact-checker` | Verifies a plan's file:line, count, path, and toolchain claims against the actual repo; audits internal numeric consistency. |
 | `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
 | `review-cleanness` | Local code-shape hygiene and behavior-preserving quality angles. |
 | `review-correctness-reliability` | Adversarial reviewer for correctness and reliability defects. |
@@ -117,6 +118,7 @@ plugins/
     agents/
       architectural-reviewer.md
       code-historian.md
+      plan-fact-checker.md
       plan-verifier.md
       review-cleanness.md
       review-correctness-reliability.md

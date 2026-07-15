@@ -100,6 +100,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The Prior intent restructure MUST preserve the historian's "Paths inspected:" line (or per-path commit anchors) so the reviewer's COVERAGE check has a structural target. -->
 > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors, **plus the historian's `Paths inspected:` enumeration verbatim**. Quote prior decisions verbatim.
 > - **Recommended approach** — the chosen path.
+> - **Load-bearing premises** — the 2–4 claims the approach's correctness rests on (e.g. "the current config is active", "X wins the CSS cascade", "tool Y supports option Z"), one bullet each in the form `premise — verified by: <the grep/read/command that confirmed it, or "unverified — checkable by: <how>">`. Declaring premises gives Challenge's premise audit a direct target; the Tailwind-class failure mode is an undeclared premise nobody thought to check.
 > - **Critical file paths** — every file that will change, absolute paths.
 > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
 > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`, `voice:voice` for the PR body). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
@@ -111,7 +112,8 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
 > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
 > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
-> (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches).
+> (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches),
+> (e) Load-bearing premises section is present and every premise carries a `verified by:` note (or an explicit `unverified — checkable by:` note for Challenge to pick up).
 > Confirm all checks pass before completing this task; fix any that fail first.
 
 ---

@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, architecture review, commit workflow, merge conflict resolution, team-voice writing, plan pitches, UI design principles, and skill authoring.",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "brian",
       "source": "./plugins/brian",
       "description": "Bundled skills: assess-code-review, autopilot, challenge, commit, diagnose, kickoff, resolve-merge-conflicts, prompting, scrutinize, up-to-speed, writing-skills.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "productivity",
       "tags": [
         "skills",
@@ -56,7 +56,13 @@
       "description": "Design skills: UI design principles, component patterns, formatting, and interaction rules. Bundled skills: principles.",
       "version": "2.0.0",
       "category": "design",
-      "tags": ["skills", "design", "ui", "frontend", "design-system"]
+      "tags": [
+        "skills",
+        "design",
+        "ui",
+        "frontend",
+        "design-system"
+      ]
     }
   ]
 }

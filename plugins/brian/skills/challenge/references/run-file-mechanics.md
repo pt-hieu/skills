@@ -6,13 +6,13 @@ Read this when persisting a round's artifacts, on any re-run round (Step 5), or 
 
 All round artifacts (context, agent returns, synthesis, dispositions) are appended to `$run_file` as `## Round N` subsections. No per-round directory; no separate files.
 
-If a Step 3 retry fetches missing context, the re-launched agent's output replaces the prior `### Architectural Review` / `### Root-Cause Review` block under the current `## Round N` heading and the synthesis notes the prior attempt. If both agents fail twice, append `### Round N: ABORTED — both agents failed twice` to the run file and skip synthesis (see Step 2 Await protocol for the terminal disposition).
+If a Step 3 retry fetches missing context, the re-launched agent's output replaces its prior block under the current `## Round N` heading and the synthesis notes the prior attempt. If both fixed reviewers fail twice, append `### Round N: ABORTED — both fixed reviewers failed twice` to the run file and skip synthesis (see Step 2 Await protocol for the terminal disposition; auxiliary-agent failures degrade the round instead).
 
 Re-runs (Step 5) read prior `### Synthesis` and `### Round N Changes` sections from the run file and inject them as `## Prior Round Findings` + `## Round N Changes` into the next round's Step 2 contract. Review-only mode never re-runs (no loop, no escalation banner).
 
 ## Step 3.0 — Persist agent returns
 
-Append `### Architectural Review` and `### Root-Cause Review` subsections under the current `## Round N` heading. Wrap each verbatim agent return in a fenced markdown code block so the agent's own `##`/`###` headings stay inert in the run file's outline:
+Append one subsection per panel agent under the current `## Round N` heading. Wrap each verbatim agent return in a fenced markdown code block so the agent's own `##`/`###` headings stay inert in the run file's outline:
 
 ```
 ### Architectural Review
@@ -24,7 +24,19 @@ Append `### Architectural Review` and `### Root-Cause Review` subsections under 
 ~~~markdown
 {verbatim agent return}
 ~~~
+
+### Fact Check            <- plan mode only
+~~~markdown
+{verbatim agent return}
+~~~
+
+### Wildcard — {lens}     <- one per launched lens
+~~~markdown
+{verbatim agent return}
+~~~
 ```
+
+Crux rounds persist `### Crux Brief`, `### Crux — {panelist}`, and `### Crux Decision` instead — shapes in `references/crux-round.md`.
 
 Use `~~~` (tilde) fences so any ` ``` ` triple-backtick code blocks inside the agent's output don't terminate the wrapper.
 
@@ -32,7 +44,7 @@ If a retry happens (Step 3.1), replace the affected agent's block with the retry
 
 ## Step 3.3a — Persist verbose synthesis
 
-Runs only after 3.1 resolves (retries complete or aborted) and before the chat render (3.3b). On the aborted-round path (both agents failed twice): skip both 3.3a and 3.3b; emit only one line to chat: `Round N: ABORTED — both agents failed twice. See <run_file>.`
+Runs only after 3.1 resolves (retries complete or aborted) and before the chat render (3.3b). On the aborted-round path (both fixed reviewers failed twice): skip both 3.3a and 3.3b; emit only one line to chat: `Round N: ABORTED — both fixed reviewers failed twice. See <run_file>.`
 
 Append `### Synthesis` under the current `## Round N` heading using this template:
 
@@ -45,6 +57,12 @@ Append `### Synthesis` under the current `## Round N` heading using this templat
 #### Systematic Resolution: {verdict}
 {high- and medium-severity findings only, with causal chains — drawn from root-cause-reviewer's findings}
 
+#### Factual Accuracy: {verdict}
+{plan mode only — claim discrepancies and falsified premises from plan-fact-checker. Omit subsection in impl mode.}
+
+#### Wildcard — {lens}: {verdict}
+{one subsection per launched lens, high- and medium-severity findings only. Omit if no lenses launched.}
+
 #### Cross-Agent Conflicts
 {any disagreements between the two reviewers — both sides explicit. Omit subsection if none.}
 
@@ -52,7 +70,7 @@ Append `### Synthesis` under the current `## Round N` heading using this templat
 {result. Omit subsection if agents disagreed.}
 
 #### What the Changes Do Well
-{consolidated strengths from both agents. Omit subsection if none.}
+{consolidated strengths from the whole panel. Omit subsection if none.}
 
 #### Action Items
 1. ❌ HIGH {file:line} — {one-sentence issue} — {one-sentence fix}
