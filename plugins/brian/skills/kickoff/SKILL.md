@@ -14,6 +14,7 @@ Instead of trying to remember a 12-task pipeline in-prompt, the agent's **first 
 ## Hard rules
 
 - **Step 0 is mandatory and runs first.** Register all kickoff tasks before doing any planning work. If `TaskList` already contains kickoff tasks for this requirement, skip Step 0 and resume from the lowest-ID pending task.
+- **Planning runs in the session's current permission mode.** The plan lives in a working file under the scratchpad or `/tmp` for Tasks 1–11; plan mode is entered only in Task 12, to transfer that file onto plan mode's plan-file handling and exit.
 - Work the lowest-ID unblocked task. Re-read its section in `references/task-specs.md` when picking it up, mark `in_progress` before starting, mark `completed` only when the task's gate passes.
 - When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
 - The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
@@ -52,7 +53,7 @@ The 12 tasks to register. The canonical Gate for every task lives only in `refer
 
 | # | Subject | Gate hook |
 | --- | --- | --- |
-| 1 | `Enter plan mode` | plan mode active |
+| 1 | `Open the working plan file` | file created, absolute path posted |
 | 2 | `Explore — gather Phase-1 findings` | findings written down |
 | 3 | `Historian — gather prior intent from git history and ticket tracker` | historian report in hand |
 | 4 | `Interrogate — close architecture-level ambiguity` | question round answered |
@@ -63,11 +64,12 @@ The 12 tasks to register. The canonical Gate for every task lives only in `refer
 | 9 | `Design the Test design section of the plan file` | `test-designer` PASS, section placed |
 | 10 | `Pitch the plan to Brian` | pitch posted |
 | 11 | `Verify plan coherence and inject post-implementation protocol` | `plan-verifier` PASS, protocol is final section |
-| 12 | `ExitPlanMode` | plan mode exited |
+| 12 | `Hand the plan to plan mode` | plan copied verbatim, plan mode exited |
 
 ## It's working if
 - `TaskList` shows the full pipeline registered and wired before any exploration starts, each task description pointing back to its section in `references/task-specs.md`.
-- The plan file exists on disk before Challenge runs — Challenge revises that file, not chat.
+- The working plan file exists on disk before Challenge runs — Challenge revises that file, not chat.
 - Interrogate questions read in plain English, each with a `(Recommended)` option, and none could have been answered by reading the code.
-- The plan file's final section is `## Post-implementation protocol`, injected by plan-verifier — not hand-written.
+- The working plan file's final section is `## Post-implementation protocol`, injected by plan-verifier — not hand-written.
+- What lands in plan mode's plan file is a verbatim copy of the working file, produced in one transfer at Task 12.
 </content>

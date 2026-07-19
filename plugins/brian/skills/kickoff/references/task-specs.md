@@ -4,13 +4,13 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 ---
 
-**Task 1 — Enter plan mode**
+**Task 1 — Open the working plan file**
 
-- subject: `Enter plan mode`
+- subject: `Open the working plan file`
 
-> **Goal**: ensure planning happens in plan mode.
-> **Action**: when already in plan mode, continue. Otherwise call the `EnterPlanMode` tool.
-> **Gate**: plan mode is active.
+> **Goal**: establish the single on-disk artifact every downstream task writes, revises, and reads.
+> **Action**: choose the path — the session scratchpad directory when the system prompt names one, otherwise `/tmp` — and name the file `kickoff-plan-<short-requirement-slug>.md`. Create it with the requirement slug as an `# ` heading. Post its absolute path to chat; every later task that says "the working plan file" means this path.
+> **Gate**: the file exists on disk and its absolute path is recorded in chat.
 
 ---
 
@@ -85,8 +85,8 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > - Skill-scan output and any skill-derived patterns to follow
 > - Architecture decisions confirmed in the Interrogate task
 >
-> **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the plan file path specified by the plan-mode system prompt (create the file if absent). This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file exists on disk and contains the Plan agent's return.
-> **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the plan file on disk. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
+> **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the working plan file opened in Task 1. This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file contains the Plan agent's return.
+> **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the working plan file on disk. Only a Plan-agent return clears this gate — coherence in the orchestrator's head does not substitute. Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
 
 ---
 
@@ -95,7 +95,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 - subject: `Write the plan file`
 
 > **Goal**: leave a self-sustained artifact on disk *before* Challenge runs, so reviewer subagents can read the same artifact the implementer will. *The implementer reads this file in a fresh context with zero memory of this conversation; everything they need lives in the file.*
-> **Action**: the plan file already exists on disk with the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
+> **Action**: the working plan file already holds the Plan agent's verbatim return (persisted at the end of Task 6). Restructure that file in place into the sections below, in order — do not discard Plan-agent content; reorganize and enrich it:
 > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
 > <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The Prior intent restructure MUST preserve the historian's "Paths inspected:" line (or per-path commit anchors) so the reviewer's COVERAGE check has a structural target. -->
 > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors, **plus the historian's `Paths inspected:` enumeration verbatim**. Quote prior decisions verbatim.
@@ -108,7 +108,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
 >
 > End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 11 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
-> **Gate**: re-read the written plan file end-to-end and confirm in chat:
+> **Gate**: re-read the working plan file end-to-end and confirm in chat:
 > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
 > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
 > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
@@ -122,9 +122,9 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 - subject: `Challenge the plan file`
 
-> **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the plan file on disk reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
+> **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the working plan file reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
 > **Goal**: catch missed details and weak spots before pitching.
-> **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the plan file written in Task 7** so reviewer subagents read the same artifact the implementer will. Revise the plan **file in place** with each round of feedback.
+> **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the working plan file** so reviewer subagents read the same artifact the implementer will. Revise the **file in place** with each round of feedback.
 > **Gate**: challengers pass, or every remaining red flag is explicitly accepted in writing inside the plan file — and the accepting/revising edits are on disk. A completed round with unresolved, unaccepted red flags does not clear this gate.
 
 ---
@@ -135,12 +135,12 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 > **Goal**: leave the plan file with a concrete, salience-ordered, smell-free Test design section the implementer can drive TDD against. Challenge has finalized the approach; the test design pins the behaviors that approach must protect. (Why this task runs after Challenge, and the accepted trade-off: `references/testability-escape-hatch.md`.)
 > **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"` (model per the Effort matrix). Pass two arguments:
-> 1. **The absolute path of the plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
+> 1. **The absolute path of the working plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
 > 2. **The path discriminator**: explicitly state `path: bug` when the requirement came in via `brian:diagnose` (Task 2 bug branch) — orchestrator already knows this from Task 2's actual execution. State `path: feature` otherwise. This removes the agent's prose-based bug-path detection ambiguity.
 >
 > The agent inserts a `## Test design` section between `## Skills to use` and `## Verification`, edits in place, and touches no other section.
 > On `verification: FAIL`: when the findings say the **chosen approach is untestable** (all tests deferred, or no regression test can pin the diagnosed root cause), stop and read `references/testability-escape-hatch.md` before acting — it authorizes the only backward edge in the post-Challenge tail. On any other `FAIL`, fix the upstream cause in the plan file and re-invoke the agent on the same path. Repeat until `verification: PASS`.
-> **Gate**: `test-designer` returns `verification: PASS` and the plan file on disk contains a `## Test design` section sitting between Skills to use and Verification.
+> **Gate**: `test-designer` returns `verification: PASS` and the working plan file contains a `## Test design` section sitting between Skills to use and Verification.
 
 ---
 
@@ -158,19 +158,24 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 - subject: `Verify plan coherence and inject post-implementation protocol`
 
-> **Goal**: confirm the plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
-> **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "brian:plan-verifier"` (model per the Effort matrix). Pass the absolute path of the plan file written in Task 7 (and revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
-> The agent reports findings but does not fix them. On `verification: FAIL`, revise the plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
-> **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the plan file to confirm the `## Post-implementation protocol` block is the final section.
+> **Goal**: confirm the working plan file reads as one coherent narrative for a fresh-context implementer, and ensure it ends with the canonical post-implementation protocol block before handoff.
+> **Action**: invoke the `plan-verifier` subagent via the `Agent` tool with `subagent_type: "brian:plan-verifier"` (model per the Effort matrix). Pass the absolute path of the working plan file (revised through Challenge). The agent does two things: it verifies the plan tells a single narrative from Context to Verification with no superseded-decision residue (Challenge revises in place, so abandoned-approach scars are the common failure), and it injects the protocol block (idempotent).
+> The agent reports findings but does not fix them. On `verification: FAIL`, revise the working plan file in place to collapse it back to one narrative — cut the superseded-decision text, reconcile the contradiction — then re-invoke `plan-verifier` on the same path. Repeat until it returns `verification: PASS`.
+> **Gate**: `plan-verifier` returns `verification: PASS` and a `protocol:` line of `injected`, `already present`, or `drift corrected`. Spot-check the tail of the working plan file to confirm the `## Post-implementation protocol` block is the final section.
 
 ---
 
-**Task 12 — ExitPlanMode**
+**Task 12 — Hand the plan to plan mode**
 
-- subject: `ExitPlanMode`
+- subject: `Hand the plan to plan mode`
 
-> **Goal**: hand the plan back for technical-detail review.
-> **Action**: call `ExitPlanMode`.
-> **Gate**: plan mode exited.
+> **Goal**: move the finished plan onto plan mode's own plan-file handling, then hand it back for technical-detail review.
+> **Action**: three calls, in order.
+> 1. Call `EnterPlanMode`.
+> 2. Read the working plan file and write its contents **verbatim** to the plan file path named by the plan-mode system prompt. Copy the whole file — every section from Context through Post-implementation protocol — with no summarizing, re-ordering, or trimming.
+> 3. Call `ExitPlanMode`.
+>
+> Nothing is authored in this task; it is a transfer. If the plan-mode plan file already has content, replace it wholesale with the working file's contents.
+> **Gate**: the plan-mode plan file matches the working plan file end-to-end, and plan mode has been exited.
 </content>
 </invoke>
