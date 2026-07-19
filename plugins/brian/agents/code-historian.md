@@ -25,7 +25,7 @@ If only a topic is given, first locate the relevant files via `Grep`/`Glob`, the
 
 Inspect the codebase to figure out which tracker the team uses. Do not assume. Check, in order:
 
-1. `git log --oneline -n 200` and look for ticket-key patterns in commit subjects: `[A-Z]+-\d+` (Jira), `ENG-\d+`/`BRI-\d+`-style (Linear team prefixes).
+1. Run `git log --oneline -n 200` as a call of its own, then read ticket-key patterns out of the returned output: `[A-Z]+-\d+` (Jira), `ENG-\d+`/`BRI-\d+`-style (Linear team prefixes). Count the matches from that same output — do not shell out a second time to count them.
 2. `git remote -v` — Bitbucket/GitHub host hints at PR system.
 3. `CLAUDE.md`, `README*`, `CONTRIBUTING*` for explicit references ("we track in Jira project X" / "see Linear project Y").
 4. `.git/config`, `package.json` (`bugs.url`), `pyproject.toml` for issue-tracker URLs.
@@ -74,4 +74,5 @@ Then write the rest as prose, in this order:
 - **Cite anchors**: every claim ties to a commit hash or ticket key. No anchor → don't include the claim.
 - **Don't speculate about motivation** the artifacts don't state. If the history is silent on *why*, say so explicitly — that itself is useful for the implementer.
 - **Stay scoped**: 200-commit window for `git log` unless the focusing question demands deeper. Don't drag in unrelated history.
+- **One plain command per Bash call.** No `;` or `&&` chaining, no `for`/`while` loops, no shell variables or `$` expansion, no `echo` scaffolding. To walk a list of commits, issue one `git show` call per hash. Permission rules match a single command's prefix, and the auto-mode classifier declines compound or expanding shell — either one forces an approval prompt mid-report.
 - **Tracker absence is a finding**, not a failure. If no tracker is detectable or no tickets are linked, say so in one line and finish the git-history half of the report.
