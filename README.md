@@ -58,6 +58,7 @@ Three plugins, each a coherent domain:
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, wildcard lenses, and crux-round escalation. |
 | `commit` | Structured commit workflow. |
+| `consult-fable` | Spawn a Fable second opinion at a named decision fork that legwork could not settle, or where a wrong branch is a one-way door. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
@@ -72,6 +73,7 @@ Three plugins, each a coherent domain:
 | --- | --- |
 | `architectural-reviewer` | Stress-tests a plan or diff for architectural drift, coupling, expandability, and historical coherence. |
 | `code-historian` | Gathers historical "why" context from git history and the ticket tracker. |
+| `fable-consultant` | Weighs in on one hard decision fork — recommendation, strongest case against it, and the observation that would flip it. Advisory only. |
 | `plan-fact-checker` | Verifies a plan's file:line, count, path, and toolchain claims against the actual repo; audits internal numeric consistency. |
 | `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
 | `review-cleanness` | Local code-shape hygiene and behavior-preserving quality angles. |
@@ -108,6 +110,7 @@ plugins/
       autopilot/
       challenge/
       commit/
+      consult-fable/
       diagnose/
       kickoff/
       prompting/
@@ -118,6 +121,7 @@ plugins/
     agents/
       architectural-reviewer.md
       code-historian.md
+      fable-consultant.md
       plan-fact-checker.md
       plan-verifier.md
       review-cleanness.md

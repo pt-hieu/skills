@@ -1,7 +1,7 @@
 {
   "name": "brian",
-  "version": "2.2.1",
-  "description": "Bundled skills: assess-code-review, autopilot, challenge, commit, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, up-to-speed, writing-skills.",
+  "version": "2.3.0",
+  "description": "Bundled skills: assess-code-review, autopilot, challenge, commit, consult-fable, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, up-to-speed, writing-skills.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"
@@ -14,6 +14,8 @@
     "debugging",
     "prompting",
     "commit",
+    "consult-fable",
+    "fable",
     "architecture-review",
     "workflow",
     "kickoff",
