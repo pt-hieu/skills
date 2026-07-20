@@ -8,6 +8,27 @@ Brian's personal Claude Code skills marketplace: plugins live under `plugins/<na
 
 Skills prescribe the *process* (steps, gates); within a step, how to satisfy the gate is the agent's call. Keep each meaning in a single source of truth: pipelines register short pointers back to the canonical section, and sibling skills point at that section rather than carrying their own copy.
 
+### Exchanges between agents
+
+When one agent hands off to another, let the exchange be a conversation in prose. An
+agent closes by saying what the next one needs in order to act; the receiver reads for
+meaning.
+
+Skip the concrete contract — a mandatory literal token, a required closing line, a
+field list. Between two LLMs it buys rigidity without buying determinism: neither side
+is a parser, so the only thing it adds is a new way to drift silently when one side
+stops emitting it. Reserve mechanical tokens for values that non-LLM code actually
+greps or branches on, or for a multi-round pipeline that keeps a token registry and a
+maintenance gate guarding drift — `challenge/references/contract-audit.md` is the one
+standing example, and the auditor is what earns the exception. A one-shot handoff has no
+round to catch drift in, and gets no tokens. `prompting/SKILL.md` states the neighbouring
+rule for output *shape* — prose, not a schema; this is the handoff analogue, not a
+restatement of it.
+
+When you want a receiver to key off something, write the obligation as prose on
+whichever side owns it. An obligation that only the actor can verify is self-enforced —
+say so plainly rather than dressing it as an external check.
+
 ### Anatomy: phonebook + references
 
 A skill's prose lives in exactly two kinds of file:
