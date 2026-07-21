@@ -15,13 +15,20 @@ agent closes by saying what the next one needs in order to act; the receiver rea
 meaning.
 
 Skip the concrete contract — a mandatory literal token, a required closing line, a
-field list. Between two LLMs it buys rigidity without buying determinism: neither side
-is a parser, so the only thing it adds is a new way to drift silently when one side
-stops emitting it. Reserve mechanical tokens for values that non-LLM code actually
-greps or branches on, or for a multi-round pipeline that keeps a token registry and a
-maintenance gate guarding drift — `challenge/references/contract-audit.md` is the one
-standing example, and the auditor is what earns the exception. A one-shot handoff has no
-round to catch drift in, and gets no tokens. `prompting/SKILL.md` states the neighbouring
+field list. Between two LLMs it usually buys rigidity without buying determinism:
+neither side is a parser, so the only thing it adds is a new way to drift silently when
+one side stops emitting it. Reserve mechanical tokens for values something actually
+branches on — non-LLM code that greps them, or a consumer written to parse rather than
+read, one told to dedupe, merge, or discard by the value instead of judging it from
+meaning. Being parsed earns the token only alongside a registry entry and a same-commit
+maintenance gate: the registry is what keeps emitter and consumer aligned, and a token
+without one enjoys the rationale while skipping the machinery.
+`challenge/references/contract-audit.md` is the canonical registry, and `scrutinize`'s
+Step E — which parses anchors, normalizes line spans, and dedupes on `(file, line)` — is
+the clearest consumer that earns them. Where the receiver reads for meaning, write
+prose, however many rounds the pipeline runs. The two can sit side by side in one
+exchange: scrutinize keys its merge on `file` and `defect_class` while judging severity
+from the reviewer's own words. `prompting/SKILL.md` states the neighbouring
 rule for output *shape* — prose, not a schema; this is the handoff analogue, not a
 restatement of it.
 
