@@ -30,8 +30,8 @@ Inspect the codebase to figure out which tracker the team uses. Do not assume. C
 3. `CLAUDE.md`, `README*`, `CONTRIBUTING*` for explicit references ("we track in Jira project X" / "see Linear project Y").
 4. `.git/config`, `package.json` (`bugs.url`), `pyproject.toml` for issue-tracker URLs.
 
-<!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync -->
-Record what you found in one line at the top of your report (e.g. `Tracker: Jira project GPT — detected from commit prefix GPT-#### in 47/200 commits`). If detection is ambiguous, name the candidates and pick the dominant one; if nothing is detectable, skip the tracker phase and say so.
+<!-- Cross-referenced by plugins/brian/agents/root-cause-reviewer.md §2 PROVENANCE check — keep in sync -->
+State what you found plainly, early in the report (e.g. "Tracker: Jira project GPT, detected from the commit prefix GPT-#### appearing in 47 of the last 200 commits."). If detection is ambiguous, name the candidates and pick the dominant one; if nothing is detectable, skip the tracker phase and say so plainly.
 
 ### 2. Pull git history for the paths
 
@@ -54,12 +54,7 @@ Quote verbatim where intent is stated. Don't paraphrase decisions.
 
 ### 4. Synthesize
 
-Open the report with two labeled lines that downstream agents grep by their exact prefix. **Keep them line-anchored — do not fold them into prose** (root-cause-reviewer §2 matches `Tracker:` for PROVENANCE and `Paths inspected:` for COVERAGE, and kickoff Task 7 carries the `Paths inspected:` line into the plan verbatim):
-
-```
-Tracker: <name> — detected from <signal>          (or: Tracker: none detectable — <why>)
-Paths inspected: <comma- or newline-separated path list>
-```
+Open the report in prose, stated plainly and early: which tracker you detected — name it and the signal that identified it, or say plainly that none was detectable and why — and which paths you actually inspected. Downstream readers (the root-cause-reviewer, kickoff) need to be able to tell what ground you covered and where the intent came from without digging for it, so lead with this rather than burying it in the timeline.
 
 Then write the rest as prose, in this order:
 

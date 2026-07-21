@@ -76,18 +76,9 @@ The reviewer is often invoked downstream of an orchestrator that already gathere
 
 **Two orthogonal checks — BOTH must hold to skip**:
 
-1. **PROVENANCE** — the input context contains at least one of:
-   - a `## Prior intent` section (the canonical name kickoff's Task 7 plan template emits),
-   - a `## Historical context` section, or
-   - a `Tracker: <name> — detected from ...` line (the historian's first-output-line convention from `code-historian.md`).
+1. **PROVENANCE** — the input context contains a `## Prior intent` section, a `## Historical context` section, or a reused historian report, AND that block actually states where the intent came from: which tracker was checked and what it found, or an explicit statement that no tracker was detectable. Read it for substance, not for a fixed marker — a report that opens by naming the tracker (or its absence) in prose satisfies this just as well as one that used a labeled line. A block that never says where its intent came from — jumps straight into a timeline with no account of what was checked — has not established provenance.
 
-   Any one of these is sufficient for the provenance signal; they are not independent.
-
-2. **COVERAGE** — every path in `## Affected Files` is named within the prior-intent block via either:
-   - a `Paths inspected:` enumeration (the historian's own output shape from `code-historian.md` Procedure §4), preserved verbatim by kickoff's Task 7 restructure, or
-   - per-path commit/file anchors that quote the path under a verbatim "why" statement.
-
-   If the prior-intent block contains neither an enumerated path list nor per-path anchors, treat COVERAGE as failed regardless of incidental substring matches. Incidental substring matches in surrounding prose do not satisfy COVERAGE — the path must be named under a structural marker.
+2. **COVERAGE** — read the same block and judge, path by path, whether every path in `## Affected Files` was genuinely inspected: the report should let you tell that history was pulled for each one (commits, blame, or an explicit "nothing found"), not merely that the path's name happens to appear somewhere in the prose. If you cannot tell from the report whether a given path was actually inspected, treat COVERAGE as failed for that path and say so in your `Historical Context:` note — e.g. "the report does not show src/foo.ts was inspected" — rather than crediting an incidental mention.
 
 **Resolution**:
 - BOTH hold → skip the historian invocation and record `Historical Context: reusing prior intent from [section name]` in reasoning.
@@ -116,7 +107,7 @@ Pass the implicated paths (preferred) and the focusing question derived from §1
 **Empty-history fallback** — if the historian report contains no meaningful commits or tickets (`Tracker absence` or empty timeline), record `Historical Context: no prior history — bedrock candidate is "missing abstraction or pattern not yet built"` and proceed; empty history is itself a §4 bedrock signal, not a §2 failure. This marker is sticky across rounds — Round 2+ retains it without re-invoking historian.
 
 **Round 2+ behavior (cross-round freshness)** — when `## Round N Changes` is present in the input (the round-aware trigger documented above), do NOT re-invoke historian on paths already covered:
-- If a `## Prior intent` (or `Tracker:`-prefixed) block is still present in the Round N input: re-read it with the Round N diff in mind, and flag any §4 bedrock citation whose underlying design decision has been re-litigated by the Round N-1 fix (common signal: the fix touches code the historian report quotes as load-bearing).
+- If the Round N input still carries a prior-intent or historian block: re-read it with the Round N diff in mind, and flag any §4 bedrock citation whose underlying design decision has been re-litigated by the Round N-1 fix (common signal: the fix touches code the historian report quotes as load-bearing).
 - If no prior-intent block is present in the Round N input AND no prior-round `Historical Context:` marker line appears anywhere in the Round N input transcript: invoke historian **narrowly on only the paths touched by Round N-1 fixes** (a minimal coverage extension), recording `Historical Context: Round N narrow refresh on changed paths`. Do not re-invoke on the full affected-files list — that would discard Round-1 calibration.
 - If Round 1 explicitly recorded `Historical Context: no prior history`, retain that disposition in Round 2+ and do not retroactively invoke historian.
 
@@ -124,7 +115,7 @@ Pass the implicated paths (preferred) and the focusing question derived from §1
 
 **FORBIDDEN**:
 - Invoking the historian as a Skill. It is an agent — use the `Agent` tool with `subagent_type: "brian:code-historian"`.
-- Proceeding past §4 without either a historian report or an explicit `Historical Context SKIPPED — [reason]` line.
+- Proceeding past §4 without either a historian report or a plainly stated reason for skipping historical context.
 - Silently ignoring a prior-intent block. If you skip, name the block you relied on.
 
 ---

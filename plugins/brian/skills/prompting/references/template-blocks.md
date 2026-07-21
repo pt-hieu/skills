@@ -63,7 +63,9 @@ This counterbalances systematic confirmation bias documented in LLM outputs.
 ```
 ## INSUFFICIENT DATA RULE
 If the data needed to support a claim is missing, stale, zero-valued, or unverifiable:
-  output: "INSUFFICIENT DATA — [what's missing, what would be needed]"
+  say so plainly — name what is missing and what evidence would resolve it.
+  Reserve the exact tag "INSUFFICIENT DATA — [what's missing, what would be needed]"
+  for a pipeline where a downstream consumer branches on that literal string.
 Do NOT infer, extrapolate, or generate plausible-sounding analysis from memory.
 A blank / skipped analysis is better than a fabricated one.
 Applies to: comparisons, calculations, pattern identifications, any factual claim.
@@ -88,7 +90,7 @@ After generating your analysis:
 1. Re-read each factual claim
 2. For each claim: can you trace it to a specific provided data field?
 3. Remove or flag any claim that failed verification with [UNVERIFIED]
-4. If >30% of claims are UNVERIFIED: output "INSUFFICIENT DATA" for this item
+4. If >30% of claims are UNVERIFIED: state that this item cannot be supported, and why
 ```
 
 ### 8. Structured Output Schema (Pydantic) — for machine-to-machine handoffs only

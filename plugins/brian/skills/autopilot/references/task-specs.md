@@ -10,7 +10,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Goal**: ground the work in real code.
   > **Action**: execute the Explore **Action** exactly as specified in § "Task 2 — Explore (Phase 1 findings)" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/references/task-specs.md` — Read that section before launching anything; kickoff owns the canonical text.
   >
-  > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "brian:code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve the historian's `Paths inspected:` line (or per-path commit anchors) — T6 reuses it.
+  > **Prior intent (inline)**: run `git log` / `git blame` on the touched paths to surface why prior changes were made. **Conditional escalation** — if the touched paths show non-trivial history (≥~5 commits OR any merge commits) AND a T2 assumption would cite prior intent, spawn `code-historian` via the `Agent` tool (`subagent_type: "brian:code-historian"`, `model: "sonnet"`) scoped to those paths to pull the tracker "why" before T2 finalizes. Preserve, in your own words, which files the historian actually inspected and where its account of prior intent came from (commit refs, ticket links) — T6 reuses this account.
   > **Gate**: concrete file paths, reusable utilities, and existing patterns (or root cause + defect class on the bug path) are written down, **plus a prior-intent note** (inline git findings, and the historian report if escalation fired).
 
 ---
@@ -49,7 +49,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > - The T3 skill-scan output and any skill-derived patterns to follow
   >
   > **Keep the agent's verbatim return** — it is the raw material T5 restructures and gates.
-  > **Gate**: a detailed design with **explicit per-file cross-file consistency** is returned from the opus agent. The design must come from that agent — improvising it yourself does not substitute, since no human reviews it before code.
+  > **Gate**: a detailed design with **explicit per-file cross-file consistency** is returned from the opus agent. The design must come from that agent, not from your own improvisation standing in for it — this is self-enforced (nothing downstream can tell the difference), and it matters precisely because no human reviews the design before code.
 
 ---
 
@@ -63,7 +63,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
-  > - **Skills to use** — every skill to invoke during implementation, from the T3 scan; one bullet per skill as `skill-name — when to invoke it and what it contributes`. Include `brian:commit` and `voice:voice`. Write `None — skill scan returned no matches` if the scan found nothing.
+  > - **Skills to use** — every skill to invoke during implementation, from the T3 scan; one bullet per skill as `skill-name — when to invoke it and what it contributes`. Include `brian:commit` and `voice:voice`. If the scan found nothing, say so plainly rather than leaving the section blank — a stated absence is a complete answer here.
   > - **Test plan** — the named tests T8 implements, salience-ordered. Name each test by the imperative phrase it will be given.
   > - **Verification** — commands + named test runs (reference each test by quoting its identifier verbatim inside backticks).
   > **Gate (re-read the structured design, confirm in chat)**:
@@ -72,7 +72,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > (c) Assumptions present with rationale / confidence / blast-radius;
   > (d) Skills-to-use complete (or `None`);
   > (e) Test plan names the tests;
-  > **(f) bug path only — if T1 ran `brian:diagnose`, the Test plan contains ≥1 test whose stated purpose quotes a substring of the diagnosed root cause** (absent → gate fails).
+  > **(f) bug path only — if T1 ran `brian:diagnose`, the Test plan contains ≥1 test whose stated purpose pins the diagnosed root cause** — judge this by reading: the test must target that cause, not merely a nearby symptom (absent → gate fails).
   > Fix any failing check before completing this task.
 
 ---
@@ -87,8 +87,8 @@ Each section below is the full spec for one task — the target of its Step-0 po
   >   Name the defect class in plain words — there is no enum to load and no SSOT file to read. Each finding states its confidence and basis in plain prose (not a tag), and the `INSUFFICIENT CONTEXT — [...]` abstinence rule applies.
   > - `## Context` — the design's Recommended approach + Assumptions, inline.
   > - `## Affected Files` — the design's Critical file paths, **repo-relative**. This anchors the architectural reviewer's mandatory historical-coherence step on the files the design *will* change.
-  > - `## Prior intent` — T1's prior-intent note (git log + any historian output) with a `Paths inspected:` line listing the Critical file paths. This satisfies the root-cause reviewer's PROVENANCE/COVERAGE checks so it records *reusing prior intent* and does NOT self-spawn `code-historian`. Instruct both reviewers explicitly: *do not spawn your own historian — prior intent is supplied inline.*
-  > - `## Project Domain Knowledge` — emit a minimal inline block (the touched skill(s)' rules) OR the literal sentinel `No project-specific skills found. Review using general principles only.` Omitting this section fires the agents' "missing required section → request it" branch (a silent stall).
+  > - `## Prior intent` — T1's prior-intent note (git log + any historian output), written so it plainly states which files were actually inspected and where its account of prior intent came from (commit refs, ticket links), covering the design's Critical file paths. This gives the root-cause reviewer what it needs to judge, by reading, that prior intent has already been gathered, so it records *reusing prior intent* and does NOT self-spawn `code-historian`. Instruct both reviewers explicitly: *do not spawn your own historian — prior intent is supplied inline.*
+  > - `## Project Domain Knowledge` — when T3's skill scan surfaced project-specific rules for the touched skill(s), emit a minimal inline block stating them. When the scan found nothing project-specific, say so plainly in this section, in your own words (e.g. state that no project-specific skills applied and the review should proceed on general principles) — a legible statement that the section was considered and came back empty, not a blank. Instruct both reviewers explicitly: a plainly stated absence is a complete answer to this section — only a section that is actually missing (no statement either way) should trigger a request for it.
   >
   > **Disposition inline (you own synthesis — no terminal question, no re-challenge loop)**: for each high- and medium-severity finding (severity judged from the reviewer's prose), pick one — **Fix** the design in place, **Rebut** with citable evidence (file ref / git history / domain rule — a rebuttal without citable evidence converts to Fix), or — for a genuinely out-of-scope finding — **note it in the design's Assumptions ledger**.
   > **Gate**: one review round complete; every high-/medium-severity finding dispositioned; design updated; no reviewer stalled on a missing input section.

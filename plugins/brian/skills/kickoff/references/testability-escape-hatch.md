@@ -8,8 +8,8 @@ Task 9 runs AFTER Challenge so Challenge's in-place revisions cannot orphan the 
 
 ## The backward edge (testability failures only)
 
-If `test-designer` returns `verification: FAIL` with findings indicating **untestability of the chosen approach** (the finding `untestable approach — all tests deferred` from its conflict-and-abstinence rules, or test-designer cannot write a regression test that pins the diagnosed root cause), the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input.
+If `test-designer`'s reply signals that the chosen approach itself is untestable — it says every test had to be deferred under its conflict-and-abstinence rules, or that it cannot write a regression test that pins the diagnosed root cause — the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input.
 
 Reopening Task 6 **cascades through Tasks 7 (Write the plan file) and 8 (Challenge)** so the on-disk plan file reflects the revised approach before Task 9 re-runs; the doubled Challenge cost is part of the accepted trade-off for testability failures.
 
-This is the only authorized backward edge in the post-Challenge tail, and it is invoked only on testability failures — routine `FAIL` cases (e.g. a Recommended-approach ↔ Critical-file-paths contradiction) are fixed in place and re-invoked, per Task 9's Action.
+This is the only authorized backward edge in the post-Challenge tail, and it is invoked only on testability failures — routine problems (e.g. a Recommended-approach ↔ Critical-file-paths contradiction) are fixed in place and re-invoked, per Task 9's Action.

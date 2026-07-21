@@ -2,11 +2,10 @@
 
 Shared-contract tokens this skill consumes. Renaming or deleting any of them is a multi-file change — grep the listed owners in the same commit. ("this file" below means `SKILL.md`, the orchestrator's execution guide.)
 
+`defect_class`, `Finding Anchor`, and `Output Contract` describe the shared reviewer contract this skill's Output Contract section (SKILL.md Step D.1) narrates a copy of. Their canonical registry is `plugins/brian/skills/challenge/references/contract-audit.md` — scrutinize points at it rather than carrying a second copy of these rows. The same canonical registry is also where any `INSUFFICIENT CONTEXT`-shaped abstinence token for the shared reviewer contract would be owned, if and when scrutinize's Output Contract carries one. A rename of any shared-contract token there must sweep this file's SKILL.md Step D.1 narration in the same commit.
+
 | Token | Owner file |
 |---|---|
-| `defect_class` (free-prose phrase; the `(file, …)` merge key and render slot) | this file (Step D.1) + agents narrate it in their Input Contract |
-| `Finding Anchor` | this file (Step D.1) + shared agents narrate the format |
-| `Output Contract` (block name) | this file (Step D.1) + agents' Input Contract sections |
 | `House Rules` (block name) | `skills/scrutinize/references/reviewer-house-rules.md` (plugin-root-relative) |
 | `Repo Root`, `Diff`, `Changed Files`, `Project Rules`, `Axis` (block names) | this file (Step D.1) |
 | `Zero Tests Flag` (per-axis hint) | this file (Step C.4) + `review-tests.md` |

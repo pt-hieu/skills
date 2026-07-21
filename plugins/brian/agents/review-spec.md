@@ -48,6 +48,6 @@ State the requirement gap and its user-facing consequence, not just "spec says X
 
 ## Output
 
-Emit findings in the form the injected `## Output Contract` describes — a Finding Anchor followed by a prose body — each quoting the spec line it turns on and naming the `## Spec Source`. If no findings, emit `NO FINDINGS`.
+Emit findings in the form the injected `## Output Contract` describes — a Finding Anchor followed by a prose body — each quoting the spec line it turns on and naming the `## Spec Source`. If you found nothing, say so plainly.
 
-If the spec is too vague to check the diff against (no concrete, verifiable requirements — only aspirational prose), emit `INSUFFICIENT CONTEXT — the spec states no verifiable requirements for the changed surface; [what a checkable spec would need]` rather than inventing findings. Run the Verification step from `## House Rules` before returning.
+If the spec is too vague to check the diff against (no concrete, verifiable requirements — only aspirational prose), say plainly that you could not assess this axis: the spec states no verifiable requirements for the changed surface, and name what a checkable spec would need. Do not invent findings to fill the gap. Run the Verification step from `## House Rules` before returning.

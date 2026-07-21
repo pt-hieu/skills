@@ -44,7 +44,7 @@ Flag anything that breaks the single narrative:
 - No unresolved kickoff scaffolding — no "TODO from Challenge", no placeholder, no note addressed to the orchestrator rather than the implementer.
 - **Premise verification check.** Every bullet in Load-bearing premises must carry either a `verified by:` note naming the concrete check (a command, grep, or file read) or an explicit `unverified — checkable by:` note. A premise stated as bare assertion — no note, or a note like "verified by: inspection" that names no reproducible check — is a finding: `Load-bearing premises — premise lacks a reproducible verification`.
 - **Bug-path regression invariant.** If Context references a diagnosed root cause or names a defect class (signals `brian:diagnose` ran upstream), the Test design section MUST contain at least one test described, in prose, as a regression test whose stated rationale quotes a substring of the Context root cause. If absent, fail the plan with finding `Test design — missing regression test on bug path`.
-- **Verification ↔ Test design dangling-reference check.** Each Test design bullet's identifier is the imperative phrase after `[unit]`/`[integration]` on the bullet's header line — this is its canonical name. Verification MUST cite tests by quoting that identifier verbatim inside backticks. Fail the plan with one finding per: (a) backtick-quoted test name in Verification with no matching Test design identifier; (b) Test design bullet whose identifier appears nowhere (backtick-quoted) in Verification. Matching is exact literal substring match on the identifier text — no token overlap, no fuzzy match.
+- **Verification ↔ Test design dangling-reference check.** Each Test design bullet names a test in the imperative phrase after `[unit]`/`[integration]` on its header line. Read Verification and Test design side by side and judge, test by test, whether every test named in Test design is genuinely reflected in Verification and vice versa — the same reader who'd recognize "rejects empty cart" and "reject an empty cart on checkout" as the same behavior should pass that pair. This is a judgment call about whether the two sides describe the same behavior, not a text match. Fail the plan with one finding per: (a) a test referenced in Verification that no Test design bullet covers; (b) a Test design bullet whose test never shows up, in substance, in Verification. Hold the same strictness as before — only the mechanism for deciding a match changed, not how forgiving you are.
 
 Do **not** rewrite the plan. Do not fix wording. You report; the orchestrator revises and may re-run you.
 
@@ -70,15 +70,12 @@ Inject the block regardless of whether Part 1 passed — it is idempotent, so a 
 
 ## Output
 
-Report exactly two lines plus findings:
+Open by telling the orchestrator plainly what happened to the protocol block and which file: whether you injected it fresh, found it already present and matching, or found it drifted and corrected it — name the file path.
 
-```
-protocol: injected | already present | drift corrected — <file path>
-verification: PASS | FAIL
-```
+Then say outright whether the plan reads as coherent or needs fixes.
 
-On `FAIL`, follow with one bullet per finding:
+If it needs fixes, follow with one bullet per finding:
 
 - **Section** — quote the offending text verbatim — what single-narrative rule it breaks — the direction of the fix (what the orchestrator should collapse, cut, or reconcile). Do not write the replacement text.
 
-On `PASS`, write one line confirming the plan reads as one narrative from Context to Verification with no superseded-decision residue.
+If it's coherent, write one line confirming the plan reads as one narrative from Context to Verification with no superseded-decision residue.

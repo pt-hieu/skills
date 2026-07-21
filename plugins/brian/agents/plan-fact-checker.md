@@ -44,11 +44,9 @@ Finding Anchor: defect_class=<plain-words phrase, e.g. "stale claim — plan ref
 
 Then a short prose body: the plan's claim (quoted), what is actually true, the evidence, which plan tasks/decisions consume the claim (the blast radius), and your confidence with its basis.
 
-After the findings, render the claims ledger — one line per inventoried claim:
+After the findings, render the claims ledger — one line per inventoried claim, terse, stating the verdict naturally in the sentence alongside the claim and the evidence, e.g. "Verified — the helper is used in 3 call sites, per grep." or "Stale — the config key was renamed; see `settings.ts:12`.":
 
-```
-- {VERIFIED|WRONG|STALE|UNCHECKABLE} — {claim in ≤15 words} — {evidence or what's needed, one clause}
-```
+- one bullet per claim, ≤ 25 words, claim + verdict + evidence in a single sentence
 
 ## Verdict
 

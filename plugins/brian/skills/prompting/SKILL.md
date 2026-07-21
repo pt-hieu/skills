@@ -16,7 +16,7 @@ Research synthesis from papers and industry sources on effective LLM prompting f
 ### CRITICAL — block if missing
 - **Deterministic split** — code computes all numbers; LLM interprets only. This is independent of prose-vs-structured output and always binds.
 - **Prose-first communication** — prefer free prose whenever an LLM or human reads the output; reserve schemas for non-LLM consumers that parse the fields. See *Prose-First vs. Structured Output* for the rationale.
-- **Abstinence rule** — `INSUFFICIENT DATA` output when data is missing or unverifiable
+- **Abstinence rule** — say plainly that the data is missing or unverifiable, naming what would resolve it; use a literal `INSUFFICIENT DATA` tag only where a consumer branches on that string
 - **Conflict detection** — explicit protocol to enumerate and resolve contradictory signals
 
 ### IMPORTANT — degrades quality without
@@ -84,7 +84,7 @@ Apply this chain for any agent producing actionable outputs:
 2. **COMPLETENESS** — fewer than 3 sources → downgrade confidence automatically
 3. **RED FLAGS** — missing fields, zero values, unchanged data over expected change periods → flag explicitly
 4. **VERIFICATION (CoVe)** — re-read each claim, trace to a specific provided field
-5. **ABSTINENCE** — if >30% claims unverifiable → output `INSUFFICIENT DATA`
+5. **ABSTINENCE** — if >30% claims unverifiable → say the item cannot be supported and name what is missing
 
 This chain should appear as mandatory steps in system prompts for any decision-making agent.
 
@@ -102,7 +102,7 @@ This chain should appear as mandatory steps in system prompts for any decision-m
 | Forcing prose into rigid JSON for an LLM/human reader | Contract drift (see *Prose-First vs. Structured Output*) | Use prose; reserve schemas for non-LLM parsers |
 | Unbounded rambling output | More words = more speculation | Ask for a short, focused paragraph — brevity, not a schema |
 | Vague confidence | "fairly confident" tells you nothing | State confidence AND its basis in plain words (calibrated HIGH/MEDIUM/LOW only when a non-LLM parses it) |
-| No abstinence path | Agent generates analysis when data is absent | Explicit INSUFFICIENT DATA output |
+| No abstinence path | Agent generates analysis when data is absent | Explicit abstinence: state the gap, name what would close it |
 | Generic role prompt | "You are a helpful assistant" activates wrong patterns | Specific role with methodology |
 | No source attribution | Claims cannot be verified or challenged | Require tool/field citation per claim |
 

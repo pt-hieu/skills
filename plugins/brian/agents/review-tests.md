@@ -23,7 +23,7 @@ For each changed production file:
 1. **Locate its tests.** Grep for the file's basename in test directories (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`, `*_test.{go,py}`, `*_spec.rb`). Read the matching test file(s) from disk.
 2. **Trace pinned behaviors.** For each public function changed in the diff, identify the assertion(s) that pin its behavior. If a function changed and no assertion exercises the changed branch, that is a finding.
 3. **New error branches.** For each new `throw`, `reject`, `return err`, or new validation gate added in the diff: is there a test that fires it? If not, name the defect class as a test-coverage gap in plain words; severity reflects the risk of the branch.
-4. **Test inflation / cosmetic tests** — flag tests that look like coverage but verify nothing of value. These are a mandated floor: emit them with the literal `Confidence: [HIGH]` tag (prose confidence with a default-to-low rule must NOT demote a mandated finding below the severity gate), because they inflate the suite, slow CI, and create false confidence. Name the defect class as a test-coverage gap in plain words (the gap is the same — a real behavior remains unpinned despite the test's presence).
+4. **Test inflation / cosmetic tests** — flag tests that look like coverage but verify nothing of value. These are a mandated floor: state plainly in the Claim or closing sentence that this is high severity and a mandated floor for an untested change that must not be downgraded (the prose default-to-low rule does not apply to it), because they inflate the suite, slow CI, and create false confidence. Name the defect class as a test-coverage gap in plain words (the gap is the same — a real behavior remains unpinned despite the test's presence).
 
    Specific anti-patterns to flag:
    - **Implementation-mirroring assertions** — the test re-derives the expected value using the same logic the function uses (e.g. `expect(add(2,3)).toBe(2+3)`, `expect(formatName(u)).toBe(u.first + " " + u.last)` when the function does exactly that concatenation). The assertion will pass for any implementation — including a broken one — because it computes the expected value the same wrong way.
@@ -39,10 +39,10 @@ For each changed production file:
 
 ## Zero-tests obligation
 
-House Rule 8 in the injected `## House Rules` block states the routing floor (a zero-tests diff forces a coverage finding); House Rule 2's carve-out delegates the literal tag requirement to this section, which is its canonical home. When `## Zero Tests Flag` is `true`:
+House Rule 8 in the injected `## House Rules` block states the routing floor (a zero-tests diff forces a coverage finding); this section is the canonical home for what that floor requires in the finding's own prose. When `## Zero Tests Flag` is `true`:
 
 - Identify the changed production function with the highest blast radius (public API entry point, shared utility imported in ≥3 places, security-relevant code).
-- Emit AT LEAST ONE finding carrying the literal `Confidence: [HIGH]` tag (this is a mandated floor — keep the literal tag here so prose confidence can never demote it) and naming the defect class as a test-coverage gap in plain words.
+- Emit AT LEAST ONE finding that states plainly, in the Claim or a closing sentence, that it is high severity and a mandated floor for an untested change — this obligation must not be downgraded by the prose default-to-low rule — and that names the defect class as a test-coverage gap in plain words.
 - The Claim line names what concrete regression class is now uncatchable: "Any future refactor of `parseToken` can break signature verification with no failing test; this is the entry point that all authenticated routes flow through."
 
 ## Naming the defect class

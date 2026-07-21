@@ -50,9 +50,9 @@ Append to every panel prompt:
 ```
 ## Output Contract (crux round)
 
-Return, in order: (1) the option set — name each option in one line; (2) the decision matrix — per option: repo-specific cost, risk, what it forecloses, each grounded in a citation or experiment; (3) your recommendation as one plain sentence naming exactly one option (retreat/re-scope counts as an option); (4) what evidence would change it — the observation that would flip your recommendation.
+Walk the option set, naming each option in one line (retreat/re-scope counts as an option — include it). For each option, compare its repo-specific cost, its risk, and what it forecloses, grounding every comparison in a citation or experiment. Then say which single option you would pick and why, and name the observation that would change your mind — the evidence that would flip your recommendation.
 
-State confidence and its basis in plain prose. If you cannot ground a matrix cell, write UNKNOWN — {what you'd need} rather than estimating.
+State confidence and its basis in plain prose. If you cannot ground a comparison, write UNKNOWN — {what you'd need} rather than estimating.
 ```
 
 ## 4. Synthesis and decision

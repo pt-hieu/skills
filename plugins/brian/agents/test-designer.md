@@ -22,8 +22,10 @@ If either is missing, refuse and ask for them. The orchestrator is the **single 
 
 ## Path handling
 
-- When `path: bug` — you MUST include at least one test you describe, in prose, as a **regression test**, and its rationale **quotes the root cause verbatim** from Context. If you cannot write one (no root cause text present in Context), output FAIL with finding `path: bug but Context contains no quotable root cause`.
-- When `path: feature` — a regression test is optional; include one only if Prior intent surfaces a specific prior bug this change could re-open.
+Your caller tells you how the requirement arrived. Read that for meaning rather than a fixed field.
+
+- **When it arrived as a bug or regression** (the caller says it came through `brian:diagnose`, or Context carries a diagnosed root cause) — you MUST include at least one test you describe, in prose, as a **regression test**, and its rationale must pin the specific root cause Context names, quoting enough of it that a reader can see the test targets that cause and not a nearby symptom. If Context states no root cause you can pin a test to, say so plainly and report the test design as not yet sound — a bug-path plan without a regression test is the failure this check exists to catch.
+- **When it arrived as new feature work** — a regression test is optional; include one only if Prior intent surfaces a specific prior bug this change could re-open.
 
 ## Design rules (enforce, do not negotiate)
 
@@ -58,7 +60,7 @@ If your bullet would require any of these, do not write it.
 
 Insert a new section between `## Skills to use` and `## Verification`. The exact header is `## Test design`. The body is one bullet per test, then a closing sentence naming what is intentionally left untested.
 
-Each bullet keeps a **fixed header line** — `plan-verifier` matches the imperative identifier after `[unit]`/`[integration]` by exact substring against Verification, so the header format is load-bearing and must not be prose-ified away — followed by a short prose body:
+Each bullet keeps a **fixed header line** — `plan-verifier` reads this identifier against Verification and judges whether the same behavior is described on both sides, so name the test clearly and consistently: a short imperative phrase that names the behavior under test in terms a reader would recognize even if Verification phrases it slightly differently (e.g. "rejects empty cart" and "reject an empty cart on checkout" describe the same test and must both be recognizable as such) — followed by a short prose body:
 
 ```
 - [unit|integration] <test name in imperative — what it asserts>
@@ -91,15 +93,12 @@ Then `Edit`.
 
 ## Output
 
-Report exactly two lines, then findings if FAIL:
+Open by telling the orchestrator plainly what you did to the plan file — whether you inserted a Test design section or replaced one that already existed — and name the plan file path.
 
-```
-test-design: inserted | replaced (existed previously) — <plan file path>
-verification: PASS | FAIL
-```
+Then say outright whether the test design holds up.
 
-On `FAIL`, one bullet per problem:
+If it does not, follow with one bullet per problem:
 
 - **<rule violated>** — quote the offending plan text or describe missing input — what the orchestrator must fix before re-running you.
 
-On `PASS`, one line: count of unit tests, count of integration tests, whether a regression test is present (required on bug path), and the salience ordering rationale in 5–10 words.
+If it holds up, write one line: count of unit tests, count of integration tests, whether a regression test is present (required on bug path), and the salience ordering rationale in 5–10 words.

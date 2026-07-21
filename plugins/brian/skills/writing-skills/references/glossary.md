@@ -35,6 +35,7 @@ Distilled from Matt Pocock's [writing-great-skills](https://github.com/mattpococ
 - **Leading word** — a compact pretrained concept the agent thinks with; repeated as a token, it anchors behaviour in the fewest tokens. Prefer pretrained over coined.
 - **Legwork** — the digging an agent does within a step (reading, exploring, changing); raised by a demanding completion criterion or a leading word.
 - **Post-completion steps** — the steps after the current one; visible, they pull the agent into premature completion.
+- **Handoff** — one agent dispatching another and reading what comes back; a conversation in prose, since neither side is a parser. Its violation is the **output contract** — a mandatory token, required closing line, or field list imposed on an exchange nothing branches on.
 
 ## Pruning
 

@@ -36,6 +36,14 @@ Each split spends one of the two loads, so split only when the cut earns it:
 - **By invocation** — split off a model-invoked skill when a distinct **leading word** should trigger it, or another skill must reach it.
 - **By sequence** — split a run of **steps** when the **post-completion steps** tempt the agent to rush the one in front of it. Hiding them encourages more **legwork** — but it only works across a real context boundary (a user-invoked hand-off or subagent dispatch); an inline call clears nothing.
 
+## Handoffs
+
+When a skill dispatches a subagent, the **handoff** is a conversation: the sender says what the receiver needs in order to act, and the receiver reads for meaning. Write both sides as prose. A mandatory literal token, a required closing line, or a field list buys rigidity without buying determinism — neither side is a parser, so the contract's only lasting effect is a way to drift silently once one side stops emitting it.
+
+Reserve mechanical tokens for a value something genuinely branches on: non-LLM code that greps it, or a receiver written to parse rather than read — told to dedupe, merge, or discard by the value instead of judging it. Being parsed earns the token only alongside a registry naming every emitter and consumer, and a gate that sweeps them in one commit. Structure and prose coexist in one exchange: key the merge on the fields that must match exactly, and let the receiver read the rest for meaning.
+
+Write each obligation on the side that owns it. When only the actor can tell whether it complied, say so plainly — a self-enforced obligation dressed as an external check teaches the agent that something downstream is watching when nothing is.
+
 ## Pruning
 
 - **Single source of truth** — keep each meaning in one authoritative place, so changing behaviour is a one-place edit.

@@ -100,8 +100,8 @@ Each gatherer prompt is assembled from these blocks:
 - **Cite-or-abstain contract (HARD RULE)**:
   - Every claim carries an inline citation: a commit short-hash, a `PR#<n>`, a `[A-Z]+-\d+` ticket key, a `file:line`, or a Slack permalink URL.
   - A claim you cannot ground in a citation — don't state it.
-  - If nothing relevant exists for this source, return exactly `INSUFFICIENT DATA — {what you looked for}` and nothing else. (This sentinel is deliberately *not* scrutinize's abstinence sentinel — they are different literal strings on purpose. The emit site here and the parse site in Step D use the same literal `INSUFFICIENT DATA — ` string; do not reconcile either site to scrutinize's wording.)
-  - If a tool call *errors* (auth failure, renamed/unavailable tool, timeout) rather than returning empty, return exactly `SOURCE UNAVAILABLE — {tool}: {what failed}` instead. This is distinct from `INSUFFICIENT DATA` on purpose: an empty source is a real "nothing found"; a failed tool is unknown coverage and must not be laundered into a clean abstention.
+  - If nothing relevant exists for this source, say so plainly and nothing else — state that you looked and found nothing, naming specifically what you looked for.
+  - If a tool call *errors* (auth failure, renamed/unavailable tool, timeout) rather than returning empty, say so plainly instead — name the tool and what failed. Distinguish this clearly from "nothing found": an empty source is a real absence of signal; a failed tool is unknown coverage and must not be laundered into a clean abstention. Say which situation you're in so the orchestrator can tell them apart from your reply.
   - Intra-source disagreement → report both sides with citations; do not pick one silently.
 - **Output** — prose, length matched to the depth lean. Lead with the single most start-relevant fact. Order by usefulness, not chronology.
 
@@ -110,7 +110,7 @@ Each gatherer prompt is assembled from these blocks:
 - **git+code** (`Explore`) — how the work is structured and where it lives: entry points, the main flow, how the pieces fit, where someone new should start reading. Cite `file:line` and commit hashes. Surface ticket keys from commit subjects so synthesis can cross-link.
 - **jira/confluence** (`general-purpose`) — the *why*: ticket(s), design docs, acceptance criteria, the latest intent-explaining comment. Fetch a seeded ticket key directly via `getJiraIssue`; otherwise keyword-search.
 - **bitbucket** (`general-purpose`) — what the change does and the reasoning behind it: the diff's shape, the review discussion, and whether it's landed or in-flight (so Brian knows what's stable to build on). Use the repo resolved in Step B.
-- **slack** (`general-purpose`) — recent team discussion, decisions, blockers, reversals; flag contradictions with PR/ticket state. **Exclude self-DMs** — any result whose conversation is a DM with Brian Pham as the only participant (e.g. channel `D07EGHRBLSJ`); these are Claude draft dumps, not team signal. If a "decision" is sourced ONLY from a self-DM, return it as `INSUFFICIENT DATA — {...}`, not a citation — otherwise a real permalink launders a Claude draft past the citation check.
+- **slack** (`general-purpose`) — recent team discussion, decisions, blockers, reversals; flag contradictions with PR/ticket state. **Exclude self-DMs** — any result whose conversation is a DM with Brian Pham as the only participant (e.g. channel `D07EGHRBLSJ`); these are Claude draft dumps, not team signal. If a "decision" is sourced ONLY from a self-DM, say plainly that you found nothing usable there rather than citing it — otherwise a real permalink launders a Claude draft past the citation check.
 
 ---
 
@@ -119,7 +119,7 @@ Each gatherer prompt is assembled from these blocks:
 When all dispatched subagents return (per the Step C wait discipline):
 
 1. Collect each return and tag it by source.
-2. **Parse the sentinels.** Any return matching `INSUFFICIENT DATA — ...` goes into `sources_abstained[]`; any return matching `SOURCE UNAVAILABLE — ...` goes into `sources_failed[]`. Never invent findings on an abstaining source's behalf, and never fold a failed source into "no signal" — it is incomplete coverage, not a clean empty.
+2. **Read each gatherer's reply for meaning and sort it.** A gatherer that says it looked and found nothing relevant goes into `sources_abstained[]`; a gatherer that says a tool call failed goes into `sources_failed[]`. Never invent findings on an abstaining source's behalf, and never fold a failed source into "no signal" — it is incomplete coverage, not a clean empty.
 3. **Cross-link discovered ticket keys** (git ↔ jira) without duplicating the same fact under two sources.
 
 **Citation enforcement at the merge boundary (load-bearing — re-assert the contract here, where claims get rewritten).** Before rendering, scan each synthesized bullet for an inline citation token: a commit short-hash, `PR#<n>`, a `[A-Z]+-\d+` ticket key, a `file:line`, or a Slack permalink URL. **A bullet with no token is dropped, not softened.** Compression during synthesis is exactly where a citation falls off while the claim survives, so the check lives at the consumer, not only the producer.
