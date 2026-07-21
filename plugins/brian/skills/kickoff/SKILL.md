@@ -5,16 +5,16 @@ description: "Use when /kickoff is invoked or a new requirement, ticket, or task
 
 # Kickoff
 
-Kickoff registers Brian's entire planning pipeline as harness-enforced tasks before any planning work starts, so no gate (skill scan, challenge, pitch) can be silently skipped on the way from a fresh requirement to a green-lit, pitched plan.
+Kickoff registers Brian's entire planning pipeline as harness-enforced tasks before any planning work starts, so no gate (skill scan, challenge, test design) can be silently skipped on the way from a fresh requirement to a green-lit plan.
 
 ## Execution model
 
-Instead of trying to remember a 12-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. Each registered task carries a one-line pointer back to its section in `references/task-specs.md`; that file stays the single source of truth for every task's Goal / Action / Gate. The pipeline prescribes the *process*, not the judgment: within a task, how to satisfy the gate is the agent's call.
+Instead of trying to remember an 11-task pipeline in-prompt, the agent's **first action** is to register every step as a task via `TaskCreate`. The `TaskList` then becomes the working memory — nothing gets skipped, because skipping shows up as a pending task. Each registered task carries a one-line pointer back to its section in `references/task-specs.md`; that file stays the single source of truth for every task's Goal / Action / Gate. The pipeline prescribes the *process*, not the judgment: within a task, how to satisfy the gate is the agent's call.
 
 ## Hard rules
 
 - **Step 0 is mandatory and runs first.** Register all kickoff tasks before doing any planning work. If `TaskList` already contains kickoff tasks for this requirement, skip Step 0 and resume from the lowest-ID pending task.
-- **Planning runs in the session's current permission mode.** The plan lives in a working file under the scratchpad or `/tmp` for Tasks 1–11; plan mode is entered only in Task 12, to transfer that file onto plan mode's plan-file handling and exit.
+- **Planning runs in the session's current permission mode.** The plan lives in a working file under the scratchpad or `/tmp` for Tasks 1–10; plan mode is entered only in Task 11, to transfer that file onto plan mode's plan-file handling and exit.
 - Work the lowest-ID unblocked task. Re-read its section in `references/task-specs.md` when picking it up, mark `in_progress` before starting, mark `completed` only when the task's gate passes.
 - When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
 - The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
@@ -32,7 +32,7 @@ Set spawned-subagent models per task via the `Agent` tool's `model` parameter.
 | 6 Plan | `Plan` (×1) | high | `opus` |
 | 8 Challenge | reviewer subagents (spawned by `brian:challenge`) | medium | `opus` |
 | 9 Design tests | `brian:test-designer` | medium | `sonnet` |
-| 11 Plan-verifier | `brian:plan-verifier` | medium | `sonnet` |
+| 10 Plan-verifier | `brian:plan-verifier` | medium | `sonnet` |
 
 The Challenge row is informational: `brian:challenge` pins its reviewers to `opus` in its own instructions and exposes no per-invocation model or effort knob — invoke it plainly and let it manage its reviewers.
 
@@ -42,14 +42,14 @@ The Challenge row is informational: `brian:challenge` pins its reviewers to `opu
 - **Action**: in a single message, call `TaskCreate` once per task in the overview below, in order. Use each task's **subject** verbatim; write each **description** as a one-line pointer back to the spec file: `Execute per § "Task N" of <absolute path of references/task-specs.md, sibling of this SKILL.md> — re-read that section and pass its Gate before completing.` Then call `TaskUpdate` to wire `addBlockedBy` where order genuinely matters (`A←B` means B is blocked by A):
   - `1←2←3←4` — Explore feeds the historian; the historian's report informs interrogation.
   - `2←5` — the skill scan needs only the Explore findings, so pick it up while the historian subagent is out.
-  - `4←6` and `5←6`, then `6←7←8←9←10←11←12` chained.
+  - `4←6` and `5←6`, then `6←7←8←9←10←11` chained.
 
   Then call `TaskList`, claim Task 1, and begin.
-- **Gate**: `TaskList` shows tasks 1–12 in `pending` with pointer descriptions, dependencies wired, and Task 1 is claimed `in_progress`.
+- **Gate**: `TaskList` shows tasks 1–11 in `pending` with pointer descriptions, dependencies wired, and Task 1 is claimed `in_progress`.
 
 ## Pipeline overview (subjects)
 
-The 12 tasks to register. The canonical Gate for every task lives only in `references/task-specs.md` — the hook column below is a memory aid, not the gate's wording; re-read a task's section there when you pick it up.
+The 11 tasks to register. The canonical Gate for every task lives only in `references/task-specs.md` — the hook column below is a memory aid, not the gate's wording; re-read a task's section there when you pick it up.
 
 | # | Subject | Gate hook |
 | --- | --- | --- |
@@ -62,14 +62,13 @@ The 12 tasks to register. The canonical Gate for every task lives only in `refer
 | 7 | `Write the plan file` | re-read checks all pass |
 | 8 | `Challenge the plan file` | challengers pass or red flags accepted in writing |
 | 9 | `Design the Test design section of the plan file` | `test-designer` PASS, section placed |
-| 10 | `Pitch the plan to Brian` | pitch posted |
-| 11 | `Verify plan coherence and inject post-implementation protocol` | `plan-verifier` PASS, protocol is final section |
-| 12 | `Hand the plan to plan mode` | plan copied verbatim, plan mode exited |
+| 10 | `Verify plan coherence and inject post-implementation protocol` | `plan-verifier` PASS, protocol is final section |
+| 11 | `Hand the plan to plan mode` | plan copied verbatim, plan mode exited |
 
 ## It's working if
 - `TaskList` shows the full pipeline registered and wired before any exploration starts, each task description pointing back to its section in `references/task-specs.md`.
 - The working plan file exists on disk before Challenge runs — Challenge revises that file, not chat.
 - Interrogate questions read in plain English, each with a `(Recommended)` option, and none could have been answered by reading the code.
 - The working plan file's final section is `## Post-implementation protocol`, injected by plan-verifier — not hand-written.
-- What lands in plan mode's plan file is a verbatim copy of the working file, produced in one transfer at Task 12.
+- What lands in plan mode's plan file is a verbatim copy of the working file, produced in one transfer at Task 11.
 </content>

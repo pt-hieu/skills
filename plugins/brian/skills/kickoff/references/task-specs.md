@@ -107,7 +107,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing tests defined in the Test design section below by quoting their identifier verbatim inside backticks). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference test names here; describe what each pins there.
 > <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
 >
-> End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 11 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
+> End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 10 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
 > **Gate**: re-read the working plan file end-to-end and confirm in chat:
 > (a) Context names the requirement source verbatim or by quote (ticket id, user-ask quote, or bug-report link), and the quoted scope matches the post-interrogation final state (reads as if that scope was always the scope),
 > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
@@ -123,7 +123,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 - subject: `Challenge the plan file`
 
 > **Pre-flight self-check (MANDATORY)**: answer in one line: *"Does the working plan file reflect the Plan-agent return, or did I write it myself?"* If self-written, reopen the Plan-agent task and run the Plan agent, then rewrite the plan file. Challenge tests the plan, not the orchestrator's intuitions.
-> **Goal**: catch missed details and weak spots before pitching.
+> **Goal**: catch missed details and weak spots before handoff.
 > **Action**: invoke `brian:challenge` via the `Skill` tool, passing **the absolute path of the working plan file** so reviewer subagents read the same artifact the implementer will. Revise the **file in place** with each round of feedback.
 > **Gate**: challengers pass, or every remaining red flag is explicitly accepted in writing inside the plan file — and the accepting/revising edits are on disk. A completed round with unresolved, unaccepted red flags does not clear this gate.
 
@@ -144,17 +144,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 ---
 
-**Task 10 — Pitch**
-
-- subject: `Pitch the plan to Brian`
-
-> **Goal**: give the user a plain-language preview before exit.
-> **Action**: invoke `voice:pitch` via the `Skill` tool to post the chat-reply pitch.
-> **Gate**: pitch is posted.
-
----
-
-**Task 11 — Verify the plan and inject post-implementation protocol**
+**Task 10 — Verify the plan and inject post-implementation protocol**
 
 - subject: `Verify plan coherence and inject post-implementation protocol`
 
@@ -165,7 +155,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 ---
 
-**Task 12 — Hand the plan to plan mode**
+**Task 11 — Hand the plan to plan mode**
 
 - subject: `Hand the plan to plan mode`
 
