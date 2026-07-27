@@ -30,7 +30,7 @@ Append one subsection per panel agent under the current `## Round N` heading. Wr
 {verbatim agent return}
 ~~~
 
-### Wildcard — {lens}     <- one per launched lens
+### Bespoke Critic — {aspect}   <- when one launched
 ~~~markdown
 {verbatim agent return}
 ~~~
@@ -60,8 +60,8 @@ Append `### Synthesis` under the current `## Round N` heading using this templat
 #### Factual Accuracy: {verdict}
 {plan mode only — claim discrepancies and falsified premises from plan-fact-checker. Omit subsection in impl mode.}
 
-#### Wildcard — {lens}: {verdict}
-{one subsection per launched lens, high- and medium-severity findings only. Omit if no lenses launched.}
+#### Bespoke Critic — {aspect}: {verdict}
+{high- and medium-severity findings only. Omit if no critic launched.}
 
 #### Cross-Agent Conflicts
 {any disagreements between the two reviewers — both sides explicit. Omit subsection if none.}

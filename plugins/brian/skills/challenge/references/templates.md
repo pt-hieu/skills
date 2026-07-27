@@ -8,7 +8,7 @@ Runs after the verbose synthesis (3.3a) is appended to the run file. Don't dump 
 
 ```
 ## Challenge Report — Round N — {VERDICT}{ — confidence: {HIGHER|LOWER}}
-arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  {lens}: {✅|⚠️|❌}}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  critic: {✅|⚠️|❌}}  ·  {H} HIGH, {M} MEDIUM  ·  artifact: <run_file>
 
 ### Findings
 - ❌ HIGH {arch|rca|both} {file:line} — {one-sentence issue, cite skill name inline if a skill rule is violated}. Fix: {one-sentence fix}.
@@ -28,8 +28,8 @@ Dropped from chat: N low-confidence findings (see run file)
 ```
 
 Hard rules:
-- The `facts` mark renders in plan mode only; one extra mark per launched wildcard lens, named by the lens.
-- Source prefix: `arch`, `rca`, `facts`, a lens name, or `both` (when merged across two sources).
+- The `facts` mark renders in plan mode only; the `critic` mark renders when a bespoke critic launched.
+- Source prefix: `arch`, `rca`, `facts`, `critic`, or `both` (when merged across two sources).
 - Skill Compliance: cite skill name inline in the issue sentence; no separate section.
 - False Consensus / Debated Findings: no section header in chat — debated findings appear in Findings list with resolved severity; `[CONSENSUS-BLIND-SPOT]` findings appear in Findings like any other.
 - Empty sections: omit header entirely (no `N/A`).
@@ -91,7 +91,7 @@ The run file IS the final report. Chat emits a single turn:
 
 ```
 ## Challenge Complete — {VERDICT progression: R1 → R2 → R3}
-arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  {lens}: {✅|⚠️|❌}}  ·  artifact: <run_file>
+arch: {✅|⚠️|❌}  rca: {✅|⚠️|❌}{  facts: {✅|⚠️|❌}}{  critic: {✅|⚠️|❌}}  ·  artifact: <run_file>
 {escalation banner if round-3-cap or diminishing-returns or crux-retreat}
 {crux recommendation line if a crux round ran}
 {last round's compact synthesis (3.3b template)}

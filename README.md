@@ -21,7 +21,7 @@ Most of my work happens through Claude Code, where Claude does the typing and I 
 
 The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, two things happen:
 
-- **`challenge`** runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus optional deployment-risk and strategy red-team lenses. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
+- **`challenge`** runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus an optional bespoke critic the orchestrator writes for whichever aspect of this particular plan most deserves depth. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
 - **`pitch`** then summarizes the surviving plan back to me in everyday language: problem, fix, new behavior, no jargon. That's where I catch direction-level mistakes that a technical plan would have hidden behind file names.
 
 Only after both do I approve and let implementation start.
@@ -56,7 +56,7 @@ Three plugins, each a coherent domain:
 | --- | --- |
 | `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
-| `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, wildcard lenses, and crux-round escalation. |
+| `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, a target-specific bespoke critic, and crux-round escalation. |
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion at a named decision fork that legwork could not settle, or where a wrong branch is a one-way door. |
 | `diagnose` | Systematic root-cause debugging methodology. |

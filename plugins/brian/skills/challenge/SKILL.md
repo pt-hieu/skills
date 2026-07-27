@@ -14,9 +14,9 @@ The two fixed reviewers are first-class plugin agents, launched on every run:
 Plan mode adds a third fixed agent:
 - `brian:plan-fact-checker` — verifies every file:line, count, path, and version claim the plan makes against the actual repo and installed toolchain
 
-The orchestrator may also add up to 2 wildcard lenses (deployment risk, strategy red-team) when the target warrants — trigger judgment and lens prompts live in `references/wildcard-lenses.md` (read it at Step 2 whenever the target touches deployment topology or external systems, or is a strategy/rollout document rather than a code diff).
+The panel may also gain one **bespoke critic** — an adversary the orchestrator writes for this particular target, aimed at whichever aspect most deserves depth. Step 2 owns that judgment in full; `references/bespoke-critic.md` carries the authoring guidance, invocation shape, and two worked derivations, opened once the aspect is named.
 
-The fixed reviewers' and fact-checker's system prompts live in `plugins/brian/agents/`; wildcard lenses and the crux-round panel are prompt templates in this skill's `references/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, Premise Audit section, re-run sections, and the crux-round mini-contract in `references/crux-round.md`). Agent files keep methodology, dimensions, examples, and their per-agent closing-judgment keywords only.
+The fixed reviewers' and fact-checker's system prompts live in `plugins/brian/agents/`; the bespoke critic is authored at runtime and the crux-round panel is a prompt template, both under this skill's `references/`. This skill orchestrates context assembly, parallel invocation, and synthesis. **The orchestrator owns the I/O contract** (Reuse Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, Premise Audit section, re-run sections, and the crux-round mini-contract in `references/crux-round.md`). Agent files keep methodology, dimensions, examples, and their per-agent closing-judgment keywords only.
 
 This skill deliberately holds quantitative state verbally (deviating from the `prompting` skill's deterministic-split rule) — the rationale and the one concrete formula it defends live together in `references/domain-harvest.md`.
 
@@ -73,9 +73,31 @@ Compose the panel:
 
 - **Always**: `brian:architectural-reviewer` and `brian:root-cause-reviewer`, each with `model: "opus"`.
 - **Plan mode**: add `brian:plan-fact-checker` with `model: "sonnet"` (claim verification is mechanical exploration; reserve opus for the judgment-heavy reviewers).
-- **Wildcard lenses** (0–2): when the target touches deployment topology or external systems, or is a strategy/rollout document, read `references/wildcard-lenses.md` and launch the lenses it selects.
+- **Bespoke critic** (0–1): decide with the gate below.
 
-All calls MUST be emitted as **tool-use blocks in the same assistant message** so they run concurrently, each with `run_in_background: true`.
+### Bespoke-critic gate
+
+The standing panel buys breadth. This slot buys depth on one aspect of *this* target, and you write the critic — so its subject is whatever the target puts at risk, named in your own words rather than drawn from a list.
+
+Ask one question: **which load-bearing aspect of this target will the standing panel only skim, where being wrong is expensive?**
+
+Launching wants both prongs, and the run file records them:
+
+- **Quoted** — the target's own text that makes the aspect load-bearing. A claim you inferred from the repo's shape rather than read in the target belongs to the standing panel; repo shape is a constant across every run and so tells you nothing about this one.
+- **Uncovered** — one line on why architectural review, root-cause analysis, and (in plan mode) claim-checking will each only skim it. Generic depth is what those three already sell; the aspect earns its critic by being one they pass over.
+
+Write the record line before opening any reference — naming the aspect is the decision, and it happens in your words, not against a menu:
+
+```
+Bespoke critic: none — {one-line reason}
+Bespoke critic: {aspect} — {quote from the target} — {why the standing panel only skims it}
+```
+
+With the aspect recorded, read `references/bespoke-critic.md` to author the critic's prompt and launch it.
+
+### Emission
+
+Once the panel is composed, all calls MUST be emitted as **tool-use blocks in the same assistant message** so they run concurrently, each with `run_in_background: true`.
 
 The orchestrator-injected contract goes into the user-turn `prompt` field. Identical for every panel agent:
 
@@ -134,7 +156,7 @@ After emitting the calls, the loop driver MUST NOT proceed to Step 3 until every
 On agent error or timeout: retry once with the same prompt. Failure handling splits by agent class:
 
 - **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `### Round N: ABORTED — both fixed reviewers failed twice` to the run file. Skip Step 5; jump to Step 6 with `mode = aborted`: chat emits one-line abort + run-file path; AskUserQuestion offers retry / proceed without challenge / rollback. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is load-bearing.
-- **Auxiliary agents** (`plan-fact-checker`, wildcard lenses): a twice-failed auxiliary agent degrades the round instead of aborting it — append `### {agent}: FAILED — degraded round` to the run file, note the gap in the synthesis's Insufficient Context Areas, and cap the round's verdict at `REVISE` (an unverified claims inventory is an unresolved gap, same as Step 3.1).
+- **Auxiliary agents** (`plan-fact-checker`, the bespoke critic): a twice-failed auxiliary agent degrades the round instead of aborting it — append `### {agent}: FAILED — degraded round` to the run file, note the gap in the synthesis's Insufficient Context Areas, and cap the round's verdict at `REVISE` (an unverified claims inventory is an unresolved gap, same as Step 3.1).
 
 ## Step 3: Synthesize Results
 
@@ -145,7 +167,7 @@ Each agent closes with a plain-language judgment sentence containing exactly one
 | `architectural-reviewer` | `pass` / `concerns` / `rethink` | pass | concerns | rethink |
 | `root-cause-reviewer` | `systematic` / `partial` / `patch-only` | systematic | partial | patch-only |
 | `plan-fact-checker` (plan mode) | `accurate` / `discrepancies` / `unsound` | accurate | discrepancies | unsound |
-| wildcard lenses (when launched) | `pass` / `concerns` / `rethink` | pass | concerns | rethink |
+| bespoke critic (when launched) | `pass` / `concerns` / `rethink` | pass | concerns | rethink |
 | Final `Overall Verdict` | (orchestrator-owned) | PASS | REVISE | RETHINK |
 
 A positive-column keyword contributes a PASS-leaning signal, a concerning-column keyword a REVISE-leaning signal, and a fundamental-issue keyword a RETHINK-leaning signal; combining across the whole panel, the worst signal governs the final verdict. (The `✅`/`⚠️`/`❌` display columns in the chat templates are cosmetic and map directly off these keywords.)
@@ -154,7 +176,7 @@ After all panel agents complete:
 
 ### 3.0 Persist agent returns
 
-Append `### Architectural Review` and `### Root-Cause Review` verbatim under the current `## Round N` heading, tilde-fenced — plus `### Fact Check` in plan mode and `### Wildcard — {lens}` per launched lens. Full mechanics in `references/run-file-mechanics.md`.
+Append `### Architectural Review` and `### Root-Cause Review` verbatim under the current `## Round N` heading, tilde-fenced — plus `### Fact Check` in plan mode and `### Bespoke Critic — {aspect}` when one launched. Full mechanics in `references/run-file-mechanics.md`.
 
 ### 3.1 INSUFFICIENT CONTEXT gate (pre-verdict)
 

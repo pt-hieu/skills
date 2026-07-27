@@ -19,8 +19,8 @@ Currently-live contract tokens (alphabetized):
 - `FIXED` (Step 4 disposition token, defined in `references/templates.md`'s Round N Changes block; challenge/SKILL.md Step 5's diminishing-returns check keys off it — a finding marked `FIXED` in a prior round reappearing in a new Synthesis ends the loop)
 - `INSUFFICIENT CONTEXT`
 - `Output Contract`
-- `pass` / `concerns` / `rethink` (Step 3 closing-verdict keywords, emitted by `architectural-reviewer` per `plugins/brian/agents/architectural-reviewer.md:180-185` and reused verbatim by the wildcard-lens prompts in `references/wildcard-lenses.md`; consumed by challenge/SKILL.md's Step 3 keyword-mapping table)
-- `Premise Audit` (plan-mode contract section — narrated by all three plugin reviewer agents and the wildcard-lens prompts)
+- `pass` / `concerns` / `rethink` (Step 3 closing-verdict keywords, emitted by `architectural-reviewer` per `plugins/brian/agents/architectural-reviewer.md:180-185` and required of the runtime-authored bespoke critic per `references/bespoke-critic.md`'s authoring rules; consumed by challenge/SKILL.md's Step 3 keyword-mapping table)
+- `Premise Audit` (plan-mode contract section — narrated by all three plugin reviewer agents, and injected verbatim into the bespoke critic's prompt)
 - `Prior Round Findings`
 - `REBUTTED-CITE` (Step 4 disposition token, defined in `references/templates.md`'s Round N Changes block)
 - `REBUTTED-JUDGMENT` (Step 4 disposition token, defined in `references/templates.md`'s Round N Changes block; challenge/SKILL.md Step 5 keys off it for the disposition-rule-enforcement check — flags `REBUTTED-JUDGMENT` used outside its eligibility filter, or of a high-severity finding without a documented sibling-instance check)
