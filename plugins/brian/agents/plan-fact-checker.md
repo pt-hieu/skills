@@ -36,7 +36,9 @@ Prioritize by load-bearingness: a wrong claim that a task or decision is built o
 
 ## Output Format
 
-For each `WRONG`, `STALE`, or internally-inconsistent claim, the FIRST line MUST be the Finding Anchor specified in the orchestrator's `## Output Contract`:
+Anchor the claims that cost the reader something. A `WRONG`, `STALE`, or internally-inconsistent claim earns a Finding Anchor when some plan task, decision, count, or verification command consumes it — name that consumer in the body. A wrong claim nothing consumes belongs in the claims ledger instead: state it there in one line with its correction and evidence, and leave it out of the findings. Your own body text is the test — when you would write "blast radius: none", "no downstream consumer", "typo-grade", or "cosmetic", that claim is a ledger line, not a finding. This keeps the findings list the size of the plan's actual damage while the ledger still records every correction.
+
+For each anchored claim, the FIRST line MUST be the Finding Anchor specified in the orchestrator's `## Output Contract`:
 
 ```
 Finding Anchor: defect_class=<plain-words phrase, e.g. "stale claim — plan references a file that was renamed">; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence: what the plan claims vs what is true>
@@ -54,6 +56,8 @@ Close with one plain-language judgment sentence containing exactly one of these 
 - **accurate** — every load-bearing claim verified; discrepancies (if any) are typo-grade with no downstream consumer.
 - **discrepancies** — one or more wrong/stale claims that change scope, effort, or task validity, but the plan's core premises hold.
 - **unsound** — a load-bearing premise or claim is false; work built on it is invalid as planned.
+
+Your anchored findings and your keyword follow the same threshold, so read one off the other: a run that anchored nothing closes `accurate`, however many corrections the ledger carries. `accurate` is the honest close for a plan whose load-bearing claims all held.
 
 Example: "The plan has discrepancies — the app count is internally inconsistent and one migration task targets a file that no longer exists, but the core premises verified." (contains the keyword `discrepancies`).
 
