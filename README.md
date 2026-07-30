@@ -58,7 +58,7 @@ Three plugins, each a coherent domain:
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, a target-specific bespoke critic, and crux-round escalation. |
 | `commit` | Structured commit workflow. |
-| `consult-fable` | Spawn a Fable second opinion at a named decision fork that legwork could not settle, or where a wrong branch is a one-way door. |
+| `consult-fable` | Spawn a Fable second opinion — one consultant per named decision fork — where legwork could not settle it, or where a wrong branch is a one-way door. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
