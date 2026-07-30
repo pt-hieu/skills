@@ -3,7 +3,6 @@ name: commit
 description: "Use when committing staged or working-tree changes to git."
 disable-model-invocation: false
 argument-hint: "[JIRA-TICKET] [focus topic]"
-allowed-tools: Bash(git *)
 ---
 
 # Commit Skill
@@ -98,4 +97,17 @@ Split when: different concerns, different types, different file patterns, too la
 
 Keep tests with their feature/fix commit. Test-only commits only for test-only changes.
 
-**Bundle escape hatch**: if splitting would require fabricating an intermediate state that never existed in the working tree (e.g. two iterations touched the same line, or a piece of logic moved between subsystems mid-session), bundle them into one commit and name the *coherent design decision* in the message (not the steps). Do not edit files back into a hypothetical mid-state just to satisfy the split rule — that intermediate never compiled, never ran, and is worse for `git bisect` than the bundle. The Changelog-Commit rules above still apply: no counts, no session references, name the specific behavior that changed.
+## Bundle Escape Hatch
+
+Split with git alone. Stage whole files, or stage single hunks with `git add -p`. That covers most mixed diffs.
+
+**Bundle when a split needs a file edit.** If you cannot separate the concerns by staging — you would have to change file content to make each commit stand on its own — bundle them into one commit instead. Two cases you will hit often:
+
+- Two iterations of the same session overwrote the same lines. Only the final text exists.
+- A piece of logic moved between subsystems mid-session. Neither the old home nor the new home holds a complete version.
+
+Leave the working tree as it is. Do not edit files back into a hypothetical mid-state to satisfy the split rule — that state never compiled and never ran, so it is worse for `git bisect` than the bundle.
+
+You decide this yourself. Do not ask the caller for permission to bundle.
+
+In the bundled message, name the *coherent design decision*, not the steps and not the fact that you bundled. The Changelog-Commit rules above still apply: no counts, no session references, name the specific behavior that changed.
