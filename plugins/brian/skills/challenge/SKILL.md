@@ -54,7 +54,7 @@ Determine whether the caller is the implementer (can Fix/Rebut/Defer findings) o
 - Implementer: working tree has uncommitted changes; HEAD ahead of origin on a non-default branch; user phrasing such as "my plan", "before I push", "I just changed".
 - Review-only: diff comes from `gh pr diff` or `git fetch origin pull/<N>/head`; clean working tree on a checked-out PR branch; phrasing like "review this PR", "audit X's branch".
 
-**Default on ambiguity**: review-only (writing comments is reversible; running disposition logic on someone else's code is not). When the caller is interactive, ask once via `AskUserQuestion`; otherwise default.
+**Default on ambiguity**: review-only (writing comments is reversible; running disposition logic on someone else's code is not). When the caller is interactive, ask once in plain text; otherwise default.
 
 **Dispatch table** (later steps reference this binding; no later step re-checks mode):
 
@@ -155,7 +155,7 @@ After emitting the calls, the loop driver MUST NOT proceed to Step 3 until every
 
 On agent error or timeout: retry once with the same prompt. Failure handling splits by agent class:
 
-- **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `### Round N: ABORTED — both fixed reviewers failed twice` to the run file. Skip Step 5; jump to Step 6 with `mode = aborted`: chat emits one-line abort + run-file path; AskUserQuestion offers retry / proceed without challenge / rollback. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is load-bearing.
+- **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `### Round N: ABORTED — both fixed reviewers failed twice` to the run file. Skip Step 5; jump to Step 6 with `mode = aborted`: chat emits one-line abort + run-file path, then asks in plain text: retry / proceed without challenge / rollback. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is load-bearing.
 - **Auxiliary agents** (`plan-fact-checker`, the bespoke critic): a twice-failed auxiliary agent degrades the round instead of aborting it — append `### {agent}: FAILED — degraded round` to the run file, note the gap in the synthesis's Insufficient Context Areas, and cap the round's verdict at `REVISE` (an unverified claims inventory is an unresolved gap, same as Step 3.1).
 
 ## Step 3: Synthesize Results
@@ -275,7 +275,7 @@ Panel agents that ran premise-audit or crux-round experiments were instructed to
 
 ### Terminal action
 
-Use `AskUserQuestion`. Options vary by mode and escalation:
+Ask the user in plain text. Options vary by mode and escalation:
 
 - **implementer + non-escalated PASS**: `proceed` / `manual review` / `roll back`.
 - **implementer + escalated**: `manual review` / `roll back` / `accept risk and proceed (explicit confirmation required)`. No silent default.

@@ -50,10 +50,10 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > **Goal**: close any gap that would change the chosen approach.
 > **Action**: focus on **architecture- and approach-level** questions only — direction, trade-offs, scope boundaries, integration choices. Trust the Plan agent to handle implementation detail later. Use the report from the Historian task to inform which questions matter — prior failures or constraints surfaced there often *are* the architecture questions.
 > - If a question can be answered by exploring the codebase, explore the codebase instead — ask only what the code cannot answer.
-> - 1–3 questions max in a single batched `AskUserQuestion` call, each with a recommended option placed first and labelled `(Recommended)`.
+> - 1–3 questions max, asked in plain text in a single batch, each with a recommended option placed first and labelled `(Recommended)`.
 > - Phrase every question and option in **plain English** — describe the decision and its trade-offs the way you would to a smart non-engineer. Strip jargon, class names, and file paths from the question and option labels; if a technical term is unavoidable, gloss it in the description. Brian should be able to answer from the choice itself without reverse-engineering the codebase.
 > - Skip the task entirely (mark completed with a one-line note "no architecture ambiguity") when the requirement is already unambiguous.
-> **Gate**: an `AskUserQuestion` round has been answered (or the no-ambiguity note recorded), and remaining unknowns will not change the chosen approach.
+> **Gate**: the question round has been answered (or the no-ambiguity note recorded), and remaining unknowns will not change the chosen approach.
 
 ---
 

@@ -50,7 +50,7 @@ All four sources are always dispatched; each self-skips when it finds nothing (r
 ## Step A. Parse the request
 
 - `scope_raw` — the text of what to get up to speed on (a PR#, branch, code-area, or topic).
-- **Empty `scope_raw`** → ask once via `AskUserQuestion` for the scope. Do not guess. Never ask more than once.
+- **Empty `scope_raw`** → ask once in plain text for the scope. Do not guess. Never ask more than once.
 - **Depth intent** — infer it from how the user phrases the request, then carry it into the gatherer prompts and the briefing length (see Depth below). Do not require a flag.
 
 ### Depth (inferred, one instruction for both modes)
@@ -79,7 +79,7 @@ Classify `scope_raw` into `scope_type ∈ {pr, branch, code-area, topic}` using 
 
 Record `resolved = {scope_type, concrete_target, anchors[]}`. `anchors[]` collects concrete handles — branch name, PR#, paths, merge-base, and ticket keys harvested via `git log --oneline -n 50 | grep -oE '[A-Z]+-[0-9]+'`. Anchors seed the subagents: a ticket key found in a branch name is handed to the jira gatherer, not rediscovered cold.
 
-**Resolution gate:** only when classification is genuinely ambiguous (e.g. `scope_raw` matches both a branch and a folder, or a substring matches multiple branches) emit a SINGLE `AskUserQuestion` listing the candidate interpretations. Otherwise proceed silently. Never ask more than once.
+**Resolution gate:** only when classification is genuinely ambiguous (e.g. `scope_raw` matches both a branch and a folder, or a substring matches multiple branches) ask once in plain text, listing the candidate interpretations. Otherwise proceed silently. Never ask more than once.
 
 ---
 

@@ -38,9 +38,9 @@ When you need a tool's exact signature or intended use while executing a step be
 2. If no `[PR-ID]` → auto-detect from the current branch:
    a. `current_branch = git rev-parse --abbrev-ref HEAD`.
    b. `list_pull_requests(repository="drovacorp/interface", state="OPEN")`, then match the PR whose `source.branch.name == current_branch`. (Prefer a server-side `q` filter on source branch if available; otherwise filter the returned page locally and paginate if needed.)
-   c. **0 matches** → stop. Tell Brian no open PR was found for `<branch>` and ask whether to pass a PR id explicitly (single `AskUserQuestion`). Do NOT fabricate or pick an unrelated PR.
+   c. **0 matches** → stop. Tell Brian no open PR was found for `<branch>` and ask in plain text whether to pass a PR id explicitly. Do NOT fabricate or pick an unrelated PR.
    d. **exactly 1 match** → use it.
-   e. **>1 match** → emit a SINGLE `AskUserQuestion` listing the candidate PRs (id, title, source→target) and let Brian pick. Never guess.
+   e. **>1 match** → ask once in plain text, listing the candidate PRs (id, title, source→target), and let Brian pick. Never guess.
 3. Record `resolved = {repository, prId, source_branch, target_branch}` and echo a one-line confirmation ("Assessing PR #<id> <title> (<src>→<tgt>)") before fetching comments.
 
 ## Step B. Fetch and filter open comments

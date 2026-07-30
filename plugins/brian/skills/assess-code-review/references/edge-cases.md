@@ -5,7 +5,7 @@
 | Bitbucket MCP not connected | Step A.0 preflight stops; tell Brian to connect it; no fallback |
 | `[PR-ID]` given but not found | stop; report the id 404'd; don't fall back to auto-detect |
 | no open PR for current branch | stop; ask once whether to pass a PR id |
-| >1 open PR for branch | single `AskUserQuestion` to pick; never guess |
+| >1 open PR for branch | ask once in plain text to pick; never guess |
 | no unresolved comments | clean success exit; nothing to do |
 | comment with no associated code (general/PR-level) | assess on text alone; no `get_diff` needed |
 | truncated comment in list | re-fetch via `get_comment` before classifying |

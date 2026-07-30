@@ -57,7 +57,7 @@ Match surrounding code style. Preserve existing abstractions; a merge is the wro
 `git ls-files -u` prints `<mode> <sha> <stage> <path>`. Stage 1 = base, stage 2 = ours, stage 3 = theirs.
 
 - **Stage 1 missing, stage 2 missing, stage 3 present** → "added on theirs" (or "modified on theirs after we deleted"). Manual merge of the new content into the working tree. If both sides added at the same path (`AA`), synthesize.
-- **Stages 1 and 3 present, stage 2 missing** → "deleted on ours, modified on theirs" (and the mirror `2 present, 3 missing` for the inverse). Both states are intentional — escalate via `AskUserQuestion`: preserve the modification (keep the file) or accept the deletion (`git rm`)?
+- **Stages 1 and 3 present, stage 2 missing** → "deleted on ours, modified on theirs" (and the mirror `2 present, 3 missing` for the inverse). Both states are intentional — ask the user in plain text: preserve the modification (keep the file) or accept the deletion (`git rm`)?
 - **Rename/edit** — detect via `git log --diff-filter=R --follow <path>` on the surviving path, or `git status` showing `R<paths>`. Use `git mv` to align the path on the side that didn't rename, then merge content into the renamed location.
 
 Escalation aides for structural pain: `git rerere` (record/replay resolutions for repeated conflicts) and `git mergetool` (visual three-way merge).
@@ -92,11 +92,11 @@ Per-stack verify (read `package.json` scripts, `Makefile`, or `justfile` first i
 
 If the conflict is beyond scope, abort cleanly rather than commit a half-resolution.
 
-Rule: if you've already staged edits during the resolution, ask the user via `AskUserQuestion` before aborting — staged work may be salvageable as a separate branch.
+Rule: if you've already staged edits during the resolution, ask the user in plain text before aborting — staged work may be salvageable as a separate branch.
 
 ## Phase 6 — Escalation Protocol
 
-Stop and ask via `AskUserQuestion` when:
+Stop and ask the user in plain text when:
 
 - Critical business-logic divergence between branches.
 - Security-sensitive code (auth, crypto, permissions, session handling).

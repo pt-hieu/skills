@@ -68,5 +68,5 @@ Persist each return as `### Crux — {options architect | red team | empiricist}
 ## 5. Re-entry
 
 - **A design option won**: amend the plan/impl with the chosen design, then record the original escalated finding's disposition as `FIXED — resolved by crux round: {chosen option}` in this round's `### Round N Changes`. The next round is a normal verify-first round (Step 5 items 1-3); its reviewers check the amendment like any other fix.
-- **Retreat/re-scope won**: jump to Step 6 with the escalation banner; the crux recommendation line (templates.md Step 6) carries the retreat recommendation and its grounds. The terminal AskUserQuestion uses the escalated option set.
+- **Retreat/re-scope won**: jump to Step 6 with the escalation banner; the crux recommendation line (templates.md Step 6) carries the retreat recommendation and its grounds. The terminal plain-text question uses the escalated option set.
 - **Round-3 cap hit by the crux round itself**: jump to Step 6 escalated, with the crux decision as the recommendation — the user gets a decided recommendation, never a bare "review required".

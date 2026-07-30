@@ -16,7 +16,7 @@ Register the pipeline as a TaskList (the working memory), work tasks in ID order
 - Work tasks in ID order. Advance only when the gate passes.
 - The skill-scan task (T3) must be executed even when no skill applies — write down the scan output before completing it.
 - **Never work on master/main — T7 creates the feature branch before any edit.**
-- **Never call `AskUserQuestion`, `EnterPlanMode`, or `ExitPlanMode`, never wait for pre-implementation approval, and never invoke a skill/agent that will.** (This is why T6 drives the reviewer agents directly rather than invoking `brian:challenge`, which ends in an `AskUserQuestion`.)
+- **Never ask the user a pre-implementation question, never call `EnterPlanMode` or `ExitPlanMode`, never wait for pre-implementation approval, and never invoke a skill/agent that will.** (This is why T6 drives the reviewer agents directly rather than invoking `brian:challenge`, which ends by asking the user to pick a disposition.)
 - **Always reach a terminal state.** Never loop past a defined bound and never stall silently. Where a human would normally be consulted, make a best-judgment call and record it (T2).
 
 ## Terminal states
