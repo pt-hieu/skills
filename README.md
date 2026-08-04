@@ -56,6 +56,7 @@ Three plugins, each a coherent domain:
 | --- | --- |
 | `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
+| `bro` | Restate the last message in plain human language, with no jargon. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, a target-specific bespoke critic, and crux-round escalation. |
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion — one consultant per named decision fork — where legwork could not settle it, or where a wrong branch is a one-way door. |
@@ -108,6 +109,7 @@ plugins/
     skills/
       assess-code-review/
       autopilot/
+      bro/
       challenge/
       commit/
       consult-fable/
