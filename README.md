@@ -9,7 +9,6 @@ Add as a marketplace in Claude Code:
 ```
 /plugin marketplace add pt-hieu/skills
 /plugin install brian@brian-skills
-/plugin install voice@brian-skills
 /plugin install design@brian-skills
 ```
 
@@ -17,14 +16,11 @@ Add as a marketplace in Claude Code:
 
 Most of my work happens through Claude Code, where Claude does the typing and I steer. These skills are the rails that keep that loop honest. They're organized around the moments where I most often go off the road.
 
-### 1. Before I let Claude commit to a plan — `challenge` + `pitch`
+### 1. Before I let Claude commit to a plan — `challenge`
 
-The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, two things happen:
+The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, `challenge` runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus an optional bespoke critic the orchestrator writes for whichever aspect of this particular plan most deserves depth. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
 
-- **`challenge`** runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus an optional bespoke critic the orchestrator writes for whichever aspect of this particular plan most deserves depth. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
-- **`pitch`** then summarizes the surviving plan back to me in everyday language: problem, fix, new behavior, no jargon. That's where I catch direction-level mistakes that a technical plan would have hidden behind file names.
-
-Only after both do I approve and let implementation start.
+Only after the panel clears do I approve and let implementation start.
 
 ### 2. While Claude is debugging — `diagnose`
 
@@ -38,17 +34,13 @@ I build a lot of LLM agents. `prompting` is the set of techniques I keep reachin
 
 Stops Claude from writing the kind of commit message a future `git blame` won't thank me for. Enforces format, blocks batch/summary commits, splits when concerns differ.
 
-### 5. When I'm posting outward — `voice`
-
-Slack messages, PR descriptions, Bitbucket and Jira comments. `voice` writes them in my warm, hedged, emoji-aware engineering register instead of the flat tone an LLM defaults to. Strictly outbound — not for code, plans, or chat replies.
-
-### 6. When I'm building UI — `design`
+### 5. When I'm building UI — `design`
 
 `principles` collects the UI design rules I otherwise re-explain on every project: component patterns, formatting, interaction defaults. Loads automatically when Claude is touching frontend.
 
 ## What's inside
 
-Three plugins, each a coherent domain:
+Two plugins, each a coherent domain:
 
 ### `brian` — engineering workflow rigor
 
@@ -84,13 +76,6 @@ Three plugins, each a coherent domain:
 | `review-tests` | Test-coverage reviewer for a diff. |
 | `root-cause-reviewer` | Validates that a fix addresses the root cause rather than a symptom. |
 | `test-designer` | Designs the Test design section of a kickoff plan file. |
-
-### `voice` — outbound communication
-
-| Skill | Purpose |
-| --- | --- |
-| `voice` | Team-facing writing voice for Slack, PRs, Bitbucket, Jira. |
-| `pitch` | Plain-language plan pitch before exiting plan mode. |
 
 ### `design` — UI design rules
 
@@ -133,11 +118,6 @@ plugins/
       review-tests.md
       root-cause-reviewer.md
       test-designer.md
-  voice/
-    .claude-plugin/plugin.json
-    skills/
-      voice/
-      pitch/
   design/
     .claude-plugin/plugin.json
     skills/

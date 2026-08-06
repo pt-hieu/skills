@@ -1,4 +1,4 @@
-# Step G — Edge cases (consolidated table)
+# Step F — Edge cases (consolidated table)
 
 | situation | handling |
 |---|---|
@@ -14,4 +14,4 @@
 | Brian rejects the whole batch | apply/post nothing; leave every thread untouched; exit |
 | fix fails to apply mid-execution | stop before posting any reply; report what applied and what didn't; leave already-resolved threads as-is and surface the partial state |
 | reply fails to post after AGREE fixes already resolved | do NOT un-resolve the fixed threads; report which replies posted and which didn't, and print the unposted pushback text in chat so Brian can post it manually; surface the partial state explicitly |
-| edit applied but doesn't fully address the comment | leave that thread UNRESOLVED (per Step F self-check); note the gap in the summary rather than resolving |
+| edit applied but doesn't fully address the comment | leave that thread UNRESOLVED (per Step E self-check); note the gap in the summary rather than resolving |

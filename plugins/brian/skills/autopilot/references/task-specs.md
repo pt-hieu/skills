@@ -33,7 +33,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
 - subject: `Skill scan — enumerate and apply`
   > **Goal**: ensure every applicable skill informs the work before designing.
   > **Action**: execute the skill-scan **Action** (steps 1–3) exactly as specified in § "Task 5 — Skill scan" of `${CLAUDE_PLUGIN_ROOT}/skills/kickoff/references/task-specs.md` — Read that section before scanning; kickoff owns the canonical text (its "Common matches" line is kickoff-flavored; use the list below instead).
-  > Common in-pipeline matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), plus the autopilot-pipeline skills `brian:commit` (T11), `voice:voice` (T12 PR body), and `verify`/`run` (T9 when the change is user-observable).
+  > Common in-pipeline matches: `brian:prompting` (LLM prompts/schemas), `claude-api` (Anthropic SDK), design skills (UI), plus the autopilot-pipeline skills `brian:commit` (T11) and `verify`/`run` (T9 when the change is user-observable).
   > **Gate**: scan written down and every relevant skill applied.
 
 ---
@@ -63,7 +63,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
-  > - **Skills to use** — every skill to invoke during implementation, from the T3 scan; one bullet per skill as `skill-name — when to invoke it and what it contributes`. Include `brian:commit` and `voice:voice`. If the scan found nothing, say so plainly rather than leaving the section blank — a stated absence is a complete answer here.
+  > - **Skills to use** — every skill to invoke during implementation, from the T3 scan; one bullet per skill as `skill-name — when to invoke it and what it contributes`. Include `brian:commit`. If the scan found nothing, say so plainly rather than leaving the section blank — a stated absence is a complete answer here.
   > - **Test plan** — the named tests T8 implements, salience-ordered. Name each test by the imperative phrase it will be given.
   > - **Verification** — commands + named test runs (reference each test by quoting its identifier verbatim inside backticks).
   > **Gate (re-read the structured design, confirm in chat)**:
@@ -151,7 +151,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Action**:
   > 1. **Pre-draft coherence self-check**: re-read the design end-to-end and confirm Context → Assumptions → Recommended approach → Test plan describe ONE final approach. If T6's in-place revision left residue ("originally…/instead…", two names for one artifact, a superseded approach described as if current), collapse to the final state **before** drafting.
   > 2. Push the branch.
-  > 3. Draft the PR body with `voice:voice` (via the `Skill` tool) in plain language. The body **MUST lead with the Assumptions ledger, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred medium-severity scrutinize findings.
+  > 3. Draft the PR body in plain language. The body **MUST lead with the Assumptions ledger, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred medium-severity scrutinize findings.
   > 4. Open the PR via the Bitbucket MCP (`mcp__bitbucket__create_pull_request`; in the interface repo use workspace `drovacorp` / repo `interface` / target `master`) or `gh`, detected from the repo remotes / T3 scan.
   > **Fallback (terminal: chat summary)**: if neither PR tool resolves, push the branch and emit to chat the exact manual PR-creation command / compare-URL plus the drafted body, then halt — do not leave a dangling branch silently.
   > **Gate**: PR open (or the manual-PR fallback fired); body leads with the blast-radius-sorted ledger; the PR URL (or compare-URL) is posted to chat. **Terminus.**
