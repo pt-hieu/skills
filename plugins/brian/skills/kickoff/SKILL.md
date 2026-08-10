@@ -16,6 +16,7 @@ Instead of trying to remember an 11-task pipeline in-prompt, the agent's **first
 - **Step 0 is mandatory and runs first.** Register all kickoff tasks before doing any planning work. If `TaskList` already contains kickoff tasks for this requirement, skip Step 0 and resume from the lowest-ID pending task.
 - **Planning runs in the session's current permission mode.** The plan lives in a working file under the scratchpad or `/tmp` for Tasks 1–10; plan mode is entered only in Task 11, to transfer that file onto plan mode's plan-file handling and exit.
 - Work the lowest-ID unblocked task. Re-read its section in `references/task-specs.md` when picking it up, mark `in_progress` before starting, mark `completed` only when the task's gate passes.
+- **Tasks 2 and 3 are the exception — they run together.** Both unblock as soon as Task 1 completes. Mark both `in_progress` and launch the Explore subagents and the historian subagent in a single message, so the two waits overlap instead of stacking.
 - When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
 - The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
 - Treat this skill as the source of truth for the workflow — when CLAUDE.md drifts, follow this skill until they reconcile.
@@ -40,8 +41,9 @@ The Challenge row is informational: `brian:challenge` pins its reviewers to `opu
 
 - **Goal**: turn the pipeline into a checklist the harness enforces.
 - **Action**: in a single message, call `TaskCreate` once per task in the overview below, in order. Use each task's **subject** verbatim; write each **description** as a one-line pointer back to the spec file: `Execute per § "Task N" of <absolute path of references/task-specs.md, sibling of this SKILL.md> — re-read that section and pass its Gate before completing.` Then call `TaskUpdate` to wire `addBlockedBy` where order genuinely matters (`A←B` means B is blocked by A):
-  - `1←2←3←4` — Explore feeds the historian; the historian's report informs interrogation.
-  - `2←5` — the skill scan needs only the Explore findings, so pick it up while the historian subagent is out.
+  - `1←2` and `1←3` — Explore and the historian both open on the working plan file and run side by side; neither feeds the other.
+  - `2←4` and `3←4` — interrogation needs the code findings and the historian's report together.
+  - `2←5` — the skill scan needs only the Explore findings.
   - `4←6` and `5←6`, then `6←7←8←9←10←11` chained.
 
   Then call `TaskList`, claim Task 1, and begin.
@@ -55,7 +57,7 @@ The 11 tasks to register. The canonical Gate for every task lives only in `refer
 | --- | --- | --- |
 | 1 | `Open the working plan file` | file created, absolute path posted |
 | 2 | `Explore — gather Phase-1 findings` | findings written down |
-| 3 | `Historian — gather prior intent from git history and ticket tracker` | historian report in hand |
+| 3 | `Historian — gather prior intent from git history and ticket tracker` | historian report in hand, and its inspected files cover Explore's paths |
 | 4 | `Interrogate — close architecture-level ambiguity` | question round answered |
 | 5 | `Skill scan — enumerate and apply` | scan written, relevant skills applied |
 | 6 | `Run Plan agent — produce detailed implementation plan` | verbatim Plan-agent return on disk |
@@ -67,6 +69,7 @@ The 11 tasks to register. The canonical Gate for every task lives only in `refer
 
 ## It's working if
 - `TaskList` shows the full pipeline registered and wired before any exploration starts, each task description pointing back to its section in `references/task-specs.md`.
+- The Explore subagents and the historian subagent go out in one message, and interrogation waits for both.
 - The working plan file exists on disk before Challenge runs — Challenge revises that file, not chat.
 - Interrogate questions read in plain English, each with a `(Recommended)` option, and none could have been answered by reading the code.
 - The working plan file's final section is `## Post-implementation protocol`, injected by plan-verifier — not hand-written.

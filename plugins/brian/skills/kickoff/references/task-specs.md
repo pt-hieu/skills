@@ -33,13 +33,14 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 - subject: `Historian — gather prior intent from git history and ticket tracker`
 
 > **Goal**: surface the *why* behind prior changes to the code about to be modified, so the implementer doesn't repeat past failures or invert past decisions blindly.
-> **Action**: invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "brian:code-historian"` (model per the Effort matrix). Pass it:
-> - The file paths surfaced in the Explore task (preferred input).
-> - The topic / area description as fallback when paths are partial.
+> **Action**: this task runs **in parallel with Task 2** — launch the historian in the same message as the Explore subagents, so the two waits overlap. The historian therefore starts without Explore's findings; it locates its own files from the topic (its input contract already covers the topic-only case). Invoke the `code-historian` subagent via the `Agent` tool with `subagent_type: "brian:code-historian"` (model per the Effort matrix). Pass it:
+> - The topic / area description drawn from the requirement, plus any file paths the requirement itself names.
 > - A focusing question derived from the requirement (e.g. *"why does this module handle X this way?"*).
 >
 > The agent auto-detects the ticket tracker (Jira / Linear / Bitbucket PRs) from commit-message patterns, remotes, and `CLAUDE.md` — do not hand it a tracker choice.
-> **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change.
+>
+> Parallelism trades away the precision of seeding the historian with Explore's paths, so the gate buys that precision back at the join instead: once both subagents are back, compare the files the historian says it inspected against the paths Explore surfaced. Where a load-bearing path went uncovered, re-invoke the historian scoped to just those paths — a second, cheap, narrow pass rather than a repeat of the whole sweep.
+> **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change — and the files it inspected cover the load-bearing paths Explore surfaced, after any scoped re-invocation.
 
 ---
 
