@@ -14,4 +14,4 @@ For each premise that is empirically checkable against the installed toolchain, 
 Experiment hygiene: run every experiment inside {scratchpad_dir}, keep the repository working tree untouched, and delete your scratch files before returning.
 ```
 
-The Step 0 working-tree snapshot plus Step 6's hygiene check backstop the hygiene rule — any path new since Step 0 is an experiment leftover to remove.
+The Step 0 working-tree snapshot plus Step 5's hygiene check backstop the hygiene rule — any path new since Step 0 is an experiment leftover to remove.

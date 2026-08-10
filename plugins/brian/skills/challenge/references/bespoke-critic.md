@@ -6,9 +6,9 @@ A bespoke critic is one extra panel agent that goes deep on a single aspect of o
 
 ## Invocation shape
 
-Launch as a `general-purpose` agent in the same message as the standing panel, `model: "opus"`, `run_in_background: true`. Its prompt is the framing you author below, then the full orchestrator contract injection from Step 2 (Output Contract, Context, Affected Files, Project Domain Knowledge, plan-mode Premise Audit, and any re-run sections) verbatim.
+Launch as a `general-purpose` agent in the same message as the standing panel, `model: "opus"`, `run_in_background: true`. Its prompt is the framing you author below, then the full orchestrator contract injection from Step 2 (Output Contract, Context, Affected Files, Project Domain Knowledge, and the plan-mode Premise Audit) verbatim.
 
-Persist the return as `### Bespoke Critic — {aspect}` under the current `## Round N` heading, tilde-fenced like the standing reviewers' blocks. A twice-failed critic degrades the round per the Step 2 await protocol.
+Persist the return as `## Bespoke Critic — {aspect}`, tilde-fenced like the standing reviewers' blocks. A twice-failed critic degrades the run per the Step 2 await protocol.
 
 ## Authoring the framing
 

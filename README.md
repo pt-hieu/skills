@@ -18,9 +18,11 @@ Most of my work happens through Claude Code, where Claude does the typing and I 
 
 ### 1. Before I let Claude commit to a plan — `challenge`
 
-The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, `challenge` runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus an optional bespoke critic the orchestrator writes for whichever aspect of this particular plan most deserves depth. A full green panel is a high bar; the first plan rarely clears it, which is the point. When a finding turns out to be a design gap rather than a defect, the loop escalates into a crux round that designs the resolution instead of re-reviewing.
+The most expensive mistake in an LLM session is a *plausible* plan that's wrong. Once it's in context, the model justifies it instead of questioning it. So before I exit plan mode, `challenge` runs a panel of fresh-context subagents against the plan — architecture fit and root cause always; in plan mode also a fact-checker that verifies the plan's claims against the actual repo, plus an optional bespoke critic the orchestrator writes for whichever aspect of this particular plan most deserves depth.
 
-Only after the panel clears do I approve and let implementation start.
+Then it comes to me. Every surviving concern is put as a decision — what the plan proposes, what the tension is, what my options are and which one Claude recommends. I answer each one, Claude applies my directions, and that's the run. Nothing gets fixed, rebutted, or waved through on my behalf: I'd rather spend one turn deciding than read a model negotiating with itself.
+
+Only after I've directed every tension do I approve and let implementation start.
 
 ### 2. While Claude is debugging — `diagnose`
 
@@ -49,7 +51,7 @@ Two plugins, each a coherent domain:
 | `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
 | `bro` | Restate the last message in plain human language, with no jargon. |
-| `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, a target-specific bespoke critic, and crux-round escalation. |
+| `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, and a target-specific bespoke critic — then surface every tension as a decision for the user, with options and a recommendation. |
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion — one consultant per named decision fork — where legwork could not settle it, or where a wrong branch is a one-way door. |
 | `diagnose` | Systematic root-cause debugging methodology. |

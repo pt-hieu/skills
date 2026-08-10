@@ -60,7 +60,7 @@ The 11 tasks to register. The canonical Gate for every task lives only in `refer
 | 5 | `Skill scan — enumerate and apply` | scan written, relevant skills applied |
 | 6 | `Run Plan agent — produce detailed implementation plan` | verbatim Plan-agent return on disk |
 | 7 | `Write the plan file` | re-read checks all pass |
-| 8 | `Challenge the plan file` | challengers pass or red flags accepted in writing |
+| 8 | `Challenge the plan file` | every surfaced tension has Brian's direction, written into the file |
 | 9 | `Design the Test design section of the plan file` | `test-designer` PASS, section placed |
 | 10 | `Verify plan coherence and inject post-implementation protocol` | `plan-verifier` PASS, protocol is final section |
 | 11 | `Hand the plan to plan mode` | plan copied verbatim, plan mode exited |
