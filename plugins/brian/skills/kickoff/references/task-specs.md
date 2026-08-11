@@ -76,10 +76,10 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 **Task 6 — Plan agent (HARD GATE)**
 
-- subject: `Run Plan agent — produce detailed implementation plan`
+- subject: `Run Plan agent — produce the architectural direction`
 
-> **Goal**: produce a detailed implementation plan from a focused designer.
-> **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix). Hand it:
+> **Goal**: get the architectural direction from a focused designer — the shape the change takes, the seams it touches, the boundaries it holds, and why this shape over the alternative. Not the edits: implementation detail gets settled while implementing.
+> **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix) — direction is the part worth opus. Tell the agent plainly what altitude to write at: decisive about direction and boundaries, silent on code snippets, function signatures, and step-by-step edit sequences. Hand it:
 > - Phase-1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape)
 > - Historian report (prior intent, recurring themes, implications)
 > - Requirements and constraints
@@ -87,7 +87,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > - Architecture decisions confirmed in the Interrogate task
 >
 > **Persist the Plan-agent return verbatim before continuing.** As soon as the Plan agent returns, write its full output to the working plan file opened in Task 1. This is the raw artifact — Task 7 will restructure it into the final sections. Do not advance to Task 7 until the file contains the Plan agent's return.
-> **Gate**: a detailed implementation plan is returned **from the Plan agent** and its verbatim output has been written to the working plan file on disk. This is self-enforced — nothing external can tell the difference between the file holding the Plan agent's actual return and the orchestrator's own paraphrase of what it would have said, so ask honestly: *did the Plan agent return this, or did I write it myself because it felt coherent enough?* Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
+> **Gate**: the architectural direction is returned **from the Plan agent** and its verbatim output has been written to the working plan file on disk. This is self-enforced — nothing external can tell the difference between the file holding the Plan agent's actual return and the orchestrator's own paraphrase of what it would have said, so ask honestly: *did the Plan agent return this, or did I write it myself because it felt coherent enough?* Diagnose output is not a Plan-agent substitute. Plan-agent latency (~2–3 min on opus) is the price of catching cross-file synthesis issues.
 
 ---
 
@@ -100,12 +100,12 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
 > <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The historian chain states coverage in prose (see code-historian.md and root-cause-reviewer.md, rewritten to judge coverage by reading rather than matching a heading); this restructure step carries that same prose intent forward instead of pinning it to a literal line. -->
 > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors. Carry forward the historian's own account of which files it inspected and where its "why" came from, in whatever prose form the historian gave it — a reader of this section must be able to tell what was and wasn't looked at. Quote prior decisions verbatim.
-> - **Recommended approach** — the chosen path.
+> - **Recommended approach** — the chosen direction: the shape the change takes, the seams it touches, the boundaries it holds, and why this shape over the alternative that was in play. Write it at architectural altitude — no code snippets, no function signatures, no step-by-step edit sequences. Decisive, not procedural: "refactor as needed" is as much a failure here as a pasted diff.
 > - **Load-bearing premises** — the 2–4 claims the approach's correctness rests on (e.g. "the current config is active", "X wins the CSS cascade", "tool Y supports option Z"), one bullet each in the form `premise — verified by: <the grep/read/command that confirmed it, or "unverified — checkable by: <how>">`. Declaring premises gives Challenge's premise audit a direct target; the Tailwind-class failure mode is an undeclared premise nobody thought to check.
-> - **Critical file paths** — every file that will change, absolute paths.
+> - **Surface area** — the components and files the change lands in, absolute paths, one line each on the role that component plays in the direction above. Name where the change lives, not what edit each file receives.
 > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
 > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
-> - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing tests defined in the Test design section below by quoting their identifier verbatim inside backticks). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference test names here; describe what each pins there.
+> - **Verification** — how to confirm the change works end-to-end: commands, manual smoke checks, and named test runs (referencing the behaviors the Test design section below pins, in terms a reader recognizes as the same behavior). Verification does NOT redescribe per-behavior test design — that lives in the Test design section. Reference those behaviors here; describe what each protects there.
 > <!-- DESIGN-DIMENSION CATALOG: Test design is currently the only post-Challenge design dimension. When a SECOND dimension (rollback / observability / perf-budget / migration) is added, extract a shared "Required design dimensions" catalog rather than adding another parallel section. -->
 >
 > End the file at **Verification**. The `plan-verifier` subagent appends the post-implementation protocol in Task 10 — leave room for it. Challenge (Task 8) will revise this file in place; that's expected.
@@ -134,7 +134,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 - subject: `Design the Test design section of the plan file`
 
-> **Goal**: leave the plan file with a concrete, salience-ordered, smell-free Test design section the implementer can drive TDD against. Challenge has finalized the approach; the test design pins the behaviors that approach must protect. (Why this task runs after Challenge, and the accepted trade-off: `references/testability-escape-hatch.md`.)
+> **Goal**: leave the plan file with a salience-ordered Test design section naming the behaviors the change must prove, so the implementer can drive TDD against them. Behaviors, not test code — test quality itself is judged at review time by `brian:review-tests`, where real tests exist. Challenge has finalized the approach; the test design pins the behaviors that approach must protect. (Why this task runs after Challenge, and the accepted trade-off: `references/testability-escape-hatch.md`.)
 > **Action**: invoke the `test-designer` subagent via the `Agent` tool with `subagent_type: "brian:test-designer"` (model per the Effort matrix). Pass two arguments:
 > 1. **The absolute path of the working plan file** (the same path Challenge revised in Task 8) so the agent reads the same artifact the implementer will.
 > 2. **How the requirement arrived**: tell the agent plainly whether Task 2 ran the `brian:diagnose` bug branch — meaning this is a bug or regression, which the orchestrator already knows from Task 2's actual execution — or the feature-exploration branch, meaning this is new feature work. State which, and what follows: on the bug path the agent must design a regression test that pins the diagnosed root cause; on the feature path it designs tests for the new behavior. Clear prose about how the work arrived resolves the ambiguity a rigid field would only paper over.

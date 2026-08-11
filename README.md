@@ -77,7 +77,7 @@ Two plugins, each a coherent domain:
 | `review-spec` | Checks a diff against what its originating ticket / PRD asked for — missing, extra, or wrongly-implemented requirements. |
 | `review-tests` | Test-coverage reviewer for a diff. |
 | `root-cause-reviewer` | Validates that a fix addresses the root cause rather than a symptom. |
-| `test-designer` | Designs the Test design section of a kickoff plan file. |
+| `test-designer` | Names the behaviors a kickoff plan's change must prove, as its Test design section. |
 
 ### `design` — UI design rules
 

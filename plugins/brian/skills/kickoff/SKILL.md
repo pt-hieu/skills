@@ -19,6 +19,7 @@ Instead of trying to remember an 11-task pipeline in-prompt, the agent's **first
 - **Tasks 2 and 3 are the exception — they run together.** Both unblock as soon as Task 1 completes. Mark both `in_progress` and launch the Explore subagents and the historian subagent in a single message, so the two waits overlap instead of stacking.
 - When a gate cannot be passed, leave the task `in_progress`, post one line to chat explaining the blocker, and wait.
 - The skill-scan task must be executed even when no skill applies — write down the scan output before completing it.
+- **The plan states architectural direction, not implementation detail.** It answers *what shape the change takes, and what must be true for it to be right* — never *how to write the code*. Detail gets settled while implementing. Keep code snippets, function signatures, and step-by-step edit sequences out of the plan file. High-level is not hand-wavy: the plan must still be decisive about direction, seams, boundaries, and premises. "Refactor as needed" fails this rule as hard as a pasted diff does.
 - Treat this skill as the source of truth for the workflow — when CLAUDE.md drifts, follow this skill until they reconcile.
 
 ## Effort matrix
@@ -60,7 +61,7 @@ The 11 tasks to register. The canonical Gate for every task lives only in `refer
 | 3 | `Historian — gather prior intent from git history and ticket tracker` | historian report in hand, and its inspected files cover Explore's paths |
 | 4 | `Interrogate — close architecture-level ambiguity` | question round answered |
 | 5 | `Skill scan — enumerate and apply` | scan written, relevant skills applied |
-| 6 | `Run Plan agent — produce detailed implementation plan` | verbatim Plan-agent return on disk |
+| 6 | `Run Plan agent — produce the architectural direction` | verbatim Plan-agent return on disk |
 | 7 | `Write the plan file` | re-read checks all pass |
 | 8 | `Challenge the plan file` | every surfaced tension has Brian's direction, written into the file |
 | 9 | `Design the Test design section of the plan file` | `test-designer` PASS, section placed |
@@ -72,6 +73,7 @@ The 11 tasks to register. The canonical Gate for every task lives only in `refer
 - The Explore subagents and the historian subagent go out in one message, and interrogation waits for both.
 - The working plan file exists on disk before Challenge runs — Challenge revises that file, not chat.
 - Interrogate questions read in plain English, each with a `(Recommended)` option, and none could have been answered by reading the code.
+- The plan reads as direction a fresh implementer can steer by — the shape of the change, the seams it touches, the boundaries it holds — with no code snippets and no per-file edit lists.
 - The working plan file's final section is `## Post-implementation protocol`, injected by plan-verifier — not hand-written.
 - What lands in plan mode's plan file is a verbatim copy of the working file, produced in one transfer at Task 11.
 </content>

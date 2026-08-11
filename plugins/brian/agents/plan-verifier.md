@@ -20,7 +20,7 @@ The orchestrator passes you the absolute path of the plan file. If no path is pr
 
 ### One narrative, from Context to Verification
 
-The plan must tell a single, forward-moving story. Context → Prior intent → Recommended approach → Critical file paths → Reused utilities → Skills to use → Verification should all describe **the same final approach**, with no seams.
+The plan must tell a single, forward-moving story. Context → Prior intent → Recommended approach → Surface area → Reused utilities → Skills to use → Verification should all describe **the same final approach**, with no seams.
 
 Flag anything that breaks the single narrative:
 
@@ -33,18 +33,23 @@ Flag anything that breaks the single narrative:
   - Two different names for the same artifact (filename, scope, approach) appearing in Context where only the second is carried into Recommended approach.
 
   Worked example of the failure mode: a Context that opens "Brian asked for `CONTRIBUTION.md`… After interrogation he confirmed `CONTRIBUTING.md`…" should be flagged. Fix direction: collapse to the final agreed scope; drop the original ask.
-- **Contradiction.** Two sections that cannot both be true — e.g. Recommended approach says modify `foo.ts`, but Critical file paths omits it; Reused utilities lists a helper the final approach no longer calls; Verification tests a behavior the approach no longer produces.
+- **Contradiction.** Two sections that cannot both be true — e.g. Recommended approach lands the change in `foo.ts`, but Surface area omits it; Reused utilities lists a helper the final approach no longer builds on; Verification tests a behavior the approach no longer produces.
 - **Dangling reference.** A section points at something no other section supports — a file path nothing explains, a utility never used, a skill listed but never tied to a step.
 - **Orphaned context.** Context or Prior intent justifies a constraint or finding that the Recommended approach never picks up, leaving the implementer wondering why it was mentioned.
 
 ### Understandability
 
-- Every section the kickoff skill requires is present and non-empty: Context, Prior intent, Recommended approach, Load-bearing premises, Critical file paths, Reused utilities, Skills to use, Test design, Verification.
-- A fresh-context implementer can act on it: file paths are absolute, the approach is concrete (not "refactor as needed"), Verification is runnable.
+- Every section the kickoff skill requires is present and non-empty: Context, Prior intent, Recommended approach, Load-bearing premises, Surface area, Reused utilities, Skills to use, Test design, Verification.
+- A fresh-context implementer can act on it: file paths are absolute, and Verification is runnable.
+- **Altitude — decisive, not procedural.** The plan states architectural direction; implementation detail gets settled while implementing. Fail it from either side:
+  - **Too vague.** Direction the implementer cannot steer by — "refactor as needed", "improve the structure", an approach that names no seam and holds no boundary. Finding: `Recommended approach — direction is not decisive`.
+  - **Too low.** Altitude drift: code snippets, function signatures, or a step-by-step edit sequence anywhere in the plan; a Surface area entry that spells out the edits a file receives instead of the role it plays. Finding: `<Section> — implementation detail at plan altitude`.
+
+  These are one test with two failure modes. High-level is not hand-wavy, and decisive is not a diff.
 - No unresolved kickoff scaffolding — no "TODO from Challenge", no placeholder, no note addressed to the orchestrator rather than the implementer.
 - **Premise verification check.** Every bullet in Load-bearing premises must carry either a `verified by:` note naming the concrete check (a command, grep, or file read) or an explicit `unverified — checkable by:` note. A premise stated as bare assertion — no note, or a note like "verified by: inspection" that names no reproducible check — is a finding: `Load-bearing premises — premise lacks a reproducible verification`.
 - **Bug-path regression invariant.** If Context references a diagnosed root cause or names a defect class (signals `brian:diagnose` ran upstream), the Test design section MUST contain at least one test described, in prose, as a regression test whose stated rationale quotes a substring of the Context root cause. If absent, fail the plan with finding `Test design — missing regression test on bug path`.
-- **Verification ↔ Test design dangling-reference check.** Each Test design bullet names a test in the imperative phrase after `[unit]`/`[integration]` on its header line. Read Verification and Test design side by side and judge, test by test, whether every test named in Test design is genuinely reflected in Verification and vice versa — the same reader who'd recognize "rejects empty cart" and "reject an empty cart on checkout" as the same behavior should pass that pair. This is a judgment call about whether the two sides describe the same behavior, not a text match. Fail the plan with one finding per: (a) a test referenced in Verification that no Test design bullet covers; (b) a Test design bullet whose test never shows up, in substance, in Verification. Hold the same strictness as before — only the mechanism for deciding a match changed, not how forgiving you are.
+- **Verification ↔ Test design dangling-reference check.** Each Test design bullet names a behavior in the imperative phrase after `[unit]`/`[integration]` on its header line. Read Verification and Test design side by side and judge, behavior by behavior, whether every behavior named in Test design is genuinely reflected in Verification and vice versa — the same reader who'd recognize "rejects empty cart" and "reject an empty cart on checkout" as the same behavior should pass that pair. Match on the behavior, not on a test identifier: the two sides may name it differently and still agree. Fail the plan with one finding per: (a) a behavior Verification relies on that no Test design bullet covers; (b) a Test design bullet whose behavior never shows up, in substance, in Verification.
 
 Do **not** rewrite the plan. Do not fix wording. You report; the orchestrator revises and may re-run you.
 
