@@ -53,7 +53,7 @@ Two plugins, each a coherent domain:
 | `bro` | Restate the last message in plain human language, with no jargon. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, and a target-specific bespoke critic — then surface every tension as a decision for the user, with options and a recommendation. |
 | `commit` | Structured commit workflow. |
-| `consult-fable` | Spawn a Fable second opinion — one consultant per named decision fork — where legwork could not settle it, or where a wrong branch is a one-way door. |
+| `consult-fable` | Spawn a Fable second opinion — an open read on a design, diagnosis, or plan, or a gated consultation on a named decision fork that legwork could not settle. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
@@ -68,7 +68,7 @@ Two plugins, each a coherent domain:
 | --- | --- |
 | `architectural-reviewer` | Stress-tests a plan or diff for architectural drift, coupling, expandability, and historical coherence. |
 | `code-historian` | Gathers historical "why" context from git history and the ticket tracker. |
-| `fable-consultant` | Weighs in on one hard decision fork — recommendation, strongest case against it, and the observation that would flip it. Advisory only. |
+| `fable-consultant` | Weighs in on one hard question — a recommendation with its counter-case and flip condition when given branches, an honest read with a push-back and a next check when not. Advisory only. |
 | `plan-fact-checker` | Verifies a plan's file:line, count, path, and toolchain claims against the actual repo; audits internal numeric consistency. |
 | `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
 | `review-cleanness` | Local code-shape hygiene and behavior-preserving quality angles. |
