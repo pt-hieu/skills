@@ -104,7 +104,7 @@ Pass the implicated paths (preferred) and the focusing question derived from §1
 Map the obvious causal chain: symptom → intermediate → candidate root cause.
 
 ### Step B — Deepen (minimum 3 iterations, internal)
-For your candidate root cause, ask: "Why does THIS exist? What design decision, missing abstraction, or architectural gap CAUSED this cause?" Run the chain at least 3 times in your head; surface only the bedrock conclusion plus any one intermediate that's load-bearing for the recommendation.
+For your candidate root cause, ask: "Why does THIS exist? What design decision, missing abstraction, or architectural gap CAUSED this cause?" Run the chain at least 3 times in your head; surface only the bedrock conclusion plus any one intermediate that's critical for the recommendation.
 
 ### Step C — Bedrock Test
 You have reached true root when ONE of these is true:
@@ -178,7 +178,7 @@ If reproduction is genuinely infeasible (flaky concurrency, prod-only data, miss
 Define the defect class as an abstract pattern independent of this specific instance, in plain words — **name the pattern, not the instance**:
 `<plain-words defect class>: <abstract description independent of specific module/variable names>`
 
-There is no closed list to pick from — write the phrase that best captures the underlying defect. The *abstract phrasing* is what's load-bearing: it drives the sibling-instance grep in Step B, so describe the pattern, never the one occurrence. When invoked inside an orchestrator that injects an `## Output Contract` block, follow whatever the contract says about naming the defect class.
+There is no closed list to pick from — write the phrase that best captures the underlying defect. The *abstract phrasing* is what's critical: it drives the sibling-instance grep in Step B, so describe the pattern, never the one occurrence. When invoked inside an orchestrator that injects an `## Output Contract` block, follow whatever the contract says about naming the defect class.
 
 Example: `missing validation: external input used in database query without sanitization` — NOT `the user input in handleSearch isn't sanitized`
 

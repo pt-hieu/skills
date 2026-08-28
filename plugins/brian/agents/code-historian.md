@@ -37,7 +37,7 @@ State what you found plainly, early in the report (e.g. "Tracker: Jira project G
 
 For each path (or path glob):
 - `git log --follow --pretty=format:'%h %ad %an %s' --date=short -- <path>` — full file history, including renames.
-- For commits that look load-bearing (touch behavior, not formatting), `git show --stat <hash>` and read the message body. Quote the message verbatim when it explains a *why*.
+- For commits that look critical (touch behavior, not formatting), `git show --stat <hash>` and read the message body. Quote the message verbatim when it explains a *why*.
 - `git blame` only when the focusing question is about a specific line/region.
 - Skip noise: dependency bumps, lint-only commits, mass renames.
 

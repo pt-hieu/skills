@@ -83,7 +83,7 @@ Render the full assessment to chat as ONE human-readable table (prose-first — 
 
 Below the table, state the gate explicitly: "Approve to apply all AGREE fixes (silently resolving those threads) and post all DISAGREE replies (leaving them open). You can adjust any row first — change a disposition, edit a fix, or rewrite a reply — before approving." Then WAIT.
 
-**Single-gate discipline (load-bearing):** present everything at once and wait for ONE approval. Do not action any row before approval. Do not ask per-comment. Brian may revise specific rows (flip a disposition, edit fix/reply text, drop a row); fold his changes in and proceed — re-present only if he asks. AMBIGUOUS rows MUST receive a disposition from Brian here; an AMBIGUOUS row that stays ambiguous after the gate is left untouched (no edit, no resolve, no reply), not guessed.
+**Single-gate discipline (critical):** present everything at once and wait for ONE approval. Do not action any row before approval. Do not ask per-comment. Brian may revise specific rows (flip a disposition, edit fix/reply text, drop a row); fold his changes in and proceed — re-present only if he asks. AMBIGUOUS rows MUST receive a disposition from Brian here; an AMBIGUOUS row that stays ambiguous after the gate is left untouched (no edit, no resolve, no reply), not guessed.
 
 **Disposition-flip rule:** if Brian flips a row to a disposition that has no drafted artifact yet — e.g. AMBIGUOUS/DISAGREE → AGREE (no fix was drafted), or AGREE → DISAGREE (no reply was drafted) — draft the missing fix or reply and re-present THAT single row for a quick confirmation before executing it. A disposition flip is not a mechanical edit, so it does not violate the "execution after the gate is mechanical" invariant — the freshly drafted artifact still gets one look. If Brian rejects or further changes that re-presented artifact, fold in his change and re-present it once more — that becomes the gate for the row. If he rejects it outright, leave the row untouched and surface it as unresolved in the final summary; never execute an artifact he declined.
 
@@ -95,7 +95,7 @@ For each AGREE row:
 1. Apply the fix to the working tree (Edit/Write on the target file).
 2. **Outcome self-check before resolving:** confirm the edit you just made actually addresses the comment's ask. If it only partially addresses it, do NOT resolve — leave the thread open and note the gap in the summary. "Silent resolve" must never hide a fix that missed the point.
 3. Immediately `resolve_comment(repository, prId, commentId, resolve=true)` on that thread's root comment.
-4. **Silent on agree (load-bearing):** post NO reply on an agreed thread. The fix + resolve is the entire action.
+4. **Silent on agree (critical):** post NO reply on an agreed thread. The fix + resolve is the entire action.
 
 For each DISAGREE row — and each answerable-question row (Step C's "reply, leave open" type), which uses identical mechanics:
 1. `add_comment(repository, prId, text=<approved reply>, parentId=<comment root id>)` — threaded reply on that comment.

@@ -15,16 +15,16 @@ Each section below is the full spec for one task — the target of its Step-0 po
 
 ---
 
-**T2 — Assumptions ledger**
+**T2 — Assumptions register**
 
-- subject: `Assumptions ledger — best-judgment calls on every approach-level unknown`
+- subject: `Assumptions register — best-judgment calls on every approach-level unknown`
   > **Goal**: close every architecture-/approach-level ambiguity by making a best-judgment call and recording it — never by asking the human.
-  > **Action**: identify the 1–3 architecture-/approach-level decision points (direction, trade-offs, scope boundaries, integration choices), informed by T1's prior-intent note. For **each**, make the best-judgment call and record one ledger entry:
+  > **Action**: identify the 1–3 architecture-/approach-level decision points (direction, trade-offs, scope boundaries, integration choices), informed by T1's prior-intent note. For **each**, make the best-judgment call and record one register entry:
   > `- Assumption: <plain-English decision>. Rationale: <why, citing T1/git/historian evidence>. Confidence: <high|medium|low>. Blast radius if wrong: <low | high (security / data / irreversible)>. Disconfirming check: <the specific evidence I looked for that would have falsified this call, and what I found>. Alternative if wrong: <what the human should change>.`
   >
-  > **Calibration rule**: a `high blast radius` assumption rated `high confidence` whose Disconfirming-check field is empty or circular is **downgraded to `medium`** — it does not abort, but sorts higher in the T12 PR ledger so the human's eye lands on it first. (The same agent both makes and rates the call, so an uncalibrated high-blast call routes to the one gate that can catch it: the human at the PR.)
-  > **Eligibility gate**: any assumption that is **`low confidence` AND `high blast radius`** makes the task ineligible — **halt with a chat summary** naming the coin-flip decision. If the requirement was unambiguous, record `None — requirement was unambiguous`. Where an assumption resolves scope, the design's Context (T5) states the *resolved* scope and the ledger is the audit trail.
-  > **Gate**: every approach-level unknown has a ledger entry with rationale / confidence / blast-radius / disconfirming-check; no `low confidence` × `high blast radius` assumption remains (else autopilot has halted).
+  > **Calibration rule**: a `high blast radius` assumption rated `high confidence` whose Disconfirming-check field is empty or circular is **downgraded to `medium`** — it does not abort, but sorts higher in the T12 PR register so the human's eye lands on it first. (The same agent both makes and rates the call, so an uncalibrated high-blast call routes to the one gate that can catch it: the human at the PR.)
+  > **Eligibility gate**: any assumption that is **`low confidence` AND `high blast radius`** makes the task ineligible — **halt with a chat summary** naming the coin-flip decision. If the requirement was unambiguous, record `None — requirement was unambiguous`. Where an assumption resolves scope, the design's Context (T5) states the *resolved* scope and the register is the audit trail.
+  > **Gate**: every approach-level unknown has a register entry with rationale / confidence / blast-radius / disconfirming-check; no `low confidence` × `high blast radius` assumption remains (else autopilot has halted).
 
 ---
 
@@ -44,7 +44,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Goal**: produce a detailed implementation design from a focused designer, with explicit cross-file consistency.
   > **Action**: launch **ONE `general-purpose` agent** via the `Agent` tool with `model: "opus"`, high thinking effort. A general-purpose agent has no built-in cross-file synthesis discipline, so the prompt MUST explicitly require: *"Enumerate every file that changes and state, per file, how it stays consistent with the others. Do not return a design until cross-file consistency is explicit."* Hand it:
   > - T1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape) and the prior-intent note
-  > - The T2 assumptions ledger
+  > - The T2 assumptions register
   > - The requirement and its constraints
   > - The T3 skill-scan output and any skill-derived patterns to follow
   >
@@ -59,7 +59,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Goal**: turn T4's raw return into an implementation-ready design and quality-gate it before any code. (T4 generates; you structure and gate.)
   > **Action**: restructure T4's return into the sections below, in order, held in your working context — do not discard T4 content; reorganize and enrich it:
   > - **Context** — the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach (inline ≥1). **State the requirement at its *resolved* scope** — if a T2 assumption resolved scope/filename/approach, use the resolved version and let Context proceed from that final state. Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
-  > - **Assumptions** — the T2 ledger (rationale / confidence / blast-radius / disconfirming-check per entry).
+  > - **Assumptions** — the T2 register (rationale / confidence / blast-radius / disconfirming-check per entry).
   > - **Recommended approach** — the chosen path.
   > - **Critical file paths** — every file that will change, absolute paths.
   > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
@@ -90,7 +90,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > - `## Prior intent` — T1's prior-intent note (git log + any historian output), written so it plainly states which files were actually inspected and where its account of prior intent came from (commit refs, ticket links), covering the design's Critical file paths. This gives the root-cause reviewer what it needs to judge, by reading, that prior intent has already been gathered, so it records *reusing prior intent* and does NOT self-spawn `code-historian`. Instruct both reviewers explicitly: *do not spawn your own historian — prior intent is supplied inline.*
   > - `## Project Domain Knowledge` — when T3's skill scan surfaced project-specific rules for the touched skill(s), emit a minimal inline block stating them. When the scan found nothing project-specific, say so plainly in this section, in your own words (e.g. state that no project-specific skills applied and the review should proceed on general principles) — a legible statement that the section was considered and came back empty, not a blank. Instruct both reviewers explicitly: a plainly stated absence is a complete answer to this section — only a section that is actually missing (no statement either way) should trigger a request for it.
   >
-  > **Disposition inline (you own synthesis — no terminal question)**: for each high- and medium-severity finding (severity judged from the reviewer's prose), pick one — **Fix** the design in place, **Rebut** with citable evidence (file ref / git history / domain rule — a rebuttal without citable evidence converts to Fix), or — for a genuinely out-of-scope finding — **note it in the design's Assumptions ledger**.
+  > **Disposition inline (you own synthesis — no terminal question)**: for each high- and medium-severity finding (severity judged from the reviewer's prose), pick one — **Fix** the design in place, **Rebut** with citable evidence (file ref / git history / domain rule — a rebuttal without citable evidence converts to Fix), or — for a genuinely out-of-scope finding — **note it in the design's Assumptions register**.
   > **Gate**: one review round complete; every high-/medium-severity finding dispositioned; design updated; no reviewer stalled on a missing input section.
 
 ---
@@ -128,10 +128,10 @@ Each section below is the full spec for one task — the target of its Step-0 po
 - subject: `Self-review — scrutinize the diff`
   > **Goal**: automated diff review before commit.
   > **Action**: invoke `brian:scrutinize` via the `Skill` tool on the working-tree diff (safe — chat-only, no terminal prompt, no internal loop). Treat findings as a hostile audit. Disposition each:
-  > - Medium-severity → **Fix**, **Rebut** with citable evidence, or **Defer** with a follow-up reference recorded into the design's Assumptions ledger (so it surfaces in the PR).
+  > - Medium-severity → **Fix**, **Rebut** with citable evidence, or **Defer** with a follow-up reference recorded into the design's Assumptions register (so it surfaces in the PR).
   > - High-severity → **must Fix or Rebut with citable evidence. A high-severity finding may NOT be deferred** (severity floor). A high-severity finding that can be neither fixed nor citably rebutted → fire the terminal: **`🛑 BLOCKED` draft PR** (title leads with the unresolved finding, do not mark ready-for-review, post to chat, halt).
   > One scrutinize pass — do not re-run it after dispositioning. Apply the fixes and proceed to T11. Severity is judged from each finding's prose.
-  > **Gate**: no unaddressed high-severity finding; every medium-severity finding dispositioned and ledger-surfaced (or a blocked terminal fired).
+  > **Gate**: no unaddressed high-severity finding; every medium-severity finding dispositioned and register-surfaced (or a blocked terminal fired).
 
 ---
 
@@ -151,7 +151,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Action**:
   > 1. **Pre-draft coherence self-check**: re-read the design end-to-end and confirm Context → Assumptions → Recommended approach → Test plan describe ONE final approach. If T6's in-place revision left residue ("originally…/instead…", two names for one artifact, a superseded approach described as if current), collapse to the final state **before** drafting.
   > 2. Push the branch.
-  > 3. Draft the PR body in plain language. The body **MUST lead with the Assumptions ledger, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred medium-severity scrutinize findings.
+  > 3. Draft the PR body in plain language. The body **MUST lead with the Assumptions register, sorted by blast radius (high-blast-radius first)**, framed *"Decisions I made without asking — flag any that are wrong,"* then a plain-language change summary, then Verification results, then any deferred medium-severity scrutinize findings.
   > 4. Open the PR via the Bitbucket MCP (`mcp__bitbucket__create_pull_request`; in the interface repo use workspace `drovacorp` / repo `interface` / target `master`) or `gh`, detected from the repo remotes / T3 scan.
   > **Fallback (terminal: chat summary)**: if neither PR tool resolves, push the branch and emit to chat the exact manual PR-creation command / compare-URL plus the drafted body, then halt — do not leave a dangling branch silently.
-  > **Gate**: PR open (or the manual-PR fallback fired); body leads with the blast-radius-sorted ledger; the PR URL (or compare-URL) is posted to chat. **Terminus.**
+  > **Gate**: PR open (or the manual-PR fallback fired); body leads with the blast-radius-sorted register; the PR URL (or compare-URL) is posted to chat. **Terminus.**

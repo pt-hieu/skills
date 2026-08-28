@@ -13,7 +13,7 @@
       "name": "brian",
       "source": "./plugins/brian",
       "description": "Bundled skills: assess-code-review, autopilot, bro, challenge, commit, consult-fable, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, up-to-speed, writing-skills.",
-      "version": "2.17.0",
+      "version": "2.18.0",
       "category": "productivity",
       "tags": [
         "skills",

@@ -41,7 +41,7 @@ This table is the canonical home for each source's `subagent_type`, `model`, and
 
 All four sources are always dispatched; each self-skips when it finds nothing (returning the abstinence sentinel from Step C).
 
-**The `Explore`-vs-`general-purpose` split is load-bearing — do not collapse all four sources to `Explore`.** `Explore`'s MCP reach is not guaranteed, so it is used only for the git+code gatherer (which needs Bash/Grep/Glob/Read, no MCP). The three MCP-backed sources (bitbucket, jira/confluence, slack) use `general-purpose`, which reaches MCP — evidenced by `plugins/brian/agents/code-historian.md` calling Atlassian and Bitbucket MCP tools directly. A future editor who renames `general-purpose` to `Explore` on an MCP source will silently break that source.
+**The `Explore`-vs-`general-purpose` split is critical — do not collapse all four sources to `Explore`.** `Explore`'s MCP reach is not guaranteed, so it is used only for the git+code gatherer (which needs Bash/Grep/Glob/Read, no MCP). The three MCP-backed sources (bitbucket, jira/confluence, slack) use `general-purpose`, which reaches MCP — evidenced by `plugins/brian/agents/code-historian.md` calling Atlassian and Bitbucket MCP tools directly. A future editor who renames `general-purpose` to `Explore` on an MCP source will silently break that source.
 
 **Dispatch invariant**: when emitting an `Agent` call for a source, `subagent_type`, `model`, and the tool list all come from this table — never substitute a different value as a default.
 
@@ -57,7 +57,7 @@ All four sources are always dispatched; each self-skips when it finds nothing (r
 
 Read the user's wording for how much they want:
 
-- **Quick lean** — phrasing like "quick", "just the gist", "tl;dr", "orient me on". Keep each gatherer tight (lead with the single highest-signal fact, stop early) and render a short briefing — the what/why framer plus a compact How it works, touching Key files & architecture only where it's load-bearing to start.
+- **Quick lean** — phrasing like "quick", "just the gist", "tl;dr", "orient me on". Keep each gatherer tight (lead with the single highest-signal fact, stop early) and render a short briefing — the what/why framer plus a compact How it works, touching Key files & architecture only where it's critical to start.
 - **Deep lean** — phrasing like "deep dive", "thorough", "full context", "everything on". Let each gatherer dig further and render the full briefing, including deeper How it works and architecture.
 - **Default** — no signal either way → a balanced briefing through Key files & architecture.
 
@@ -87,7 +87,7 @@ Record `resolved = {scope_type, concrete_target, anchors[]}`. `anchors[]` collec
 
 Emit ALL four source `Agent` calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call uses `subagent_type`, `model`, and tool list from the Source Registry, and `run_in_background: true`.
 
-**Wait discipline (load-bearing — this is the line that makes backgrounding stick).** After dispatch: wait for harness notifications (they arrive on completion, so polling adds nothing) and emit at most one status line during the wait. Every source's data comes exclusively from its dispatched gatherer — the orchestrator holds the same MCP tools, and gathering inline is the lazy path that silently collapses the parallel-isolation guarantee. A source with no dispatched subagent is **skipped, not absorbed**.
+**Wait discipline (critical — this is the line that makes backgrounding stick).** After dispatch: wait for harness notifications (they arrive on completion, so polling adds nothing) and emit at most one status line during the wait. Every source's data comes exclusively from its dispatched gatherer — the orchestrator holds the same MCP tools, and gathering inline is the lazy path that silently collapses the parallel-isolation guarantee. A source with no dispatched subagent is **skipped, not absorbed**.
 
 ### Shared per-source prompt skeleton
 
@@ -122,7 +122,7 @@ When all dispatched subagents return (per the Step C wait discipline):
 2. **Read each gatherer's reply for meaning and sort it.** A gatherer that says it looked and found nothing relevant goes into `sources_abstained[]`; a gatherer that says a tool call failed goes into `sources_failed[]`. Never invent findings on an abstaining source's behalf, and never fold a failed source into "no signal" — it is incomplete coverage, not a clean empty.
 3. **Cross-link discovered ticket keys** (git ↔ jira) without duplicating the same fact under two sources.
 
-**Citation enforcement at the merge boundary (load-bearing — re-assert the contract here, where claims get rewritten).** Before rendering, scan each synthesized bullet for an inline citation token: a commit short-hash, `PR#<n>`, a `[A-Z]+-\d+` ticket key, a `file:line`, or a Slack permalink URL. **A bullet with no token is dropped, not softened.** Compression during synthesis is exactly where a citation falls off while the claim survives, so the check lives at the consumer, not only the producer.
+**Citation enforcement at the merge boundary (critical — re-assert the contract here, where claims get rewritten).** Before rendering, scan each synthesized bullet for an inline citation token: a commit short-hash, `PR#<n>`, a `[A-Z]+-\d+` ticket key, a `file:line`, or a Slack permalink URL. **A bullet with no token is dropped, not softened.** Compression during synthesis is exactly where a citation falls off while the claim survives, so the check lives at the consumer, not only the producer.
 
 **Conflicts are first-class — for mental-model accuracy, not status-checking.** If two sources disagree (the design doc describes X but the code does Y; Slack says the approach changed but the branch still reflects the old one), surface both sides with citations inside **How it works** so Brian's mental model is correct from day one — never silently pick a side. Frame it as "here's what's actually true and why the sources diverge," not "verify before shipping."
 

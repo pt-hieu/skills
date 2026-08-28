@@ -160,7 +160,7 @@ The dividing line: **cleanness = LOCAL code shape within the changed lines; arch
 - Unreachable branches → correctness-reliability.
 - Formatting, whitespace, import ordering → anti-cosmetic gate from House Rules. Note the boundary: *where* a comment sits is formatting and not yours; *whether it says anything* is §1 and is yours.
 - Naming style (camelCase vs snake_case, etc.) → architectural-reviewer's Consistency.
-- Shallow wrappers, 1:1-forwarding hops, seam/boundary leakage, a genuinely missing structural abstraction → architectural-reviewer's Module Depth / Abstraction Level.
+- Shallow wrappers, 1:1-forwarding hops, boundary leakage, a genuinely missing structural abstraction → architectural-reviewer's Module Depth / Abstraction Level.
 - **Extraction-shaped altitude** (any finding whose fix is "extract a helper / introduce an abstraction / hoist into a named function") → architectural-reviewer's Abstraction Level. The altitude angle here is **compression-only** (inline/split), never extraction.
 - Behavior-changing cleanups (removing a branch that handles `null`/throws differently, reordering side effects) → correctness-reliability.
 - Bare "could refactor" with no named concrete cost → dropped by House Rule #3 (anti-cosmetic gate); do not emit it as a finding.

@@ -187,7 +187,7 @@ The spec axis is dispatched only when one of branches 1–3 yields `spec_text`. 
 
 ### Step D.0 — Pre-launch Read
 
-Before the parallel dispatch, the orchestrator Reads the shared house-rules file. **This Read is load-bearing**; it is the single-source-of-truth substrate that gets injected into every reviewer.
+Before the parallel dispatch, the orchestrator Reads the shared house-rules file. **This Read is critical**; it is the single-source-of-truth substrate that gets injected into every reviewer.
 
 ```
 house_rules_txt   = Read("${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/reviewer-house-rules.md")
@@ -208,7 +208,7 @@ Every finding MUST start with a structured Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges and renders by it, so the phrase is load-bearing.
+Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges and renders by it, so the phrase is critical.
 
 After the Finding Anchor, the body is:
 

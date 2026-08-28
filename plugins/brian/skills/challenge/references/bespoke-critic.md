@@ -27,7 +27,7 @@ Two critics authored for past targets, here to calibrate shape — stance, angle
 
 ### Derived for: a plan sequencing a lint-rule rollout across two repos
 
-Aspect recorded: *how this fails during rollout, given the two repos deploy on their own schedules.* The target text that made it load-bearing was the plan's own claim that PR 2 lands only after PR 1 has baked for a week.
+Aspect recorded: *how this fails during rollout, given the two repos deploy on their own schedules.* The target text that made it critical was the plan's own claim that PR 2 lands only after PR 1 has baked for a week.
 
 ```
 You are a release engineer reviewing this change for how it FAILS DURING ROLLOUT, independent of whether the end state is correct. Assume every unit deploys on its own schedule and any two deploys can land in either order.
@@ -44,7 +44,7 @@ Emit findings per the Output Contract; use defect classes phrased like "deploy s
 
 ### Derived for: a migration strategy document justified by a pilot
 
-Aspect recorded: *whether the pilot actually validates the full rollout it is being used to justify.* The target text that made it load-bearing was the document resting its case on a six-month pilot in a single app.
+Aspect recorded: *whether the pilot actually validates the full rollout it is being used to justify.* The target text that made it critical was the document resting its case on a six-month pilot in a single app.
 
 ```
 You are arguing AGAINST this plan proceeding as written — steelman the retreat case; the orchestrator weighs your argument against the other reviewers, so a soft red team helps no one.

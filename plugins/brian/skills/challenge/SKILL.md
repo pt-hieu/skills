@@ -5,7 +5,7 @@ description: "Use before finalizing a significant plan, after complex implementa
 
 # Challenge
 
-Fire independent opus subagents in parallel to stress-test a plan or implementation. The panel challenges whether the changes keep the architecture healthy, expandable, and maintainable — whether they fix root causes vs patch symptoms — and, in plan mode, whether the plan's own factual claims and load-bearing premises actually hold.
+Fire independent opus subagents in parallel to stress-test a plan or implementation. The panel challenges whether the changes keep the architecture healthy, expandable, and maintainable — whether they fix root causes vs patch symptoms — and, in plan mode, whether the plan's own factual claims and critical premises actually hold.
 
 The two fixed reviewers are first-class plugin agents, launched on every run:
 - `brian:architectural-reviewer` — coupling, cohesion, module depth, historical coherence, expandability, side effects
@@ -74,11 +74,11 @@ Compose the panel:
 
 The standing panel buys breadth. This slot buys depth on one aspect of *this* target, and you write the critic — so its subject is whatever the target puts at risk, named in your own words rather than drawn from a list.
 
-Ask one question: **which load-bearing aspect of this target will the standing panel only skim, where being wrong is expensive?**
+Ask one question: **which critical aspect of this target will the standing panel only skim, where being wrong is expensive?**
 
 Launching wants both prongs, and the run file records them:
 
-- **Quoted** — the target's own text that makes the aspect load-bearing. A claim you inferred from the repo's shape rather than read in the target belongs to the standing panel; repo shape is a constant across every run and so tells you nothing about this one.
+- **Quoted** — the target's own text that makes the aspect critical. A claim you inferred from the repo's shape rather than read in the target belongs to the standing panel; repo shape is a constant across every run and so tells you nothing about this one.
 - **Uncovered** — one line on why architectural review, root-cause analysis, and (in plan mode) claim-checking will each only skim it. Generic depth is what those three already sell; the aspect earns its critic by being one they pass over.
 
 Write the record line before opening any reference — naming the aspect is the decision, and it happens in your words, not against a menu:
@@ -103,7 +103,7 @@ Every finding MUST start with a structured Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges findings by `(file, defect_class)`, so the phrase is load-bearing.
+Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges findings by `(file, defect_class)`, so the phrase is critical.
 
 Confidence: state each finding's confidence and its basis in plain prose within the finding body (high when you verified it against cited code; low when it rests mostly on the diff). Do not append a tag.
 
@@ -140,7 +140,7 @@ After emitting the calls, the loop driver MUST NOT proceed to Step 3 until every
 
 On agent error or timeout: retry once with the same prompt. Failure handling splits by agent class:
 
-- **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `## ABORTED — both fixed reviewers failed twice` to the run file. Skip Steps 3 and 4; chat emits one-line abort + run-file path, then asks in plain text: retry / proceed without challenge / roll back. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is load-bearing.
+- **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `## ABORTED — both fixed reviewers failed twice` to the run file. Skip Steps 3 and 4; chat emits one-line abort + run-file path, then asks in plain text: retry / proceed without challenge / roll back. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is critical.
 - **Auxiliary agents** (`plan-fact-checker`, the bespoke critic): a twice-failed auxiliary agent degrades the run instead of aborting it — append `## {agent}: FAILED — degraded run` to the run file, note the gap in the synthesis's Insufficient Context Areas, and cap the verdict at `REVISE` (an unverified claims inventory is an unresolved gap, same as Step 3.1).
 
 ## Step 3: Synthesize Results

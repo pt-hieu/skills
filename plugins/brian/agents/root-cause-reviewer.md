@@ -176,7 +176,7 @@ If reproduction is genuinely infeasible (flaky concurrency, prod-only data, miss
 Define the defect class as an abstract pattern independent of this specific instance, in plain words — **name the pattern, not the instance**:
 `<plain-words defect class>: <abstract description independent of specific module/variable names>`
 
-There is no closed list to pick from — write the phrase that best captures the underlying defect. The *abstract phrasing* is what's load-bearing: it is what drives the sibling-instance grep in Step B, so describe the pattern, never the one occurrence.
+There is no closed list to pick from — write the phrase that best captures the underlying defect. The *abstract phrasing* is what's critical: it is what drives the sibling-instance grep in Step B, so describe the pattern, never the one occurrence.
 
 Example: `missing validation: external input used in database query without sanitization` — NOT `the user input in handleSearch isn't sanitized`
 

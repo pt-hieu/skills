@@ -39,8 +39,8 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 >
 > The agent auto-detects the ticket tracker (Jira / Linear / Bitbucket PRs) from commit-message patterns, remotes, and `CLAUDE.md` — do not hand it a tracker choice.
 >
-> Parallelism trades away the precision of seeding the historian with Explore's paths, so the gate buys that precision back at the join instead: once both subagents are back, compare the files the historian says it inspected against the paths Explore surfaced. Where a load-bearing path went uncovered, re-invoke the historian scoped to just those paths — a second, cheap, narrow pass rather than a repeat of the whole sweep.
-> **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change — and the files it inspected cover the load-bearing paths Explore surfaced, after any scoped re-invocation.
+> Parallelism trades away the precision of seeding the historian with Explore's paths, so the gate buys that precision back at the join instead: once both subagents are back, compare the files the historian says it inspected against the paths Explore surfaced. Where a critical path went uncovered, re-invoke the historian scoped to just those paths — a second, cheap, narrow pass rather than a repeat of the whole sweep.
+> **Gate**: historian report is in hand, including a timeline of meaningful commits, linked tickets with verbatim "why" quotes (or an explicit "no tracker / no linked tickets" note), recurring themes, and implications for the current change — and the files it inspected cover the critical paths Explore surfaced, after any scoped re-invocation.
 
 ---
 
@@ -78,7 +78,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 
 - subject: `Run Plan agent — produce the architectural direction`
 
-> **Goal**: get the architectural direction from a focused designer — the shape the change takes, the seams it touches, the boundaries it holds, and why this shape over the alternative. Not the edits: implementation detail gets settled while implementing.
+> **Goal**: get the architectural direction from a focused designer — the shape the change takes, the boundaries it crosses and the ones it holds, and why this shape over the alternative. Not the edits: implementation detail gets settled while implementing.
 > **Action**: launch ONE `Plan` subagent at high effort (model per the Effort matrix) — direction is the part worth opus. Tell the agent plainly what altitude to write at: decisive about direction and boundaries, silent on code snippets, function signatures, and step-by-step edit sequences. Hand it:
 > - Phase-1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape)
 > - Historian report (prior intent, recurring themes, implications)
@@ -100,8 +100,8 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > - **Context** — one continuous narrative covering: the requirement in concrete terms; where it came from (ticket id, user ask, bug report, link or quote); why it is being made; the Phase-1 findings that justify the chosen approach — inline them. **The quoted ask must reflect the final agreed scope after interrogation: if interrogation corrected the filename, scope, or approach, quote the corrected version as the requirement and let the rest of Context proceed from that final state.** Bug path: include root cause + defect class from `brian:diagnose`. Feature path: include existing patterns, call sites, and constraints surfaced by Explore.
 > <!-- Referenced as PROVENANCE signal in plugins/brian/agents/root-cause-reviewer.md §2 — keep in sync. The historian chain states coverage in prose (see code-historian.md and root-cause-reviewer.md, rewritten to judge coverage by reading rather than matching a heading); this restructure step carries that same prose intent forward instead of pinning it to a literal line. -->
 > - **Prior intent** — inline the historian's recurring themes and implications, with commit-hash and ticket-key anchors. Carry forward the historian's own account of which files it inspected and where its "why" came from, in whatever prose form the historian gave it — a reader of this section must be able to tell what was and wasn't looked at. Quote prior decisions verbatim.
-> - **Recommended approach** — the chosen direction: the shape the change takes, the seams it touches, the boundaries it holds, and why this shape over the alternative that was in play. Write it at architectural altitude — no code snippets, no function signatures, no step-by-step edit sequences. Decisive, not procedural: "refactor as needed" is as much a failure here as a pasted diff.
-> - **Load-bearing premises** — the 2–4 claims the approach's correctness rests on (e.g. "the current config is active", "X wins the CSS cascade", "tool Y supports option Z"), one bullet each in the form `premise — verified by: <the grep/read/command that confirmed it, or "unverified — checkable by: <how>">`. Declaring premises gives Challenge's premise audit a direct target; the Tailwind-class failure mode is an undeclared premise nobody thought to check.
+> - **Recommended approach** — the chosen direction: the shape the change takes, the boundaries it crosses and the ones it holds, and why this shape over the alternative that was in play. Write it at architectural altitude — no code snippets, no function signatures, no step-by-step edit sequences. Decisive, not procedural: "refactor as needed" is as much a failure here as a pasted diff.
+> - **Critical premises** — the 2–4 claims the approach's correctness rests on (e.g. "the current config is active", "X wins the CSS cascade", "tool Y supports option Z"), one bullet each in the form `premise — verified by: <the grep/read/command that confirmed it, or "unverified — checkable by: <how>">`. Declaring premises gives Challenge's premise audit a direct target; the Tailwind-class failure mode is an undeclared premise nobody thought to check.
 > - **Surface area** — the components and files the change lands in, absolute paths, one line each on the role that component plays in the direction above. Name where the change lives, not what edit each file receives.
 > - **Reused utilities** — existing functions, helpers, or patterns this builds on, each with its path.
 > - **Skills to use** — every skill the implementer must invoke during execution, taken from the Skill-scan task's output. List one bullet per relevant skill in the form `skill-name — when to invoke it and what it contributes`. Include skills that apply during implementation (e.g. `brian:prompting`, `claude-api`, design skills) and skills that apply at handoff (e.g. `brian:commit`). If the scan found no applicable skills, write `None — skill scan returned no matches` so the implementer knows the scan was performed.
@@ -114,7 +114,7 @@ The full spec for each pipeline task registered in Step 0 of `SKILL.md`. Each se
 > (b) Context inlines at least one Phase-1 finding (root cause + defect class for bugs; a named existing pattern with file path for features),
 > (c) Prior intent section is present with commit-hash and/or ticket-key anchors,
 > (d) Skills-to-use section lists every skill marked relevant in the Skill-scan task (or explicitly states `None` when the scan found no matches),
-> (e) Load-bearing premises section is present and every premise carries a `verified by:` note (or an explicit `unverified — checkable by:` note for Challenge to pick up).
+> (e) Critical premises section is present and every premise carries a `verified by:` note (or an explicit `unverified — checkable by:` note for Challenge to pick up).
 > Confirm all checks pass before completing this task; fix any that fail first.
 
 ---
