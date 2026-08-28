@@ -1,7 +1,6 @@
 ---
 name: writing-skills
-description: Principles and vocabulary for writing and editing skills that make an agent's behaviour predictable.
-disable-model-invocation: true
+description: "Use when writing a new skill or subagent instruction file, revising an existing one, or diagnosing one that misbehaves — sprawl, duplication, sediment, or an agent that stops short. Covers invocation mode, information hierarchy, granularity, handoffs, pruning, and leading words, all in service of predictability."
 ---
 
 # Writing Skills
