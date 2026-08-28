@@ -36,7 +36,7 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 | `correctness-reliability` | `brian:review-correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
 | `cleanness` | `brian:review-cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
 | `security` | `brian:review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
-| `tests` | `brian:review-tests` | `review-tests.md` | no | production-code file in diff | sonnet |
+| `tests` | `brian:review-tests` | `review-tests.md` | no | production-code OR test file in diff | sonnet |
 | `architecture` | `brian:architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
 | `spec` | `brian:review-spec` | `review-spec.md` | no | spec source resolvable (Jira key in branch/commit messages, `--spec <path>`, or PRD file under `docs/`\|`specs/`\|`.scratch/`) | sonnet |
 
@@ -148,7 +148,7 @@ Dispatch `security` when a changed-file path, an added code line, or a mandatory
 
 ### C.4 Tests trigger
 
-Dispatch `tests` if at least one production-code file is in the diff. A file is production-code if its path does NOT match any of:
+Dispatch `tests` if at least one production-code file **or** at least one test file is in the diff. Test-only diffs dispatch too: a diff that touches nothing but tests is exactly where a tautological or change-detector test enters the codebase with no production change to draw a reviewer's eye. A file is production-code if its path does NOT match any of:
 ```
 ^(test|tests|spec|specs|__tests__)/
 \.(test|spec)\.(ts|tsx|js|jsx|py|go|rs|java|rb)$
@@ -309,7 +309,18 @@ After dispatch, wait for harness notifications — do NOT poll. Emit at most one
 
 When all dispatched agents have returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 6+4). Two exceptions keep a floor, recognized from the reviewer's own words rather than a bracketed sentinel: a `review-tests` finding whose prose identifies it as the zero-tests obligation or a test-inflation finding is treated as HIGH regardless of the prose default — this skill has decided those always matter, so do not demote it. A `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) carries a **MEDIUM severity floor** — never demote it below MEDIUM even when the prose is terse, so a single unmet requirement is never silently dropped by the LOW-grouping gate (rule 4). This mirrors the `review-tests` floor and encodes "don't let Standards mask Spec" without merging axes; the `review-spec` floor keys off `defect_class`, which is an earned, registered contract token — dedupe and the rest of the severity logic are otherwise unchanged.
+1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 6+4).
+
+   Three floors override that default. Recognize each from the reviewer's own words rather than a sentinel token — every reviewer that carries a floor is told to claim it in prose. Never demote a floored finding below its level, however terse the prose:
+
+   | Floor | Fires on | Why it cannot be demoted |
+   |---|---|---|
+   | HIGH | a `review-tests` finding whose prose identifies it as the zero-tests obligation, a tautology, or a change detector | a test that can only pass is not a weak test but a false negative wearing a green check; at LOW, the grouping gate (rule 4) would drop the one finding explaining why the suite is lying |
+   | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene | a house-rule prohibition, not a style preference; the gate would otherwise drop it wherever fewer than three land in one directory |
+   | MEDIUM | a `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) | a single unmet requirement would otherwise be dropped silently by the same gate |
+
+   The floors are the only severity override; dedupe and the rest of the logic below are unchanged. Comment-hygiene findings arrive already grouped one-per-file from `review-cleanness`, so its floor promotes whole files rather than individual lines and cannot flood the report.
+
 2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
 3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
 4. **Severity gate**:
