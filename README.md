@@ -58,7 +58,7 @@ Two plugins, each a coherent domain:
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
-| `scrutinize` | Review local code changes against Brian's house rules across correctness, reliability, security, tests, architecture, and cleanness axes. |
+| `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, and tests axes. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
 | `writing-skills` | Principles and vocabulary for writing and editing skills that make an agent's behaviour predictable. |
 
@@ -71,10 +71,8 @@ Two plugins, each a coherent domain:
 | `fable-consultant` | Weighs in on one hard question — a recommendation with its counter-case and flip condition when given branches, an honest read with a push-back and a next check when not. Advisory only. |
 | `plan-fact-checker` | Verifies a plan's file:line, count, path, and toolchain claims against the actual repo; audits internal numeric consistency. |
 | `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
-| `review-cleanness` | Local code-shape hygiene and behavior-preserving quality angles. |
-| `review-correctness-reliability` | Adversarial reviewer for correctness and reliability defects. |
+| `review-cleanness` | Flags every non-WHY comment, shim residue, and reuse defects, plus behavior-preserving quality angles. |
 | `review-security` | Application-security reviewer for a diff. |
-| `review-spec` | Checks a diff against what its originating ticket / PRD asked for — missing, extra, or wrongly-implemented requirements. |
 | `review-tests` | Test-coverage reviewer for a diff. |
 | `root-cause-reviewer` | Validates that a fix addresses the root cause rather than a symptom. |
 | `test-designer` | Names the behaviors a kickoff plan's change must prove, as its Test design section. |
@@ -114,9 +112,7 @@ plugins/
       plan-fact-checker.md
       plan-verifier.md
       review-cleanness.md
-      review-correctness-reliability.md
       review-security.md
-      review-spec.md
       review-tests.md
       root-cause-reviewer.md
       test-designer.md

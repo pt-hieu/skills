@@ -17,7 +17,7 @@ This is the anti-cosmetic gate. Drop these — do not emit findings for any of t
 
 **Comment hygiene and tautological / change-detector tests are outside this gate.** Both look like tooling's job and are not: a linter can check that a comment exists but not whether it says anything, and coverage tooling reports a tautology as covered lines — which is the harm, not an exemption. Never drop either as cosmetic.
 
-## 4. Root-cause framing (correctness/reliability/security only)
+## 4. Root-cause framing (security only)
 State the consequence, not the symptom. Good: "under concurrent X, observer Y sees stale Z". Bad: "missing await". The reader must be able to predict the failure mode from the Claim line alone.
 
 ## 5. No LLM arithmetic
@@ -33,7 +33,7 @@ If you cannot assess from disk, say so plainly in prose — state that you could
 
 One defect, one axis. These four rules say who owns what, so two reviewers never file the same finding under different names and no one assumes a sibling axis will cover it. They bind unconditionally: you cannot see which axes were dispatched, so never gate on whether another one ran.
 
-- **Cleanness owns no structural-abstraction findings.** A genuinely missing abstraction (a shared layer that should exist but doesn't) is architectural-reviewer's territory. If `review-cleanness` reported one, it would collide with the architecture axis at synthesis. Cleanness stays on local code shape.
+- **Cleanness owns no structural-abstraction findings.** A genuinely missing abstraction (a shared layer that should exist but doesn't) is module-level structure, outside scrutinize's scope. Cleanness stays on the local shape of the changed lines; its reuse hunt may grep the whole repo to cite an existing helper or a duplicate, but the finding stays "use/deduplicate what exists", never "design a new abstraction".
 - **A zero-tests diff forces a coverage finding.** When production code changed and no test changed, `review-tests` must name the highest-risk uncovered function as a test-coverage gap rather than emit `NO FINDINGS`.
 - **Every test the diff touches gets the mutation check.** `review-tests` owns tautologies and change detectors and must report each one it finds, at a HIGH floor. No other axis reports them; `cleanness` would read the same test as local code shape and collide.
 - **Every comment the diff touches gets the WHY check.** `review-cleanness` owns comment hygiene and must report it, grouped one finding per file, at a MEDIUM floor. No other axis reports it.

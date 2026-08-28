@@ -1,12 +1,12 @@
 ---
 name: scrutinize
-description: "Use to review local code changes against Brian's house rules — correctness, reliability, security, tests, architecture, spec, and code-cleanness."
+description: "Use to review local code changes against Brian's house rules — code-cleanness (comments, reuse), security, and tests."
 ---
 
 # Scrutinize
 
 ## What it does
-Reviews a local diff by axis (correctness, cleanness, security, tests, architecture, spec) with parallel reviewer subagents instead of one generalist pass, then synthesizes their findings under Brian's house rules into a severity-ordered list in chat. The diff is also snapshotted under a per-repo directory in `/tmp` (outside the repo) for replay.
+Reviews a local diff by axis (cleanness, security, tests) with parallel reviewer subagents instead of one generalist pass, then synthesizes their findings under Brian's house rules into a severity-ordered list in chat. The diff is also snapshotted under a per-repo directory in `/tmp` (outside the repo) for replay.
 
 ## Args
 - *(no args)* — working-tree mode: stages + unstaged + untracked files.
@@ -14,8 +14,7 @@ Reviews a local diff by axis (correctness, cleanness, security, tests, architect
 - `--commit <sha>` — review a single commit.
 - `--base <ref>` — diff `<ref>..HEAD`.
 - `--axes=all` — force every axis (override smart-dispatch).
-- `--axes=<csv>` — force a specific axis set (always-on axes still run).
-- `--spec <path>` — explicit spec/PRD file for the spec axis to check the diff against.
+- `--axes=<csv>` — force a specific axis set (the always-on cleanness axis still runs).
 - `--input <sha-ts>` — replay against a prior cached snapshot (see Output for the path).
 
 ## Output
@@ -33,16 +32,13 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 
 | axis | `subagent_type` (Agent tool) | agent file | always-on? | trigger (one-line) | default model |
 |---|---|---|---|---|---|
-| `correctness-reliability` | `brian:review-correctness-reliability` | `review-correctness-reliability.md` | yes | — | sonnet |
-| `cleanness` | `brian:review-cleanness` | `review-cleanness.md` | yes (downgradable on tiny diffs) | — | sonnet |
+| `cleanness` | `brian:review-cleanness` | `review-cleanness.md` | yes (never dropped) | — | sonnet |
 | `security` | `brian:review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
 | `tests` | `brian:review-tests` | `review-tests.md` | no | production-code OR test file in diff | sonnet |
-| `architecture` | `brian:architectural-reviewer` | `architectural-reviewer.md` (REUSED) | no | new file / public-export change / module-boundary path | sonnet |
-| `spec` | `brian:review-spec` | `review-spec.md` | no | spec source resolvable (Jira key in branch/commit messages, `--spec <path>`, or PRD file under `docs/`\|`specs/`\|`.scratch/`) | sonnet |
 
 Steps C, D, E, F all reference this table. This table is the only place axes are enumerated in this file — everywhere else refers back to it.
 
-**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column (note the `brian:` plugin prefix — the harness registers plugin agents under it) — never substitute `brian:architectural-reviewer` (or any other value) as a default. If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
+**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column (note the `brian:` plugin prefix — the harness registers plugin agents under it). If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
 
 ---
 
@@ -53,7 +49,6 @@ Extract from the user's `/scrutinize` invocation:
 - `mode ∈ {working-tree, branch, commit, base}` — driven by which flag is present (default: `working-tree`).
 - `axes_override ∈ {all, <comma-list>, default}` — from `--axes=...`.
 - `replay_input ∈ {<sha-ts> | none}` — from `--input <sha-ts>`.
-- `spec_source ∈ {<path> | none}` — from `--spec <path>` (explicit spec file to check the diff against).
 
 Reject incompatible combinations (e.g. `--branch` and `--commit` together) with a one-line error and exit non-zero.
 
@@ -119,34 +114,17 @@ Retention prune (B.4, run at end of Step F) and replay mode (B.5, taken only whe
 
 ## Step C. Smart-dispatch
 
-Produces the triple `(dispatched_axes[], skipped[{axis, reason}], tier)`.
+Produces the pair `(dispatched_axes[], skipped[{axis, reason}])`.
 
 ### C.1 Always-on
 
-`correctness-reliability` and `cleanness` are always dispatched unless overridden by `--axes=<csv>` (in which case the explicit list wins, augmented by anything matching mandatory triggers below).
+`cleanness` is always dispatched — on every diff size, with no downgrade — unless `--axes=<csv>` explicitly excludes it (in which case the explicit list wins, augmented by anything matching mandatory triggers below). Every run therefore has at least one reviewer.
 
-### C.2 Tiny-diff tier
-
-Compute:
-```
-total_lines = $(printf '%s\n' "$diff_text" | grep -cE '^[+-][^+-]')
-total_files = $(printf '%s\n' "$diff_files" | wc -l)
-tiny_diff_flag = (total_lines < 10 AND total_files < 2)
-```
-
-If `tiny_diff_flag`:
-- Drop `cleanness` from always-on (record reason `tiny diff: <N> lines across <M> files`).
-- Set `tier = narrow`.
-
-If not tiny: `tier = full`.
-
-Every axis runs on the Axis Registry's default-model column (`sonnet`); the tier controls axis breadth, not model choice.
-
-### C.3 Security trigger
+### C.2 Security trigger
 
 Dispatch `security` when a changed-file path, an added code line, or a mandatory new-file under a security/module-boundary directory matches the trigger catalog. When evaluating the security trigger, read `references/security-triggers.md` for the full path regex, code-pattern regexes, and the Mandatory-Security rule, and record the trigger reason (path / code-pattern / mandatory-new-file) in `axes_dispatched[]` metadata.
 
-### C.4 Tests trigger
+### C.3 Tests trigger
 
 Dispatch `tests` if at least one production-code file **or** at least one test file is in the diff. Test-only diffs dispatch too: a diff that touches nothing but tests is exactly where a tautological or change-detector test enters the codebase with no production change to draw a reviewer's eye. A file is production-code if its path does NOT match any of:
 ```
@@ -158,28 +136,13 @@ _spec\.rb$
 
 Compute `zero_tests_flag = (production_files >= 1 AND test_files == 0)`. Pass into the tests agent's user-turn prompt as `## Zero Tests Flag: true|false`.
 
-### C.5 Architecture trigger
-
-Dispatch `architecture` when a new file, a `{index, main, mod, __init__, lib, app}` basename, a public-export line change, or a module-boundary path is present. When evaluating the architecture trigger, read `references/architecture-triggers.md` for the full new-file / basename / public-export regex / module-boundary-path catalog.
-
-### C.6 Override semantics
+### C.4 Override semantics
 
 - `--axes=all`: dispatch every axis in the registry regardless of triggers. `skipped[]` is empty.
-- `--axes=<csv>`: dispatch the listed axes. Always-on axes still run unless `--axes=<csv>` explicitly excludes them (the comma-list is authoritative). Mandatory-Security still forces security on when its rule fires.
+- `--axes=<csv>`: dispatch the listed axes. The always-on `cleanness` axis still runs unless `--axes=<csv>` explicitly excludes it (the comma-list is authoritative). Mandatory-Security still forces security on when its rule fires.
 - Default (no flag): always-on + triggered axes; everything else is recorded in `skipped[]` with a one-sentence `reason` string explaining the gap ("no production-code files changed; pass `--axes=tests` to force").
 
 The dispatch decision flows through to the chat-print step (Step F), which renders `axes_dispatched`, `axes_skipped`, and `axes_abstained` in the header line.
-
-### C.7 Spec trigger + resolution
-
-The `spec` axis verifies the diff builds what its originating ticket / PRD asked for — every other axis checks quality or house-rules; none checks whether the diff is the *right* change. Resolve the spec source in this priority order and capture `spec_text` and `spec_source_label` (what the text came from). Stop at the first branch that resolves:
-
-1. **`--spec <path>` present** → `Read` it. `spec_source_label = "--spec <path>"`.
-2. **Jira key in history** — search the branch name and `git log <base>..<head>` commit messages for the regex `\b[A-Z][A-Z0-9]+-\d+\b` (e.g. `GPT-1234`). On a match, fetch the issue best-effort via the Atlassian MCP (`getJiraIssue`); use the summary + description as `spec_text`, `spec_source_label = "Jira <KEY>"`. If the MCP is unavailable or the fetch fails, degrade to the next branch (do not hard-fail).
-3. **PRD/spec file on disk** — a file under `docs/`, `specs/`, or `.scratch/` whose name matches the branch/feature name → `Read` it. `spec_source_label = "<path>"`.
-4. **None resolved** → record `skipped[] = {axis: spec, reason: "no spec source resolved; pass --spec <path>"}` and do NOT dispatch the spec axis.
-
-The spec axis is dispatched only when one of branches 1–3 yields `spec_text`. Under `--axes=all` it is still subject to resolution: if no source resolves, it lands in `skipped[]` with the same reason rather than dispatching empty.
 
 ---
 
@@ -252,37 +215,14 @@ After the common blocks above, append per-axis hint blocks. Each is conditional 
 - **If `axis_name == tests`** — append:
   ```
   ## Zero Tests Flag
-  {{zero_tests_flag}}    # literal "true" or "false" from Step C.4
+  {{zero_tests_flag}}    # literal "true" or "false" from Step C.3
   ```
-
-- **If `axis_name == architecture`** (i.e. dispatching the reused `architectural-reviewer` agent) — also append the legacy-vocabulary block aliases that the reused agent's Input Contract requires:
-  ```
-  ## Context
-  {{diff_text}}
-
-  ## Affected Files
-  {{diff_files}}
-
-  ## Project Domain Knowledge
-  {{project_rules}}
-  ```
-  These duplicate the same payload under the block names architectural-reviewer.md expects. Without them the agent refuses per its Input Contract. The duplication is a deliberate adapter — do not delete it.
 
 - **If `axis_name == security`** — append:
   ```
   ## Security Trigger
   {{trigger_reason}}    # one of: "path", "code-pattern", "mandatory-new-file"
   ```
-
-- **If `axis_name == spec`** — append the resolved spec text and its provenance (from Step C.7):
-  ```
-  ## Spec
-  {{spec_text}}
-
-  ## Spec Source
-  {{spec_source_label}}    # one of: "--spec <path>", "Jira <KEY>", "<PRD path>"
-  ```
-  The `review-spec` agent refuses if `## Spec` is missing, so this block is mandatory whenever the spec axis is dispatched.
 
 **Project Rules** is the concatenation (capped at 1500 words; trim lowest-priority whole blocks if over):
 - `<repo_root>/CLAUDE.md`
@@ -311,13 +251,12 @@ When all dispatched agents have returned:
 
 1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 6+4).
 
-   Three floors override that default. Recognize each from the reviewer's own words rather than a sentinel token — every reviewer that carries a floor is told to claim it in prose. Never demote a floored finding below its level, however terse the prose:
+   Two floors override that default. Recognize each from the reviewer's own words rather than a sentinel token — every reviewer that carries a floor is told to claim it in prose. Never demote a floored finding below its level, however terse the prose:
 
    | Floor | Fires on | Why it cannot be demoted |
    |---|---|---|
    | HIGH | a `review-tests` finding whose prose identifies it as the zero-tests obligation, a tautology, or a change detector | a test that can only pass is not a weak test but a false negative wearing a green check; at LOW, the grouping gate (rule 4) would drop the one finding explaining why the suite is lying |
    | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene | a house-rule prohibition, not a style preference; the gate would otherwise drop it wherever fewer than three land in one directory |
-   | MEDIUM | a `review-spec` finding whose defect class names a missing or partial requirement (a `spec gap` / `spec deviation`) | a single unmet requirement would otherwise be dropped silently by the same gate |
 
    The floors are the only severity override; dedupe and the rest of the logic below are unchanged. Comment-hygiene findings arrive already grouped one-per-file from `review-cleanness`, so its floor promotes whole files rather than individual lines and cannot flood the report.
 
@@ -330,7 +269,7 @@ When all dispatched agents have returned:
 6. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
 7. **Abstinence tracking**: read each agent's return for meaning — if it states it could not assess the axis from the available context, record `{axis: <axis>, reason: <what was missing, in the agent's own words>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
 
-The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, tier, counts), is held in orchestrator memory as a single `data` dict and handed directly to the chat-print step (Step F).
+The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, counts), is held in orchestrator memory as a single `data` dict and handed directly to the chat-print step (Step F).
 
 ---
 
@@ -343,7 +282,7 @@ Print the findings directly to chat using the in-memory `data` dict from Step E.
 Print one header block summarizing the run:
 
 ```
-scrutinize | tier: <tier> | <repo_root> @ <short_sha> (<iso_ts>)
+scrutinize | <repo_root> @ <short_sha> (<iso_ts>)
 dispatched: <axes_dispatched joined by ", ">
 skipped:    <axis>: <reason>; ...   (omit line if empty)
 abstained:  <axis>: <reason>; ...   (omit line if empty)
