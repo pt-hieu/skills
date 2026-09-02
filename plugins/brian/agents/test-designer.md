@@ -14,11 +14,7 @@ Methodology (Kent Beck, "Programmer Test Principles"): list candidate behaviors 
 
 ## Input Contract
 
-The orchestrator passes you two arguments:
-1. The absolute path of the plan file.
-2. A `path:` discriminator with value `bug` or `feature`.
-
-If either is missing, refuse and ask for them. The orchestrator is the **single source of truth** for the path classification — do not re-derive it from the plan's prose.
+The orchestrator passes you the absolute path of the plan file and tells you, in prose, how the requirement arrived — as a bug or regression that came through `brian:diagnose`, or as new feature work. If the plan path is missing, refuse and ask for it. If the caller says nothing about how the work arrived, ask for that rather than re-deriving it from the plan's prose: the orchestrator ran the pipeline and is the single source of truth for that classification.
 
 `Read` the whole plan file end-to-end before drafting. You need Recommended approach (the direction and the boundaries it holds), Surface area (which components the change lands in), Reused utilities (existing patterns the change builds on), and Verification (so your section dovetails into it without overlap).
 
