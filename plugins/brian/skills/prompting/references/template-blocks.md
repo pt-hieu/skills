@@ -14,22 +14,22 @@ Your analysis methodology:
 3. [Step 3 — how you resolve conflicts]
 4. [Step 4 — how you form final judgment]
 
-CONSTRAINTS:
-- All numerical calculations are pre-computed and provided below. Do NOT perform arithmetic.
-- Use ONLY the provided data. Do not reference external knowledge about current state.
+Constraints:
+- All numerical calculations are pre-computed and provided below; do not perform arithmetic, because a figure you compute cannot be traced to a source.
+- Use only the provided data; do not reference external knowledge about current state.
 - Flag any data that appears inconsistent or anomalous.
 ```
 
 ### 2. Conflict Detection Protocol
 
 ```
-## CONFLICT DETECTION (MANDATORY)
+## CONFLICT DETECTION
 Before writing any recommendation:
 1. LIST all signals per item across inputs (e.g., quantitative vs qualitative vs contextual)
 2. For each conflict: state it explicitly — "Conflict: metric A suggests X but metric B suggests Y"
 3. Resolution priority: [define your hierarchy, e.g., hard data > soft signals > context]
 4. If unresolvable: downgrade conviction and note "conflicting signals"
-FORBIDDEN: "on balance" or "taking everything into account" without listing conflicts first
+A summary like "on balance" or "taking everything into account" comes after the conflicts are listed, not instead of them
 ```
 
 ### 3. Confidence Calibration Guide
@@ -43,8 +43,8 @@ Append confidence tag in the analysis field:
 - [MEDIUM]: Most align, one minor conflict noted explicitly
 - [LOW]:    Only 2 indicators align — downgrade recommendation automatically
 
-If you cannot cite 3+ data points from the provided context supporting a recommendation,
-it must be downgraded one level.
+If a recommendation rests on fewer data points from the provided context than the tag above requires,
+downgrade it one level.
 ```
 
 ### 4. Pro/Con Balance Requirement
@@ -54,7 +54,7 @@ it must be downgraded one level.
 For every recommendation, the KEY RISK / counter-argument field must be the strongest opposing case:
 - POSITIVE recommendation → KEY RISK argues for caution (what could invalidate this)
 - NEGATIVE/DEFENSIVE stance → KEY RISK names what opportunity you'd miss
-Never present KEY RISK as a minor footnote. It must genuinely challenge the thesis.
+KEY RISK must genuinely challenge the thesis, at its real weight.
 This counterbalances systematic confirmation bias documented in LLM outputs.
 ```
 
@@ -66,7 +66,7 @@ If the data needed to support a claim is missing, stale, zero-valued, or unverif
   say so plainly — name what is missing and what evidence would resolve it.
   Reserve the exact tag "INSUFFICIENT DATA — [what's missing, what would be needed]"
   for a pipeline where a downstream consumer branches on that literal string.
-Do NOT infer, extrapolate, or generate plausible-sounding analysis from memory.
+Do not infer, extrapolate, or generate plausible-sounding analysis from memory.
 A blank / skipped analysis is better than a fabricated one.
 Applies to: comparisons, calculations, pattern identifications, any factual claim.
 ```
@@ -79,7 +79,7 @@ For every numerical claim, cite which tool or pre-computed field provided the va
 - Format: "score 42 [tool_get_metrics]" or "ratio 3.2 [pre_computed.analysis]"
 - For derived values: show the formula — "ratio = (114-107)/(107-101) = 1.17"
 - Mark any inferred/estimated values with [ESTIMATED]
-If you cannot attribute a number to a data source, do NOT include it.
+If you cannot attribute a number to a data source, do not include it.
 ```
 
 ### 7. Chain-of-Verification (CoVe)
@@ -90,7 +90,7 @@ After generating your analysis:
 1. Re-read each factual claim
 2. For each claim: can you trace it to a specific provided data field?
 3. Remove or flag any claim that failed verification with [UNVERIFIED]
-4. If >30% of claims are UNVERIFIED: state that this item cannot be supported, and why
+4. If most claims are UNVERIFIED: state that this item cannot be supported, and why
 ```
 
 ### 8. Structured Output Schema (Pydantic) — for machine-to-machine handoffs only
@@ -105,7 +105,7 @@ class AnalysisOutput(BaseModel):
     subject: str
     action: Literal["RECOMMEND", "WATCH", "WAIT", "AVOID"]  # Constrained enum
     confidence: Literal["HIGH", "MEDIUM", "LOW"]
-    thesis: str = Field(description="2-3 sentences, qualitative only")
+    thesis: str = Field(description="Short qualitative thesis, no numbers")
     pro_case: str = Field(description="Strongest argument for the action")
     con_case: str = Field(description="Strongest counter-argument")
     data_sources_cited: list[str] = Field(description="Tool names or field paths used")
@@ -154,9 +154,6 @@ Bad because: [what's wrong — vague, invented numbers, no conflict handling]
 
 ```
 ## OBJECTIVITY RULE
-If data shows no clear signal: output WAIT or AVOID — never stretch marginal evidence.
-An output with 0 recommendations is better than forced recommendations.
-Confirmation bias: LLMs trained on persuasive text tend to overweight supporting evidence.
-Counter it by actively seeking the opposing case before concluding.
-SKIP / NO RECOMMENDATION is always a valid output.
+If the data shows no clear signal, output WAIT or AVOID rather than stretching marginal evidence; no recommendation is a valid output.
+Seek the opposing case before concluding, so the conclusion rests on more than the supporting evidence.
 ```

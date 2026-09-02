@@ -21,13 +21,13 @@ Research synthesis from papers and industry sources on effective LLM prompting f
 
 ### IMPORTANT — degrades quality without
 - **Specific role** — expert role with domain + methodology, not generic "you are helpful"
-- **Few-shot examples** — 2-4 `<good_example>` / `<bad_example>` blocks with `<reasoning>`
+- **Examples** — a few varied examples, labeled illustrative, only where the output shape is genuinely format-sensitive; the model matches their length and structure, so an example of judgment it already owns narrows the output for no gain
 - **Confidence calibration** — per-dimension confidence, not single vague score
 - **Pro/con balance** — always require counter-argument to prevent confirmation bias
 
 ### NICE-TO-HAVE — improves polish
 - **Data citation** — each claim cites which tool/field it came from
-- **Output constraints** — length limits + structured format = fewer speculative statements
+- **Output framing** — say who reads the output and what they do with it; that bounds length better than a word cap, which starves the hard cases
 
 ---
 
@@ -52,7 +52,7 @@ Flow: Raw Data → Code (compute metrics, scores, deltas) → Structured Context
 
 **Reserve structured output (Literal/Enum schemas) for true machine-to-machine handoffs** — where a *non-LLM* consumer parses the value and branches on it. An enum tag read only by another LLM (or a human) buys rigidity without buying determinism, and invites the failure mode below.
 
-**The failure mode prose avoids:** when you force an LLM's output into a rigid schema that another LLM or a human consumes, the two sides drift — a consumer ends up parsing a field the producer renamed or stopped emitting, and the producer hallucinates fields to satisfy a contract no one reads. (Documented in this codebase: a stale `finding_id` contract left agents "verifying by a never-injected field," commit `6652d78`.) Prose has no such contract to drift.
+**The failure mode prose avoids:** when you force an LLM's output into a rigid schema that another LLM or a human consumes, the two sides drift — a consumer ends up parsing a field the producer renamed or stopped emitting, and the producer hallucinates fields to satisfy a contract no one reads. Prose has no such contract to drift.
 
 **This is orthogonal to the deterministic split** above: code still computes every number; the LLM still interprets. Prose-first governs only *how the LLM's qualitative output is shaped* — as prose, not as a schema — when the reader is an LLM or a human.
 
@@ -81,12 +81,12 @@ Use this table when designing output. **The consumer type is the deciding column
 Apply this chain for any agent producing actionable outputs:
 
 1. **DATA FRESHNESS** — check timestamps match expected recency; reject stale data
-2. **COMPLETENESS** — fewer than 3 sources → downgrade confidence automatically
+2. **COMPLETENESS** — thin sourcing lowers confidence; say how many sources a claim rests on
 3. **RED FLAGS** — missing fields, zero values, unchanged data over expected change periods → flag explicitly
 4. **VERIFICATION (CoVe)** — re-read each claim, trace to a specific provided field
-5. **ABSTINENCE** — if >30% claims unverifiable → say the item cannot be supported and name what is missing
+5. **ABSTINENCE** — when most claims are unverifiable, say the item cannot be supported and name what is missing
 
-This chain should appear as mandatory steps in system prompts for any decision-making agent.
+Include the parts of this chain that the agent's data can actually fail on, each stated as a requirement with its reason rather than as a numbered ritual.
 
 ---
 
@@ -135,5 +135,5 @@ Apply the right personality to match agent responsibility:
 |-------------|---------|-------------|
 | Thorough Investigator | Analysis, synthesis, evaluation agents | Cross-reference multiple angles, show work, cite specifics |
 | Skeptical Auditor | Validation, review, quality-check agents | Assume errors exist, check every number |
-| Decisive Minimalist | Alert, triage, classification agents | 2-3 sentences max, no hedging |
+| Decisive Minimalist | Alert, triage, classification agents | A short answer, no hedging |
 | Precise Clerk | Extraction, cataloging, registration agents | Extract facts only, never infer |
