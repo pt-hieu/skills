@@ -136,7 +136,7 @@ Do not re-embed agent-definition content in the prompt.
 
 ### Await protocol
 
-After emitting the calls, the loop driver MUST NOT proceed to Step 3 until every launched agent has returned. Use the harness's task-completion notifications (no polling). Emit at most one status line in the wait window.
+After emitting the calls, wait until every launched agent has returned before starting Step 3. Use the harness's task-completion notifications; polling adds nothing.
 
 On agent error or timeout: retry once with the same prompt. Failure handling splits by agent class:
 
@@ -176,11 +176,7 @@ Count `INSUFFICIENT CONTEXT` dimensions across all panel agents.
 2. Merge overlapping concerns by anchor similarity: same `file` AND the same underlying `defect_class`. `defect_class` is a plain-words phrase, so judge sameness by *meaning* — two findings on the same file are the same finding only when they describe the same underlying defect class. A structural issue and a missing test on the same file are distinct defect classes; do NOT merge them (this preserves the non-collapse guarantee). When merging genuine duplicates, note both source agents.
 3. Prioritize by severity × confidence, both judged from the prose: high-severity blockers first, then medium.
 4. **Detect cross-agent conflicts** — if architectural-reviewer says "good abstraction" but root-cause-reviewer says "over-abstraction hides the root cause", carry the conflict forward as its own tension in Step 4 with both sides cited. The orchestrator does NOT pick a side.
-5. **False Consensus Check** — if every panel agent closed positive (all positive-column keywords) AND none raised any concern they described as medium-or-higher severity:
-   - Note: "The whole panel agrees this is clean. Applying extra scrutiny."
-   - Re-examine the 3 highest-risk areas of the diff/plan for anything the panel may have normalized or overlooked.
-   - If something is found, add it as a new finding with tag `[CONSENSUS-BLIND-SPOT]`.
-   - Otherwise note: "False consensus check completed — agreement appears genuine."
+5. **False Consensus Check** — if every panel agent closed positive (all positive-column keywords) AND none raised any concern they described as medium-or-higher severity, a unanimous panel is itself a signal to check: re-examine the highest-risk areas of the diff/plan yourself for anything the panel may have normalized or overlooked. Add anything you find as a new finding tagged `[CONSENSUS-BLIND-SPOT]`; otherwise record in the synthesis that the check ran and the agreement held.
 
 The merged finding list is held verbally through Step 4; that's all that's needed.
 
@@ -209,7 +205,7 @@ Render one status line, then one block per tension — this shape is canonical a
 Also raised (no decision needed unless you want one):
 - {low-confidence finding, one line} — {source}
 
-Strengths: {max 2 lines, omit if none}
+Strengths: {brief, omit if none}
 ```
 
 Hard rules:
@@ -217,14 +213,14 @@ Hard rules:
 - Each block gets at least two genuine options. "Leave it as proposed and accept the risk" is a legitimate option — name its cost when you offer it.
 - A recommendation is mandatory on every block. Options without a pick push the work back onto the user, which is the opposite of what this step is for.
 - Recommend against the target when the evidence says so. The recommendation is your judgment, not a summary of what the plan already says.
-- Keep each of the three lines to one or two sentences. Depth lives in the run file, not the chat turn.
+- Keep each of the three lines short enough to read as a decision. Depth lives in the run file, not the chat turn.
 - On a cross-agent conflict the options are the two reviewers' positions; the recommendation picks one and cites the evidence that decides it.
-- Never move a finding into `Also raised` to shorten the list. That line is for low-confidence findings with no concrete risk attached, and nothing else. If the turn runs long, cut strengths and `Also raised` — the decisions are the payload.
+- Never move a finding into `Also raised` to shorten the list. That line is for low-confidence findings with no concrete risk attached, and nothing else. The decisions are the payload; strengths and `Also raised` follow them.
 - The `facts` mark renders in plan mode only, the `critic` mark when a bespoke critic launched; both map straight off Step 3's keyword table. Source attribution and any violated skill name go in the 🛑 line, never a separate section or prefix.
 - `[CONSENSUS-BLIND-SPOT]` findings render as ordinary blocks — keep the tag in the title so the user sees where it came from.
 - Omit an empty section's header entirely; never write `N/A`.
 
-If the panel surfaced nothing worth a decision, say so in one line, note the strengths in two at most, and go straight to Step 5.
+If the panel surfaced nothing worth a decision, say so, note the strengths briefly, and go straight to Step 5.
 
 Append the rendered tension list verbatim to the run file as `## Tensions`, then close the turn and wait. Do not start applying anything until the user answers.
 

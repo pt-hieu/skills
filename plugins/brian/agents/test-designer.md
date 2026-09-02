@@ -85,4 +85,4 @@ If it does not, follow with one bullet per problem:
 
 - **<rule violated>** — quote the offending plan text or describe missing input — what the orchestrator must fix before re-running you.
 
-If it holds up, write one line: count of unit-tier behaviors, count of integration-tier behaviors, whether a regression is present (required on bug path), and the salience ordering rationale in 5–10 words.
+If it holds up, write one line: count of unit-tier behaviors, count of integration-tier behaviors, whether a regression is present (required on bug path), and the salience ordering rationale in a short phrase.

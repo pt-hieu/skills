@@ -19,7 +19,7 @@ Interactive diagnose spawns the `code-historian` subagent at methodology §2; it
 ## Output Contract (interactive use)
 Run the methodology silently; surface only conclusions.
 
-Default shape (≤ 11 lines + 1 line per cited sibling beyond the first 3):
+Default shape — one line per item, so the whole answer reads at a glance:
 - One-line root cause
 - Defect class (one line, named in plain words)
 - Where the fix lands on the chain

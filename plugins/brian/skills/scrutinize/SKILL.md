@@ -38,7 +38,7 @@ The orchestrator owns the I/O contract. Reviewer agents narrate the contract in 
 
 Steps C, D, E, F all reference this table. This table is the only place axes are enumerated in this file — everywhere else refers back to it.
 
-**Dispatch invariant**: when emitting an `Agent` tool call for an axis, the `subagent_type` argument comes from the second column above and ONLY from that column (note the `brian:` plugin prefix — the harness registers plugin agents under it). If the orchestrator finds itself emitting two Agent calls with the same `subagent_type`, that is a bug: re-read this table.
+**Dispatch invariant**: the `subagent_type` argument of each axis's `Agent` call is the second column above, `brian:` prefix included — the harness registers plugin agents under that prefix. Each axis has its own agent type, so no two calls in one dispatch share a `subagent_type`.
 
 ---
 
@@ -150,7 +150,7 @@ The dispatch decision flows through to the chat-print step (Step F), which rende
 
 ### Step D.0 — Pre-launch Read
 
-Before the parallel dispatch, the orchestrator Reads the shared house-rules file. **This Read is critical**; it is the single-source-of-truth substrate that gets injected into every reviewer.
+Before the parallel dispatch, the orchestrator Reads the shared house-rules file; its text is injected into every reviewer so all of them and the synthesis step work from the same wording.
 
 ```
 house_rules_txt   = Read("${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/reviewer-house-rules.md")
@@ -158,7 +158,7 @@ house_rules_txt   = Read("${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/rev
 
 `${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory (the harness substitutes it); the path must resolve from any repo the skill runs in, so it is always plugin-root-relative, never repo-relative.
 
-The orchestrator NEVER restates the house rules literally — only via this Read-and-inject substitution.
+Inject the file's text as read; do not paraphrase it — a paraphrase gives the reviewers and Step E two different rule sets.
 
 ### Step D.1 — Per-axis prompt assembly
 
@@ -236,12 +236,12 @@ If none exist, write the line: `No project rules found; review against general p
 
 Emit ALL dispatched-axis Agent calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call:
 
-- `subagent_type`: the **second column of the Axis Registry** for this axis — and only that column. Every dispatched axis MUST use a distinct `subagent_type`; if you are about to emit two Agent calls with the same value, stop and re-read the registry.
+- `subagent_type`: the second column of the Axis Registry for this axis (see the dispatch invariant there).
 - `model`: the Axis Registry's default-model column (`sonnet` for every axis).
 - `run_in_background: true`.
 - `prompt`: the assembled user-turn from D.1.
 
-After dispatch, wait for harness notifications — do NOT poll. Emit at most one status line during the wait.
+After dispatch, wait for the harness's task-completion notifications; polling adds nothing.
 
 ---
 
@@ -249,7 +249,7 @@ After dispatch, wait for harness notifications — do NOT poll. Emit at most one
 
 When all dispatched agents have returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 6+4).
+1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+4).
 
    Two floors override that default. Recognize each from the reviewer's own words rather than a sentinel token — every reviewer that carries a floor is told to claim it in prose. Never demote a floored finding below its level, however terse the prose:
 

@@ -41,6 +41,6 @@ A tension the user directed you to drop produces no comment — it appears in `#
 - {tension title}: left as proposed — {the reason the user gave}
 ```
 
-One line per tension, hard cap. Multi-line detail stays in the run file's `## Directions Applied`.
+One line per tension; detail stays in the run file's `## Directions Applied`.
 
 If any tension was left open on purpose and carries real risk, add one line under the list naming the risk that now ships. State it plainly; do not re-argue the decision.

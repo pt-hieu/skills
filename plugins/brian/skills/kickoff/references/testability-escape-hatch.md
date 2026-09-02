@@ -4,11 +4,11 @@ Disclosed reference for kickoff Task 9 (Design tests). Read this only when `test
 
 ## Why Test design runs after Challenge
 
-Task 9 runs AFTER Challenge so Challenge's in-place revisions cannot orphan the Test design section (the failure mode plan-verifier exists to catch, commit `cee4f52`). The accepted cost is that Challenge's opus-level reviewers cannot critique the test commitments. The single authorized mitigation is the backward edge below.
+Task 9 runs AFTER Challenge so Challenge's in-place revisions cannot orphan the Test design section (the failure mode plan-verifier exists to catch). The accepted cost is that Challenge's opus-level reviewers cannot critique the test commitments. The single authorized mitigation is the backward edge below.
 
 ## The backward edge (testability failures only)
 
-If `test-designer`'s reply signals that the chosen approach itself is untestable — it says every test had to be deferred under its conflict-and-abstinence rules, or that it cannot write a regression test that pins the diagnosed root cause — the orchestrator MUST reopen Task 6 (Plan-agent) with the testability concern as input.
+If `test-designer`'s reply signals that the chosen approach itself is untestable — it says every test had to be deferred under its conflict-and-abstinence rules, or that it cannot write a regression test that pins the diagnosed root cause — reopen Task 6 (Plan-agent) with the testability concern as input.
 
 Reopening Task 6 **cascades through Tasks 7 (Write the plan file) and 8 (Challenge)** so the on-disk plan file reflects the revised approach before Task 9 re-runs; the doubled Challenge cost is part of the accepted trade-off for testability failures.
 

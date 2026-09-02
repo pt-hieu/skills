@@ -87,7 +87,7 @@ Record `resolved = {scope_type, concrete_target, anchors[]}`. `anchors[]` collec
 
 Emit ALL four source `Agent` calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call uses `subagent_type`, `model`, and tool list from the Source Registry, and `run_in_background: true`.
 
-**Wait discipline (critical — this is the line that makes backgrounding stick).** After dispatch: wait for harness notifications (they arrive on completion, so polling adds nothing) and emit at most one status line during the wait. Every source's data comes exclusively from its dispatched gatherer — the orchestrator holds the same MCP tools, and gathering inline is the lazy path that silently collapses the parallel-isolation guarantee. A source with no dispatched subagent is **skipped, not absorbed**.
+**Wait discipline.** After dispatch, wait for harness notifications; they arrive on completion, so polling adds nothing. Every source's data comes exclusively from its dispatched gatherer. The orchestrator holds the same MCP tools, but gathering inline collapses the parallel-isolation guarantee that keeps each source's findings independently cited. A source with no dispatched subagent is **skipped, not absorbed**.
 
 ### Shared per-source prompt skeleton
 

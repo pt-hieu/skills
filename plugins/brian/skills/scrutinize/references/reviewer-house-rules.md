@@ -1,6 +1,6 @@
 # Reviewer house rules (injected verbatim by the orchestrator as `## House Rules`)
 
-These rules govern every reviewer agent invoked by `brian:scrutinize`. They are the structural noise-suppression and hallucination-filter contract. Treat them as binding — the orchestrator enforces them at synthesis time too, so violations are detected.
+These rules govern every reviewer agent invoked by `brian:scrutinize`. They keep noise and ungrounded claims out of the report; the orchestrator applies the same rules at synthesis, so a finding that breaks one is downgraded or dropped there instead of reaching the user.
 
 ## 1. Citation required
 Every finding cites `file:line` with a quoted code snippet read from disk (NOT from the diff text). If the snippet does not literally appear at the cited line on disk, the orchestrator treats the finding as low-confidence at synthesis (citation enforcement). Missing snippet → low-confidence.

@@ -46,7 +46,7 @@ Then a short prose body: the plan's claim (quoted), what is actually true, the e
 
 After the findings, render the claims register — one line per inventoried claim, terse, stating the verdict naturally in the sentence alongside the claim and the evidence, e.g. "Verified — the helper is used in 3 call sites, per grep." or "Stale — the config key was renamed; see `settings.ts:12`.":
 
-- one bullet per claim, ≤ 25 words, claim + verdict + evidence in a single sentence
+- one bullet per claim: claim, verdict, and evidence in a single sentence
 
 ## Verdict
 

@@ -42,7 +42,7 @@ Each section below is the full spec for one task — the target of its Step-0 po
 
 - subject: `Design the implementation — opus general-purpose agent, cross-file consistency required`
   > **Goal**: produce a detailed implementation design from a focused designer, with explicit cross-file consistency.
-  > **Action**: launch **ONE `general-purpose` agent** via the `Agent` tool with `model: "opus"`, high thinking effort. A general-purpose agent has no built-in cross-file synthesis discipline, so the prompt MUST explicitly require: *"Enumerate every file that changes and state, per file, how it stays consistent with the others. Do not return a design until cross-file consistency is explicit."* Hand it:
+  > **Action**: launch **ONE `general-purpose` agent** via the `Agent` tool with `model: "opus"`, high thinking effort. Ask it, in prose, to enumerate every file that changes and to state, per file, how it stays consistent with the others — no human reviews this design before code, so the cross-file check has to live in the design itself. Hand it:
   > - T1 findings (file paths, traces, reusable utilities; on the bug path include `brian:diagnose` root cause + defect class + suggested fix shape) and the prior-intent note
   > - The T2 assumptions register
   > - The requirement and its constraints
