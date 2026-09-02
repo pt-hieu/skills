@@ -265,9 +265,8 @@ When all dispatched agents have returned:
 4. **Severity gate**:
    - `HIGH` and `MEDIUM` findings pass through verbatim.
    - `LOW` findings are grouped by `(axis, file_dir)`. If a group has ≥3, render as one collapsed "LOW theme" card. Else drop. Track `counts.low_dropped`.
-5. **Anti-summary-collapse**: if an agent's tool-trace shows ≥3 distinct file Reads but emits exactly 1 Finding Anchor, prepend a META finding to the list with `axis=meta`, `severity=MEDIUM`, `defect_class=implicit assumption (under-reporting)`, summary `"<agent> may have under-reported: scanned N files, emitted 1 finding. Re-read manually."`.
-6. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
-7. **Abstinence tracking**: read each agent's return for meaning — if it states it could not assess the axis from the available context, record `{axis: <axis>, reason: <what was missing, in the agent's own words>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
+5. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
+6. **Abstinence tracking**: read each agent's return for meaning — if it states it could not assess the axis from the available context, record `{axis: <axis>, reason: <what was missing, in the agent's own words>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
 
 The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, counts), is held in orchestrator memory as a single `data` dict and handed directly to the chat-print step (Step F).
 
