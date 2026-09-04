@@ -47,6 +47,7 @@ Distilled from Matt Pocock's [writing-great-skills](https://github.com/mattpococ
 - **Defining constraint** — the one plain declarative sentence opening a skill, stating what it does differently from the model's default; written as prose, never under a `The constraint:` label.
 - **It's working if** — a short checkable list of observable signals that a skill fired (a leading word recurring in the trace, an artifact written, a gate refused); confirms the skill ran, not just loaded.
 - **Refusal at the branch** — a short imperative placed at the exact step where the agent is tempted to rush, tied to the leading word ("no red loop, no Phase 2"); at the branch, not buried in a reference file.
+- **Write what is** — every rule stated as the only rule that ever existed; contrast against a prior version ("no longer", "instead of", "don't propose") is a diff against text the agent never saw.
 
 ## Failure modes
 

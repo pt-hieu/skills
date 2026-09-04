@@ -60,6 +60,7 @@ Sentence-level moves that make a skill read as one deliberate voice rather than 
 - **Defining constraint** — open every skill with one plain declarative sentence stating what it does differently from the model's default (`diagnose` reaches bedrock instead of stopping at the first plausible cause). Write it as prose in the first line of the body, never under a `The constraint:` label.
 - **It's working if** — where a skill has crisp tells, add a short checkable list of observable signals that it fired: a leading word reappearing in the trace, an artifact written to disk, a gate the agent refused to cross. These are how a reader confirms the skill ran, not just that it was loaded.
 - **Refusal at the branch** — when a skill exists to prevent one specific rush, write the refusal as a short imperative at the exact step where the agent is tempted, tied to the leading word ("no red loop, no Phase 2"). Put it at the branch, not buried in a reference file the agent reaches only after the temptation has passed.
+- **Write what is** — state every rule as if it were the only rule that ever existed. Phrasing that contrasts with a previous version ("apply, don't propose", "no longer asks", "instead of X") is a diff against text the agent never saw: it spends tokens on a phantom alternative and invites the agent to consider it. The same applies when adapting a skill from elsewhere — the origin's framing is not the reader's context.
 
 ## Failure modes
 
