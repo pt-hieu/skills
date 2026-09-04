@@ -60,6 +60,7 @@ Two plugins, each a coherent domain:
 | `prompting` | Research-backed prompting techniques for reliable LLM agents. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
 | `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, and tests axes. |
+| `show-me` | Explain the current topic visually — pseudocode, call tree, component tree, file tree, Mermaid, diff, or a one-off HTML artifact — picking the smallest view that makes the point. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
 | `writing-skills` | Principles and vocabulary for writing and editing skills that make an agent's behaviour predictable. |
 
@@ -105,6 +106,7 @@ plugins/
       prompting/
       resolve-merge-conflicts/
       scrutinize/
+      show-me/
       up-to-speed/
       writing-skills/
     agents/
