@@ -48,7 +48,6 @@ Two plugins, each a coherent domain:
 
 | Skill | Purpose |
 | --- | --- |
-| `assess-code-review` | Work a Bitbucket PR's open review comments to closure — assess, propose fixes or push-backs, apply and resolve on approval. |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
 | `bro` | Restate the last message in plain human language, with no jargon. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, and a target-specific bespoke critic — then surface every tension as a decision for the user, with options and a recommendation. |
@@ -94,7 +93,6 @@ plugins/
   brian/
     .claude-plugin/plugin.json
     skills/
-      assess-code-review/
       autopilot/
       bro/
       challenge/
