@@ -53,6 +53,7 @@ Two plugins, each a coherent domain:
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, and a target-specific bespoke critic — then surface every tension as a decision for the user, with options and a recommendation. |
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion on anything hard — a design, a diagnosis, a plan, or a choice you keep re-opening. |
+| `coordinate` | Coordinate opus subagents through several work items in parallel worktrees — unblock them, settle conflicts between them, and deliver the result: stacked PRs unless the brief names another. |
 | `decruft` | Remove instructions written for older models — pressure language, thinking and prefill scaffolds, version workarounds, over-scripted steps — from an existing prompt surface, applied in place and never committed. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
@@ -98,6 +99,7 @@ plugins/
       challenge/
       commit/
       consult-fable/
+      coordinate/
       decruft/
       diagnose/
       kickoff/
