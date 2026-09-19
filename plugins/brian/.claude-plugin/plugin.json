@@ -1,7 +1,7 @@
 {
   "name": "brian",
-  "version": "3.7.0",
-  "description": "Bundled skills: autopilot, bro, challenge, commit, consult-fable, coordinate, decruft, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, show-me, up-to-speed, writing-skills.",
+  "version": "3.8.0",
+  "description": "Bundled skills: autopilot, bro, challenge, commit, consult-fable, coordinate, decruft, diagnose, kickoff, prompting, resolve-merge-conflicts, scrutinize, setup-coding-standard, show-me, up-to-speed, writing-skills.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"
@@ -29,6 +29,7 @@
     "code-review",
     "writing-skills",
     "decruft",
-    "show-me"
+    "show-me",
+    "coding-standards"
   ]
 }
