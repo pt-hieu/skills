@@ -54,7 +54,11 @@ When verification fails, the fix goes back to the agent that owns the item. No v
 
 ## Step 5: Assemble the result
 
-Build the result from Step 1. For stacked PRs: take the branches in the map's order, rebase each onto the one below it, and send any rebase conflict to the agent that owns the upper branch, to resolve with `brian:resolve-merge-conflicts`. A branch whose code changed during rebase is verified again by its agent. Then push and open one PR per item, each based on the branch below it and the bottom one on the default branch, each body linking its work item and its neighbours in the stack.
+Build the result from Step 1. A stack is built with the `gh stack` extension, from your own checkout: first release the agents' worktrees with `git worktree remove`, because a branch still checked out in a worktree cannot be rebased here.
+
+- `gh stack init {bottom} … {top}` adopts the verified branches in the map's order, bottom first, on top of the default branch.
+- `gh stack rebase` cascades each branch onto the one below it. A conflict goes to the agent that owns the upper branch, with the path to this checkout, to resolve with `brian:resolve-merge-conflicts`; you then run `gh stack rebase --continue`. A branch whose code changed during the rebase is verified again by its agent.
+- `gh stack submit --auto --open` pushes every branch, opens one PR per item based on the branch below it, and links the stack on GitHub. Its generated titles are placeholders: give each PR the title and body Brian's PR guidelines ask for with `gh pr edit`, each body linking its work item, and keep the stack section `gh stack` wrote into the body — read it back with `gh pr view --json body` before you replace anything.
 
 The result is done when every work item has its PR, each PR's diff contains only its own item, and each item has a passing verification run made after its last code change.
 
@@ -68,4 +72,4 @@ Give Brian the result in order — for a stack, bottom first, with links — the
 - Independent agents went out in one message, each on opus in its own worktree.
 - Blocked agents were continued with `SendMessage`, never respawned.
 - You edited no source file.
-- Every PR in a stack shows one item's diff against the branch below it.
+- A stack was assembled with `gh stack`, and every PR in it shows one item's diff against the branch below it.
