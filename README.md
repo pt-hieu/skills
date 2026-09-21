@@ -40,6 +40,8 @@ Stops Claude from writing the kind of commit message a future `git blame` won't 
 
 `principles` collects the UI design rules I otherwise re-explain on every project: component patterns, formatting, interaction defaults. Loads automatically when Claude is touching frontend.
 
+`prototype` builds a throwaway clickable flow inside an app that consumes my flyingsalmon design system: fake data, a scenario switcher, its own worktree branch, and only registry components.
+
 ## What's inside
 
 Two plugins, each a coherent domain:
@@ -85,6 +87,7 @@ Two plugins, each a coherent domain:
 | Skill | Purpose |
 | --- | --- |
 | `principles` | UI design principles, component patterns, formatting, interaction rules. |
+| `prototype` | Throwaway clickable flow on fake data with a scenario switcher, built from flyingsalmon registry components on a worktree branch. |
 
 ## Layout
 
@@ -126,6 +129,7 @@ plugins/
     .claude-plugin/plugin.json
     skills/
       principles/
+      prototype/
 ```
 
 ## License
