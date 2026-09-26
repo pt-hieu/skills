@@ -51,7 +51,6 @@ Two plugins, each a coherent domain:
 | Skill | Purpose |
 | --- | --- |
 | `autopilot` | Autonomous, no-human-in-the-loop sibling of `kickoff`: takes a requirement to a PR without entering plan mode. |
-| `bro` | Restate the last message in plain human language, with no jargon. |
 | `challenge` | Audit a plan or implementation with a panel of independent subagents — fixed architecture and root-cause reviewers, plus plan-mode fact-checking, premise falsification, and a target-specific bespoke critic — then surface every tension as a decision for the user, with options and a recommendation. |
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion on anything hard — a design, a diagnosis, a plan, or a choice you keep re-opening. |
@@ -99,7 +98,6 @@ plugins/
     .claude-plugin/plugin.json
     skills/
       autopilot/
-      bro/
       challenge/
       commit/
       consult-fable/
