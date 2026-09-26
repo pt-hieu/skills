@@ -1,41 +1,38 @@
 ---
 name: commit
 description: "Use when committing staged or working-tree changes to git."
-disable-model-invocation: false
-argument-hint: "[JIRA-TICKET] [focus topic]"
+argument-hint: "[focus topic]"
 ---
 
-# Commit Skill
+# Commit
 
-Commits with a strict `{JIRA} {emoji} {type}(scope): {description}` format and one concern per commit — splitting mixed diffs instead of batching them under a summary message.
+`commit` turns a mixed diff into atomic commits — one concern each, every one named for the behavior it changes — where the default is a single commit under a summary message. Atomic is the leading word: a commit that `git bisect` can land on and `git revert` can undo without taking anything unrelated with it.
 
-## Behavior
+## Steps
 
-1. Auto-stage if nothing staged (`git add`)
-2. Analyze `git diff` for changes
-3. Detect split opportunities (different concerns/types)
-4. Create commit(s): `{JIRA} {emoji} {type}(scope): {description}`
+1. **Pick the changes.** If something is staged, commit only what is staged; the caller chose it. If nothing is staged, take every working-tree change, including untracked files, but leave out anything that looks like a secret (`.env`, keys, credentials) or a build artifact, and name what you left out in the report. When a focus topic is given, commit only the changes that belong to it and leave the rest in the working tree.
+2. **Read the whole diff** (`git diff --cached`, or `git diff` plus the untracked files), and group the changes by concern: one bug fix, one feature, one rename, one config change. Done when every hunk belongs to exactly one group.
+3. **Split by staging.** For each group, stage its files, or its hunks with `git add -p`, and commit it before staging the next. When two groups cannot be separated by staging alone, bundle them (see "Bundling" below).
+4. **Report.** List each commit's short hash and subject line, then anything left uncommitted and why.
 
-Default: If you're in `interface` repository or its worktree, always skip the commit hooks by using `-n` when committing
+The run is done when every change picked in step 1 is in exactly one commit. Keep going without asking: grouping, splitting, bundling, and messages are your call. Push, amend, or rewrite existing commits only when the caller asks, because those change history other people may already have.
 
-## Format
+Commit hooks run. When a hook fails, fix what it reports and create the commit again. In the `interface` repository or any of its worktrees, commit with `-n` to skip the hooks.
+
+## Message
 
 ```
-{JIRA-TICKET} {emoji} {type}(scope): {description}
+{emoji} {type}(scope): {description}
 ```
 
-Types: `feat|fix|docs|style|refactor|perf|test|chore|ci|wip`
+Type is one of `feat|fix|docs|style|refactor|perf|test|chore|ci|wip`, and the emoji is the gitmoji that fits the change most closely, since a reader scanning `git log` takes in the emoji before the words. Write the description in the imperative present tense ("prevent", not "prevented") and keep the whole line under 72 characters, because longer subjects wrap or get cut in `git log --oneline` and in PR views.
 
-Rules:
-- Present tense, imperative, <72 chars, omit test mentions unless test-only.
+A message describes one atomic change. Check it against the diff before committing:
 
-## No batch or summary commits
-
-A "changelog commit" aggregates several changes under one vague message. It defeats `git bisect`, makes a revert take unrelated changes with it, and hides what changed. Before writing a message, check three things against the diff:
-
-- The message names the specific behavior that changed — you can complete "this commit makes ___ work when ___" in concrete terms. If you cannot, the scope is too broad; split further.
-- The message carries no count ("5 bugs", "multiple issues"). A count means several concerns; split them.
-- The message describes the change, not the session that produced it ("from review", "from the audit").
+- It names the specific behavior that changed: you can complete "this commit makes ___ work when ___" in concrete terms. If you cannot, the commit holds more than one concern; split it.
+- It carries no count ("5 bugs", "multiple issues"). A count means several concerns; split them.
+- It describes the change, not the session that produced it ("from review", "from the audit"), because a later reader of `git log` never saw that session.
+- It mentions tests only when the commit changes nothing but tests.
 
 Illustrative:
 
@@ -49,50 +46,17 @@ fix(pipeline): prevent null pointer when stage has no artifacts
 <reasoning>Names the behavior and the condition; bisectable and safe to revert on its own.</reasoning>
 </good_example>
 
-Changes that span several concerns become several commits, one per logical change.
+## Grouping
 
-## Emoji Map
+Separate concerns and separate types go in separate commits, and so does a diff too large to review in one sitting. Tests go in the same commit as the feature or fix they cover, so that every commit passes its own tests; a test-only commit holds only test changes.
 
-| Emoji | Type | When |
-|-------|------|------|
-| ✨ | feat | New feature |
-| 🏷️ | feat | Types |
-| 👔 | feat | Business logic |
-| 🚸 | feat | UX improvement |
-| 🐛 | fix | Bug fix |
-| 🩹 | fix | Simple fix |
-| 🚑️ | fix | Critical hotfix |
-| 🚨 | fix | Linter warnings |
-| ✏️ | fix | Typos |
-| ♻️ | refactor | Refactoring |
-| 🎨 | style | Structure/format |
-| 🚚 | refactor | Move/rename |
-| ⚰️ | refactor | Dead code |
-| 📝 | docs | Documentation |
-| ✅ | test | Tests |
-| 🔧 | chore | Config |
-| ➕ | chore | Add dep |
-| ➖ | chore | Remove dep |
-| 👷 | ci | CI/CD |
-| ⚡️ | perf | Performance |
+## Bundling
 
-## Split Rules
+When separating two concerns would mean editing file content — so that each commit stands on its own — bundle them into one commit instead. Two common cases:
 
-Split when: different concerns, different types, different file patterns, too large for single review.
-
-Keep tests with their feature/fix commit. Test-only commits only for test-only changes.
-
-## Bundle Escape Hatch
-
-Split with git alone. Stage whole files, or stage single hunks with `git add -p`. That covers most mixed diffs.
-
-**Bundle when a split needs a file edit.** If you cannot separate the concerns by staging — you would have to change file content to make each commit stand on its own — bundle them into one commit instead. Two cases you will hit often:
-
-- Two iterations of the same session overwrote the same lines. Only the final text exists.
+- Two iterations in the same session rewrote the same lines. Only the final text exists.
 - A piece of logic moved between subsystems mid-session. Neither the old home nor the new home holds a complete version.
 
-Leave the working tree as it is. Do not edit files back into a hypothetical mid-state to satisfy the split rule — that state never compiled and never ran, so it is worse for `git bisect` than the bundle.
+Leave the working tree as it is. An intermediate state rebuilt by hand never compiled and never ran, so it is worse for `git bisect` than the bundle. Bundle without asking the caller.
 
-You decide this yourself. Do not ask the caller for permission to bundle.
-
-In the bundled message, name the *coherent design decision*, not the steps and not the fact that you bundled. The Changelog-Commit rules above still apply: no counts, no session references, name the specific behavior that changed.
+The bundled message names the design decision that ties the changes together, not the steps and not the fact that you bundled. Every check under "Message" still applies.
