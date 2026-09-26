@@ -1,139 +1,39 @@
 ---
 name: prompting
-description: "Use when creating or improving LLM agent prompts, designing structured output schemas, or diagnosing vague, overconfident, or hallucinated agent outputs."
+description: "Use when writing, revising, or diagnosing prose an LLM reads, or removing prompting written for legacy models."
 ---
 
 # Prompting
 
-Applies research-backed prompting techniques — conflict detection, confidence calibration, chain-of-verification, citation, hallucination prevention — instead of intuition when writing or fixing LLM agent prompts and structured-output schemas.
+Write prose for an LLM the way you would brief a capable colleague who has none of your context: in sentences, with reasons, and addressed to a reader. Do not write a form to fill in or a list of orders.
 
-Research synthesis from papers and industry sources on effective LLM prompting for reliable agent systems. To cite the evidence behind a technique, read `references/research-sources.md`.
+The reader is Opus 5.5. It thinks before every reply and keeps going on long, multi-part work, so the prose's job is to hand over the whole task, say what done looks like and when to stop, and supply the context and reasons it cannot infer.
 
----
+The rules below apply to every piece of prose an LLM reads. Then read the reference for what you are writing, in full, before drafting:
 
-## Quality Checklist (Severity Tiers)
+- **A skill or a subagent instruction file**, or one that misbehaves through sprawl, repetition, stale layers, or stopping short: read [`references/skills.md`](references/skills.md).
+- **An agent prompt that reasons over data and reports back**, or one whose output is vague, overconfident, or invented: read [`references/prompts.md`](references/prompts.md).
 
-### CRITICAL — block if missing
-- **Deterministic split** — code computes all numbers; LLM interprets only. This is independent of prose-vs-structured output and always binds.
-- **Prose-first communication** — prefer free prose whenever an LLM or human reads the output; reserve schemas for non-LLM consumers that parse the fields. See *Prose-First vs. Structured Output* for the rationale.
-- **Abstinence rule** — say plainly that the data is missing or unverifiable, naming what would resolve it; use a literal `INSUFFICIENT DATA` tag only where a consumer branches on that string
-- **Conflict detection** — explicit protocol to enumerate and resolve contradictory signals
+- **Removing outdated instructions from an existing prompt surface** — dated pressure language, thinking and prefill scaffolds, version workarounds, over-scripted steps: read [`references/decruft.md`](references/decruft.md) and follow its steps. It edits files in place and never commits.
 
-### IMPORTANT — degrades quality without
-- **Specific role** — expert role with domain + methodology, not generic "you are helpful"
-- **Examples** — a few varied examples, labeled illustrative, only where the output shape is genuinely format-sensitive; the model matches their length and structure, so an example of judgment it already owns narrows the output for no gain
-- **Confidence calibration** — per-dimension confidence, not single vague score
-- **Pro/con balance** — always require counter-argument to prevent confirmation bias
+A subagent that analyses data is both of the first two; read both.
 
-### NICE-TO-HAVE — improves polish
-- **Data citation** — each claim cites which tool/field it came from
-- **Output framing** — say who reads the output and what they do with it; that bounds length better than a word cap, which starves the hard cases
+## Rules for any prose an LLM reads
 
----
+- **Prose, not contracts.** Write instructions as sentences and ask for output as sentences. A field list, a mandatory literal token, or a required closing line binds two LLMs to a contract that neither of them parses, and it drifts silently when one side stops emitting it. Use a literal token or a schema only when something branches on the exact value: non-LLM code that parses it, or a receiver told to dedupe, merge, or discard by that value. Keep a list of every emitter and consumer of such a value, and change them in the same commit.
+- **Name the finish line.** Hand over the whole task at once and say what done looks like in terms the model can check: "the tests pass", "every endpoint is migrated". With a clear finish line it knows when it is done; without one it stops at a plausible point or keeps polishing.
+- **Say when to stop.** Tell it to keep going when a step does not need input, and name the few cases where it stops and asks: it cannot continue without the user, or the next action is destructive (deleting data, force-pushing, changing anything outside the repository). A run that stops for confirmation it did not need costs a restart.
+- **Give the reason.** A rule stated with its reason extends to cases the rule does not name. A bare rule is either followed too literally or ignored. "Cite the field each number came from, because the reader checks figures against the source" works better than "ALWAYS CITE SOURCES".
+- **Name the reader.** Say who reads the output and what they do with it. That sets length and shape better than a word cap, which cuts short the hard cases. Ask for what the reader must act on to come first ("start with what is blocked on me"), because that is what they read first.
+- **Write what is.** State each rule as if no other version had ever existed. "No longer", "instead of X", and "don't propose" describe a version the reader never saw, and they put the rejected option in front of it. This also applies when adapting text from elsewhere.
+- **Be specific.** Describe the behaviour you want. To steer away from a default, list the exact patterns to leave out: "avoid a generic look" swaps one default for another, while "no cream background, no numbered 01 / 02 / 03 section labels, no pill-shaped buttons" removes them.
+- **Plain register.** Write in normal case. Skip pressure words (CRITICAL, MUST, NEVER in capitals), threats, and pleading: current models over-apply emphasised rules. Say things literally, because a metaphor brings in connotations you did not choose.
+- **Cut no-ops.** For each sentence, ask whether it changes the model's behaviour compared with what it would do anyway. If not, delete the whole sentence. "Be helpful" and "you are a helpful assistant" are no-ops.
+- **Leave thinking to the model.** Opus 5.5 thinks before every reply, so "think carefully", "think step by step", and "think hard" only delay the reply. Do not ask it to reproduce its reasoning in the output either; ask for the explanation the reader needs ("explain why you chose this approach in three sentences"). For a simple question, "answer directly" is enough.
+- **Use leading words.** A compact word the model already knows (_relentless_, _tracer bullet_, _bedrock_), repeated where it applies, holds a behaviour in place with few tokens. Reuse the word rather than re-describing the behaviour, and prefer an existing word to a coined one, which the model has no associations for.
+- **One source of truth.** State each meaning in exactly one place and point to it from everywhere else. A repeated rule reads as more important than it is, and a change to it needs edits in several places.
+- **Examples sparingly.** The model copies an example's length, structure, and topic. Use a few varied examples, marked as illustrative, and only where the shape of the output matters. Do not use them to demonstrate judgment the model already has.
 
-## Core Architecture Principle
+## Finish
 
-**Separate computation from reasoning.** Single highest-impact technique (MIT thesis: tool-augmented computation achieves 100% accuracy vs LLM arithmetic).
-
-```
-Code layer:  All arithmetic, lookups, thresholds, ratios, scores, aggregations
-LLM layer:   Qualitative judgment, narrative, recommendations, synthesis
-
-Flow: Raw Data → Code (compute metrics, scores, deltas) → Structured Context → LLM (interpret)
-```
-
-**Rule:** Never let the LLM compute numbers that code can compute deterministically. Pre-compute everything possible and pass structured results to the LLM.
-
----
-
-## Prose-First vs. Structured Output
-
-**Default to prose for anything an LLM or a human reads.** Free natural-language prose carries judgment, nuance, and uncertainty better than a rigid field list, and it does not drift: there is no schema for the producer and consumer to fall out of sync on.
-
-**Reserve structured output (Literal/Enum schemas) for true machine-to-machine handoffs** — where a *non-LLM* consumer parses the value and branches on it. An enum tag read only by another LLM (or a human) buys rigidity without buying determinism, and invites the failure mode below.
-
-**The failure mode prose avoids:** when you force an LLM's output into a rigid schema that another LLM or a human consumes, the two sides drift — a consumer ends up parsing a field the producer renamed or stopped emitting, and the producer hallucinates fields to satisfy a contract no one reads. Prose has no such contract to drift.
-
-**This is orthogonal to the deterministic split** above: code still computes every number; the LLM still interprets. Prose-first governs only *how the LLM's qualitative output is shaped* — as prose, not as a schema — when the reader is an LLM or a human.
-
-When assembling a prompt from the standard blocks (expert role, conflict detection, confidence calibration, pro/con, abstinence, citation, CoVe, structured/prose output, few-shot, objectivity), read `references/template-blocks.md`.
-
----
-
-## Strict vs. Flexible Declarations
-
-Use this table when designing output. **The consumer type is the deciding column** — reach for an enum only when a non-LLM downstream actually parses the value (rationale in *Prose-First vs. Structured Output*):
-
-| Field | Consumer | Strictness | Rationale |
-|-------|----------|-----------|-----------|
-| `action` / `decision` | non-LLM automation | **STRICT** | Code branches on the exact value |
-| `confidence` (HIGH/MEDIUM/LOW) | depends | **STRICT only when a non-LLM parses it**; for an LLM/human consumer, prose confidence + its basis is sufficient | Drift risk for no gain unless a machine parser reads it |
-| `reasoning` / `thesis` | LLM / human | **PROSE** | Qualitative judgment |
-| `key_risk` / `counter_argument` | LLM / human | **PROSE, but mandatory** | Must genuinely challenge the thesis — required content, not a rigid field |
-| `conflicts_identified` | depends | **STRICT list only for a non-LLM**; otherwise enumerate in prose | Must enumerate, not summarize |
-
-**Rule:** The consumer type decides. A field parsed by non-LLM code → `Literal`/`Enum` with exact values. A field read by an LLM or a human → prose with descriptive guidance.
-
----
-
-## Anti-Hallucination Verification Chain
-
-Apply this chain for any agent producing actionable outputs:
-
-1. **DATA FRESHNESS** — check timestamps match expected recency; reject stale data
-2. **COMPLETENESS** — thin sourcing lowers confidence; say how many sources a claim rests on
-3. **RED FLAGS** — missing fields, zero values, unchanged data over expected change periods → flag explicitly
-4. **VERIFICATION (CoVe)** — re-read each claim, trace to a specific provided field
-5. **ABSTINENCE** — when most claims are unverifiable, say the item cannot be supported and name what is missing
-
-Include the parts of this chain that the agent's data can actually fail on, each stated as a requirement with its reason rather than as a numbered ritual.
-
----
-
-## Anti-Patterns to Avoid
-
-| Anti-Pattern | Why It Fails | Fix |
-|-------------|-------------|-----|
-| LLM performs arithmetic | "Semantically coherent but mathematically flawed" | Pre-compute in code |
-| Single mega-prompt | Context overload, signals buried | Multi-step pipeline |
-| No conflict enumeration | LLM papers over contradictions | Force explicit listing |
-| Missing counter-argument | Confirmation bias from training data | Always require KEY RISK / con case |
-| Stale parametric knowledge | Model's knowledge is months old | Always inject fresh data via tools |
-| Forcing prose into rigid JSON for an LLM/human reader | Contract drift (see *Prose-First vs. Structured Output*) | Use prose; reserve schemas for non-LLM parsers |
-| Unbounded rambling output | More words = more speculation | Ask for a short, focused paragraph — brevity, not a schema |
-| Vague confidence | "fairly confident" tells you nothing | State confidence AND its basis in plain words (calibrated HIGH/MEDIUM/LOW only when a non-LLM parses it) |
-| No abstinence path | Agent generates analysis when data is absent | Explicit abstinence: state the gap, name what would close it |
-| Generic role prompt | "You are a helpful assistant" activates wrong patterns | Specific role with methodology |
-| No source attribution | Claims cannot be verified or challenged | Require tool/field citation per claim |
-
----
-
-## Data Formatting Rules
-
-- Round to meaningful precision: `18.2x` not `18.23456789`
-- Always include units: `1,500 units` not `1500`
-- Include deltas alongside absolutes: `Score: 82.5 (up 4.2 from previous)`
-- Standardize layout across all items for consistency
-
-### Context Layer Structure
-
-Organize input data into clear layers for the LLM:
-
-| Layer | Purpose | Format |
-|-------|---------|--------|
-| Quantitative | Metrics, scores, computed values | Key values only, not raw data |
-| Qualitative | Assessments, reviews, descriptions | Tabular with change deltas |
-| Contextual | Environment, constraints, external factors | Bullet-point summaries |
-
----
-
-## Personality Archetypes
-
-Apply the right personality to match agent responsibility:
-
-| Personality | Best For | Key Behavior |
-|-------------|---------|-------------|
-| Thorough Investigator | Analysis, synthesis, evaluation agents | Cross-reference multiple angles, show work, cite specifics |
-| Skeptical Auditor | Validation, review, quality-check agents | Assume errors exist, check every number |
-| Decisive Minimalist | Alert, triage, classification agents | A short answer, no hedging |
-| Precise Clerk | Extraction, cataloging, registration agents | Extract facts only, never infer |
+Reread the draft as its reader: a model with no context beyond this text. Stop when every sentence either tells it something it needs in order to act or changes what it would do by default, and every rule it must follow carries its reason.

@@ -2,8 +2,8 @@
 
 Gather project-specific knowledge so agents review against documented patterns, not just general principles. The 5-stage pipeline produces `{knowledge_context}` for Step 2.
 
-> Scope: this skill intentionally violates the `prompting` skill's CRITICAL
-> rule "Deterministic split — code computes all numbers; LLM interprets only".
+> Scope: this skill intentionally violates the `prompting` skill's
+> rule that code computes every number and the LLM only interprets.
 > Rationale: the orchestrator is the sole consumer of any quantitative state
 > here (no cross-process handoff). Verbal discipline + a human-readable run
 > file is sufficient for single-process loops. The prompting rule still

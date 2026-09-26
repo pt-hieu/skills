@@ -81,7 +81,7 @@ Skill files (SKILL.md, CLAUDE.md, rule files) inherit everything in Group 1, plu
 
 | Pattern | Why it is cruft now | Fix |
 | --- | --- | --- |
-| Verbose SKILL.md explaining things the model already knows | Every paragraph must justify its token cost; general programming knowledge does not | Apply the step 4 deletion rule paragraph by paragraph |
+| Verbose SKILL.md explaining things the model already knows | Every paragraph must justify its token cost; general programming knowledge does not | Apply the step 4 classification in `decruft.md` paragraph by paragraph |
 | Wrong degrees of freedom | Exact scripts for judgement calls over-constrain; vague prose for fragile operations under-constrains | Match specificity to fragility: prose heuristics for open fields, exact commands (`do not modify this command`) only for narrow bridges |
 | The recency trap: one session's stumble encoded as a permanent rule | The next session steps around a pothole that is not there | Before keeping a rule, ask: would this have helped most recent sessions, or just the one that wrote it? |
 | Volatile specifics: hardcoded paths, flags, version numbers, API claims with no verification date | Skills rot factually as code ships; nothing re-checks them | Encode architecture, data models, and workflows; verify surviving factual claims against current code during the pass |
@@ -122,6 +122,13 @@ These surface next to prompt cruft; fix or report them even though they are not 
 ## Target-model facts
 
 Per-model behaviour the reasons above depend on. Verify against the current Anthropic docs when a claim decides an edit and the project pins an older target.
+
+**Opus 5.5**
+
+- Thinks before every reply. "Think carefully", "think step by step", and "think hard" lines only delay the reply; remove them from prompts and saved instructions. For a quick answer, "Answer directly" is the replacement.
+- Requests to reproduce its reasoning in the reply are cruft; replace them with the explanation the reader needs ("explain why you chose this approach in three sentences").
+- Keeps going on long, multi-part work. Prompts that feed a task in pieces, or stop for confirmation at every step, are fitted to an earlier model. Re-baseline by adding what this model needs instead: one finish line it can check, and the specific cases where it stops and asks (it cannot continue without the user, or the next action is destructive).
+- A vague steer away from a default ("avoid a generic look") swaps one default for another. Replace it with the list of specific patterns to leave out.
 
 **Claude Fable 5.1 (and Mythos 5.1)**
 

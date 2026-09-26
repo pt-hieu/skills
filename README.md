@@ -28,9 +28,9 @@ Only after I've directed every tension do I approve and let implementation start
 
 When something breaks, Claude defaults to the first plausible cause. `diagnose` is a script it follows instead: frame the problem, deepen past the first hypothesis, identify the defect class, validate with a test, run a devil's-advocate pass. It pairs with `challenge` — `diagnose` builds the hypothesis, `challenge` stress-tests it.
 
-### 3. When Claude is writing prompts or agents — `prompting`
+### 3. When Claude is writing prompts, agents, or skills — `prompting`
 
-I build a lot of LLM agents. `prompting` is the set of techniques I keep reaching for: conflict detection, confidence calibration, pro/con balance, chain-of-verification, citation, hallucination prevention. Useful when designing agent prompts and structured-output schemas, not only when running them.
+I build a lot of LLM agents and skills, and all of them run on prose a model reads. `prompting` is how I write that prose: in sentences with reasons, addressed to a reader, with no-ops cut. It adds what agent prompts must ask for (missing-data handling, conflicts, the case against, confidence with its basis, citation) and how skills are laid out so an agent follows the same process every run. On an existing prompt surface, it finds and removes cruft: instructions written for older models, such as pressure language, thinking and prefill scaffolds, and version workarounds.
 
 ### 4. When the work is done — `commit`
 
@@ -55,16 +55,14 @@ Two plugins, each a coherent domain:
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion on anything hard — a design, a diagnosis, a plan, or a choice you keep re-opening. |
 | `coordinate` | Coordinate opus subagents through several work items in parallel worktrees — unblock them, settle conflicts between them, and deliver the result: stacked PRs unless the brief names another. |
-| `decruft` | Remove instructions written for older models — pressure language, thinking and prefill scaffolds, version workarounds, over-scripted steps — from an existing prompt surface, applied in place and never committed. |
 | `diagnose` | Systematic root-cause debugging methodology. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
-| `prompting` | Research-backed prompting techniques for reliable LLM agents. |
+| `prompting` | Write the prose LLMs read — agent prompts, skills, subagent instructions, and handoffs — and remove instructions written for older models from an existing prompt surface, applied in place and never committed. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
 | `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, and tests axes. |
 | `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the repo's stack. |
 | `show-me` | Explain the current topic visually — pseudocode, call tree, component tree, file tree, Mermaid, diff, or a one-off HTML artifact — picking the smallest view that makes the point. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
-| `writing-skills` | Principles and vocabulary for writing and editing skills that make an agent's behaviour predictable. |
 
 **Agents** (dispatched by the skills above, not invoked directly):
 
@@ -102,7 +100,6 @@ plugins/
       commit/
       consult-fable/
       coordinate/
-      decruft/
       diagnose/
       kickoff/
       prompting/
@@ -111,7 +108,6 @@ plugins/
       setup-coding-standard/
       show-me/
       up-to-speed/
-      writing-skills/
     agents/
       architectural-reviewer.md
       code-historian.md

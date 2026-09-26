@@ -1,11 +1,8 @@
----
-name: decruft
-description: Use when removing outdated instructions from an existing prompt surface.
----
+# Decruft
 
 Decruft removes instructions that were written for an older model and now degrade the current one, editing the files in place. It is not a shortening pass: the harm comes from specific dated instructions, not from length, and a surface with none of them is left untouched.
 
-**Cruft** is the leading word. A line is cruft only when it matches a named pattern in [`references/patterns.md`](references/patterns.md) *and* you can state why the target model no longer needs it. A line that fails either test is context, and context is never cruft. Indiscriminate deletion is the one way this skill makes things worse, so the keep list below binds as strongly as the pattern tables.
+**Cruft** is the leading word. A line is cruft only when it matches a named pattern in [`decruft-patterns.md`](decruft-patterns.md) *and* you can state why the target model no longer needs it. A line that fails either test is context, and context is never cruft. Indiscriminate deletion is the one way this skill makes things worse, so the keep list below binds as strongly as the pattern tables.
 
 ## Ground rules
 
@@ -21,7 +18,7 @@ Decruft removes instructions that were written for an older model and now degrad
 
 Resolve both from the request and the repository, never by asking. Scope is whatever the request names (file, directory, list). With no name, scope is the working directory's whole prompt surface as found in step 2.
 
-Target model resolves in this order: the model the request names; else the destination of a migration the repository documents (vendor notes, TODOs); else the newest model the repository's code or docs point at; else the current flagship of the provider the code calls (for Anthropic: Claude Fable 5.1). State both assumptions at the top of the final report so the user can re-run narrower.
+Target model resolves in this order: the model the request names; else the destination of a migration the repository documents (vendor notes, TODOs); else the newest model the repository's code or docs point at; else Opus 5.5, the model this skill writes for. State both assumptions at the top of the final report so the user can re-run narrower.
 
 Done when: scope and target model are written down and every later judgement is relative to that model.
 
@@ -52,7 +49,7 @@ Done when: every line in the inventory is classified keep or candidate.
 
 ### 5. Scan the pattern groups and edit
 
-Read [`references/patterns.md`](references/patterns.md) and work through its four groups. Run the greppable signals over the inventory rather than eyeballing. For each candidate that matches a documented row with a target-model reason, apply the row's fix now: remove, rewrite (with the replacement), move (to the place named), replace with the API feature, or add (under-described tool contracts get *more* text).
+Read [`decruft-patterns.md`](decruft-patterns.md) and work through its four groups. Run the greppable signals over the inventory rather than eyeballing. For each candidate that matches a documented row with a target-model reason, apply the row's fix now: remove, rewrite (with the replacement), move (to the place named), replace with the API feature, or add (under-described tool contracts get *more* text).
 
 A documented-pattern match is edited even when it seems minor, reads as a soft nudge, or "measurably helps" on the old model. Those are reasons the user may revert a hunk, not reasons to withhold the edit.
 
@@ -94,7 +91,7 @@ These stay even when a grep matches:
 - **Working redundancy.** The same contract in two files, or content you would merely organise differently, is a refactoring preference, not cruft. Consolidate only when the duplicates disagree.
 - **A one-line role statement.** Flag identity text only when it is the sole context the prompt gives.
 - **A single end-of-prompt recap** of the key constraints. The anti-pattern is scattered duplication, not deliberate recap.
-- **Re-baselining that adds text.** Fitting a prompt to a new model sometimes means adding guidance for that model's failure modes (see the Fable 5.1 notes at the end of the patterns file). The job is fit, in both directions.
+- **Re-baselining that adds text.** Fitting a prompt to a new model sometimes means adding guidance for that model's failure modes (see *Target-model facts* at the end of the patterns file). The job is fit, in both directions.
 
 ## It's working if
 
