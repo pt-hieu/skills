@@ -57,9 +57,9 @@ Done when the flow runs end to end by clicking, in every scenario.
 
 ### 6. Verify
 
-Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype in dark mode and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. Fix every failure before anything reaches the user.
+Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. Fix every failure before anything reaches the user.
 
-Done when every scenario passes in dark mode.
+Done when every scenario passes.
 
 ### 7. Commit
 

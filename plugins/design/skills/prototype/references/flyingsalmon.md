@@ -1,6 +1,6 @@
 # flyingsalmon rules for prototypes
 
-Distilled from flyingsalmon at commit `5b8bce1`: `CLAUDE.md`, `CONTEXT.md`, `docs/adr/`, and the `interface-review` skill. These are the rules that change rarely. The component list is never recorded here; read it from `https://flyingsalmon.superbrian.dev/r/registry.json`. When this file and the published registry disagree, the registry wins, and the commit message says where they disagreed.
+Distilled from flyingsalmon at commit `cb98736`: `CLAUDE.md`, `GLOSSARY.md`, `docs/adr/`, and the `interface-review` skill. These are the rules that change rarely. The component list is never recorded here; read it from `https://flyingsalmon.superbrian.dev/r/registry.json`. When this file and the published registry disagree, the registry wins, and the commit message says where they disagreed.
 
 ## Hard gate
 
@@ -8,13 +8,14 @@ Every piece of UI is a registry component or a composition of registry component
 
 ## Look
 
-- **Mood** — soft, minimal, playful.
-- **Type** — Baloo 2 (`--font-heading`) for headings and display, Onest (`--font-sans`) for body and UI. No other typeface.
-- **Color** — an indigo accent over pure neutral grays, all OKLCH, reached only through the functional aliases (`--background`, `--primary`, `--muted`, `--destructive`, `--success`, `--warning`, `--error`, `--border`, and their `-foreground` pairs). No raw hex or `rgb()`, and no alpha on any color; softness comes from a lighter or darker palette step. Element opacity is for disabled states and motion only.
+- **Mood** — bold, warm, social.
+- **Type** — Bricolage Grotesque (`--font-heading`) for headings and display, Onest (`--font-sans`) for body and UI. No other typeface.
+- **Color** — an orange primary (`orange-600`, a fill under white text) over an `orange-50` beige page, with white cards, popovers, and field boxes, orange borders, and neutral-gray text. Marks take `--indicator`; orange text takes `--primary-text`. All OKLCH, every color a step from the Tailwind palette, reached only through the functional aliases (`--background`, `--card`, `--popover`, `--input`, `--primary`, `--primary-text`, `--indicator`, `--muted`, `--destructive`, `--success`, `--warning`, `--error`, `--border`, and their `-foreground` pairs). No raw hex or `rgb()`, and no alpha on any color; a lighter or darker shade is a palette step. Element opacity is for disabled states and motion only.
 - **Surfaces** — flat. No shadows and no elevation. Surfaces separate by solid borders and background steps, and interaction feedback shows in the border.
-- **Radius** — derived from `--radius` through `--radius-sm` … `--radius-4xl`. Never a hardcoded value.
+- **Spacing** — every padding, gap, margin, and size is a step on Tailwind's 4px scale, never a pixel value. Card, dialog, and timeline take their spacing from `--card-spacing`, `--dialog-spacing`, and `--timeline-spacing`.
+- **Radius** — derived from `--radius` (12px) through `--radius-sm` … `--radius-4xl`. Never a hardcoded value.
 - **Motion** — small, springy, under 200ms; spinner and skeleton are exempt. Durations come from `--motion-fast` and `--motion-base`, springs from the registry's `motion` item. `prefers-reduced-motion` is not handled anywhere in the system and a prototype does not add it.
-- **Dark mode** — the `dark` class on `<html>`. Prototypes are reviewed in dark mode.
+- **Light mode only** — no dark theme and no `dark:` variants.
 
 ## Feedback rule
 
