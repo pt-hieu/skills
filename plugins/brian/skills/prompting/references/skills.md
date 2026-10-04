@@ -59,4 +59,4 @@ Every line in `SKILL.md` is read on every run, and every reference file costs a 
 
 ---
 
-*Distilled from [writing-great-skills](https://github.com/mattpocock/skills) by Matt Pocock.*
+*Distilled from [writing-for-agents](https://github.com/mattpocock/skills) by Matt Pocock.*
