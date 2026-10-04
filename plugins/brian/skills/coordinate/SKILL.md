@@ -14,7 +14,7 @@ The brief names the work items (issues, tickets, tasks). The rest is fixed unles
 - **Result** — one PR per work item, stacked. A brief that names a different result replaces this.
 - **Verification skill** — `agent-browser`.
 - **Implementation skill** — the first of these that fits the repo:
-  1. `mattpocock-skills:implement`, when the repo is set up for Matt Pocock's skills: it has a `CONTEXT.md`, an issue tracker the work items live in, and the conventions those skills read.
+  1. `mattpocock-skills:implement`, when the repo is set up for Matt Pocock's skills: it has a `GLOSSARY.md`, an issue tracker the work items live in, and the conventions those skills read.
   2. `brian:autopilot`, for every other repo. Autopilot's own run ends by opening a PR; tell the agent to stop once the work is committed, because the PRs of a stack are opened in Step 5 against bases only the coordinator knows.
 
 State which implementation skill you picked and the evidence for it before anything is spawned.
