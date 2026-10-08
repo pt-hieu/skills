@@ -3,123 +3,35 @@ name: resolve-merge-conflicts
 description: "Use when resolving Git merge conflicts — merge, rebase, or cherry-pick conflicts, unmerged paths, or `<<<<<<<` conflict markers in the working tree"
 ---
 
-# Merge Conflict
+# Resolve merge conflicts
 
-## Role & Mindset
+The run is done when the operation in progress (merge, rebase, or cherry-pick) has no unmerged paths, the result serves what both sides were trying to do, and the project's own checks pass on it. Clearing the markers is only part of the result. A conflict-free merge can still break the build when one side renamed or re-signed something the other side calls.
 
-You are a merge-conflict resolver: a Decisive Minimalist when the resolution is unambiguous, a Skeptical Auditor when it isn't. Resolutions stay anchored in commit intent, not just diff text.
+## Resolve from intent
 
-## Anchor on Intent
+Before you edit a file, read what each side meant: the commits on both sides (`git log --merge`, or the left-right log against `MERGE_HEAD`, `REBASE_HEAD`, or `CHERRY_PICK_HEAD`) and the code around the conflict. The diff text alone does not say which side owns a line. Each resolution serves both intents, or picks one for a reason you can state. When hunks compete, the side whose commits own the surrounding feature wins, and the rejected intent goes in the report. Match the surrounding style and keep the existing abstractions, because a merge is the wrong place to introduce new ones.
 
-Every resolution starts by understanding what each side was trying to do. Read both sides' commit messages — and the surrounding code if intent is still unclear — before touching a single conflict marker. The merged result must serve both intents, or explicitly choose one with a stated reason. Diff text alone is not enough.
+For a lockfile, settle the manifest and then regenerate the lockfile with the package manager. A hand-edited lockfile is one no install ever produced.
 
-## Phase 1 — Discovery
+## When to ask
 
-Run before opening any file. Intent first, code second.
+Resolve everything you can first. Then ask the user about the rest in one message, giving two or three candidate resolutions and the cost of each. Ask when:
 
-Start with `git status` to confirm which operation is in progress. Then run the remaining four commands as parallel Bash calls in a single message — they are independent reads:
+- one side deleted a file the other side modified;
+- the branches diverge on business logic;
+- the code is security-sensitive (auth, crypto, permissions, sessions);
+- several valid resolutions have real trade-offs;
+- intent is still unclear after reading the commits and the code.
 
-```sh
-git status                                              # operation in progress + summary
-git diff --name-only --diff-filter=U                    # unmerged file list
-git ls-files -u                                         # stage entries (signals structural conflicts)
-git log --merge --oneline                               # commits involved in this merge
-git log --left-right --oneline HEAD...MERGE_HEAD        # what each side did (substitute MERGE_HEAD for rebase/cherry-pick context)
-```
+A question costs one turn. A wrong resolution in any of these cases ships silently. Ask before `--abort` as well when you have staged resolution work, since that work may be worth keeping on a branch.
 
-Read commit messages on both sides for each conflicted file before proposing a resolution.
+## Verify
 
-## Phase 2 — Classification
+- `git ls-files -u` prints nothing, and no conflict markers remain in the files that were conflicted.
+- When a lockfile changed, a frozen install passes (`pnpm install --frozen-lockfile`, `cargo build --locked`, `uv sync --frozen`, or the stack's equivalent).
+- The project's typecheck, lint, and the tests covering touched modules pass. Find the commands in `package.json` scripts, the `Makefile`, the `justfile`, or the CI config. When a failure traces to a symbol one side renamed or a signature it changed, update every call site to the post-merge API and run the checks again.
+- When a check fails, run it on each parent before the merge. A failure both parents already had is not one the merge introduced, so report it and leave it alone.
 
-For each conflicted path, pick exactly one type by detection signal:
+## Hand back
 
-| Type | Detection signal |
-|---|---|
-| **Content** | `<<<<<<<` / `=======` / `>>>>>>>` markers present in working-tree file |
-| **Structural** | `git ls-files -u` shows asymmetric stages (file present at one stage, missing at another) — no markers in working tree |
-| **Dependency** | Only a lockfile or manifest version pin is in conflict |
-| **Semantic** | The merge resolved cleanly, but typecheck/build now fails because one side renamed a symbol or changed a signature the other side calls |
-
-## Phase 3 — Resolution Playbooks
-
-### Content
-
-Parse markers, identify each hunk's intent, and pick the resolution shape:
-
-- complementary hunks → combine
-- overlapping hunks with shared intent → synthesize
-- competing hunks → choose by context (the side whose commit message owns the surrounding feature) and note the rejected side's intent in the resolution log
-
-Match surrounding code style. Preserve existing abstractions; a merge is the wrong moment to introduce new ones.
-
-### Structural — three sub-playbooks keyed by `git ls-files -u` stage signature
-
-`git ls-files -u` prints `<mode> <sha> <stage> <path>`. Stage 1 = base, stage 2 = ours, stage 3 = theirs.
-
-- **Stage 1 missing, stage 2 missing, stage 3 present** → "added on theirs" (or "modified on theirs after we deleted"). Manual merge of the new content into the working tree. If both sides added at the same path (`AA`), synthesize.
-- **Stages 1 and 3 present, stage 2 missing** → "deleted on ours, modified on theirs" (and the mirror `2 present, 3 missing` for the inverse). Both states are intentional — ask the user in plain text: preserve the modification (keep the file) or accept the deletion (`git rm`)?
-- **Rename/edit** — detect via `git log --diff-filter=R --follow <path>` on the surviving path, or `git status` showing `R<paths>`. Use `git mv` to align the path on the side that didn't rename, then merge content into the renamed location.
-
-Escalation aides for structural pain: `git rerere` (record/replay resolutions for repeated conflicts) and `git mergetool` (visual three-way merge).
-
-### Dependency
-
-Identify the highest compatible version range from the manifest, then **regenerate the lockfile from scratch** rather than hand-editing.
-
-### Semantic
-
-The file merged cleanly but the build is now broken because one side renamed a symbol or changed a signature the other side calls. Trace each rename/signature change across call sites (`grep -rn '<old-name>'`, LSP "find references" if available) and update every call site to the post-merge API. Re-run the per-stack verify in Phase 4 after edits.
-
-## Phase 4 — Verification
-
-Absence-of-markers proves only one subtype. Run the matching verification per type and report results. Order cheap-to-expensive so a fast failure short-circuits the slow ones: marker grep and `git ls-files -u` first (instant), frozen-install second, typecheck and tests last.
-
-| Type | Verification command |
-|---|---|
-| Content | `! git grep -nE '^(<{7}\|={7}\|>{7})( \|$)'` — must be empty |
-| Structural | `git ls-files -u` — must be empty |
-| Dependency | Stack frozen-install must pass (e.g. `pnpm install --frozen-lockfile`, `cargo build --locked`, `uv sync --frozen`) |
-| Semantic | Per-stack typecheck + targeted tests on touched modules |
-
-Per-stack verify (read `package.json` scripts, `Makefile`, or `justfile` first if the project's commands aren't obvious):
-
-| Stack | Command |
-|---|---|
-| TS / JS | `pnpm typecheck && pnpm lint && pnpm test` (substitute npm/yarn) |
-| Python | `ruff check && mypy . && pytest` |
-
-## Phase 5 — Safe Rollback
-
-If the conflict is beyond scope, abort cleanly rather than commit a half-resolution.
-
-Rule: if you've already staged edits during the resolution, ask the user in plain text before aborting — staged work may be salvageable as a separate branch.
-
-## Phase 6 — Escalation Protocol
-
-Stop and ask the user in plain text when:
-
-- Critical business-logic divergence between branches.
-- Security-sensitive code (auth, crypto, permissions, session handling).
-- Multiple valid resolutions with material trade-offs.
-- Insufficient context after reading commit messages and surrounding code.
-
-Phrase the question with the two (or three) candidate resolutions and the trade-off each carries. Ask before guessing — the cost of a clarifying question is far below the cost of a wrong resolution.
-
-## Stop When Done
-
-Stop after resolving and verifying. Hand the staged tree back to the user; the user owns the commit and the push.
-
-## Worked Examples
-
-### Good — semantic conflict resolved by tracing call sites
-
-Branch A renamed `getUser` → `fetchUser` in `src/api/users.ts`. Branch B added a new caller `src/components/Header.tsx` that imports `getUser`. The merge resolves cleanly (no markers), but `pnpm typecheck` fails: `Module '"src/api/users"' has no exported member 'getUser'`.
-
-Resolution:
-1. `grep -rn 'getUser' src/` → finds the new caller in `Header.tsx`.
-2. Rename the import + call site to `fetchUser` in `Header.tsx`.
-3. `pnpm typecheck` → passes.
-
-### Bad — same scenario, missed the semantic trace
-
-The agent saw `git status` had no unmerged paths (file merged clean) and exited "resolved". Did not run typecheck. Build broke on CI. Root mistake: treated "no markers" as proof of resolution, skipped the per-type semantic verify in Phase 4.
+Stage the resolution and report each file: how you resolved it, any intent you rejected and why, and the checks you ran with their results. Leave the commit, `rebase --continue`, and the push to the caller.
