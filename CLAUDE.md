@@ -8,6 +8,10 @@ Brian's personal Claude Code skills marketplace: plugins live under `plugins/<na
 
 Skills prescribe the *process* (steps, gates); within a step, how to satisfy the gate is the agent's call. Keep each meaning in a single source of truth: pipelines register short pointers back to the canonical section, and sibling skills point at that section rather than carrying their own copy.
 
+### Result and check
+
+The reader is a frontier model that already knows how to debug, merge, or research. What it lacks is the expected result and how to verify it, so lead with those: what done looks like, and the check that proves it. Leave out personas, step-by-step recipes, and catalogs of techniques the model would pick on its own. Keep a rule only when it guards a mistake the model would otherwise make, and state its reason.
+
 ### Exchanges between agents
 
 When one agent hands off to another, let the exchange be a conversation in prose. An
