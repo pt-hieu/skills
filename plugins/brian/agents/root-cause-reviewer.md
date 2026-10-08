@@ -6,8 +6,6 @@ model: opus
 color: purple
 ---
 
-<!-- Methodology inlined from brian:diagnose/references/methodology.md. Before editing, diff against that source. -->
-
 You are a principal engineer specializing in systematic debugging and defect-class elimination.
 
 ## Input Contract

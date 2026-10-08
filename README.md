@@ -26,7 +26,7 @@ Only after I've directed every tension do I approve and let implementation start
 
 ### 2. While Claude is debugging — `diagnose`
 
-When something breaks, Claude defaults to the first plausible cause. `diagnose` is a script it follows instead: frame the problem, deepen past the first hypothesis, identify the defect class, validate with a test, run a devil's-advocate pass. It pairs with `challenge` — `diagnose` builds the hypothesis, `challenge` stress-tests it.
+When something breaks, Claude defaults to the first plausible cause. `diagnose` holds it to bedrock instead: the root cause has to be proven by a reproduction that fails because of it, and the defect class it names drives a search for every sibling instance. It pairs with `challenge` — `diagnose` builds the hypothesis, `challenge` stress-tests it.
 
 ### 3. When Claude is writing prompts, agents, or skills — `prompting`
 
@@ -55,7 +55,7 @@ Two plugins, each a coherent domain:
 | `commit` | Structured commit workflow. |
 | `consult-fable` | Spawn a Fable second opinion on anything hard — a design, a diagnosis, a plan, or a choice you keep re-opening. |
 | `coordinate` | Coordinate opus subagents through several work items in parallel worktrees — unblock them, settle conflicts between them, and deliver the result: stacked PRs unless the brief names another. |
-| `diagnose` | Systematic root-cause debugging methodology. |
+| `diagnose` | Root-cause debugging, proven by a reproduction. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Write the prose LLMs read — agent prompts, skills, subagent instructions, and handoffs — and remove instructions written for older models from an existing prompt surface, applied in place and never committed. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
