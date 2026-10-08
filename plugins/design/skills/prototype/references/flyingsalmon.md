@@ -1,6 +1,6 @@
 # flyingsalmon rules for prototypes
 
-Distilled from flyingsalmon at commit `cb98736`: `CLAUDE.md`, `GLOSSARY.md`, `docs/adr/`, and the `interface-review` skill. These are the rules that change rarely. The component list is never recorded here; read it from `https://flyingsalmon.superbrian.dev/r/registry.json`. When this file and the published registry disagree, the registry wins, and the commit message says where they disagreed.
+Distilled from flyingsalmon at commit `a53eb9b`: `CLAUDE.md`, `GLOSSARY.md`, `docs/adr/`, and the `interface-review` skill. These are the rules that change rarely. The component list is never recorded here; read it from `https://flyingsalmon.superbrian.dev/r/registry.json`. When this file and the published registry disagree, the registry wins, and the commit message says where they disagreed.
 
 ## Hard gate
 
@@ -14,8 +14,9 @@ Every piece of UI is a registry component or a composition of registry component
 - **Surfaces** — flat. No shadows and no elevation. Surfaces separate by solid borders and background steps, and interaction feedback shows in the border.
 - **Spacing** — every padding, gap, margin, and size is a step on Tailwind's 4px scale, never a pixel value. Card, dialog, and timeline take their spacing from `--card-spacing`, `--dialog-spacing`, and `--timeline-spacing`.
 - **Radius** — derived from `--radius` (12px) through `--radius-sm` … `--radius-4xl`. Never a hardcoded value.
-- **Motion** — small, springy, under 200ms; spinner and skeleton are exempt. Durations come from `--motion-fast` and `--motion-base`, springs from the registry's `motion` item. `prefers-reduced-motion` is not handled anywhere in the system and a prototype does not add it.
+- **Motion** — small, springy, under 200ms; spinner and skeleton are exempt, and so are the sticker's boil and the scroll-linked pop-in. Durations come from `--motion-fast` and `--motion-base`, springs from the registry's `motion` item. `prefers-reduced-motion` is not handled anywhere in the system and a prototype does not add it.
 - **Light mode only** — no dark theme and no `dark:` variants.
+- **Accessibility** — every interactive element shows a visible focus state and is reachable and operable by keyboard; a stand-in keeps both. Contrast meets WCAG AA.
 
 ## Feedback rule
 
