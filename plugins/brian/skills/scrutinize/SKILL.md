@@ -193,14 +193,11 @@ If zero findings: emit a single line `NO FINDINGS`.
 ## Repo Root
 {{repo_root}}
 
-## Diff
-{{diff_text}}
+## Diff Snapshot
+{{snapshot}}    # absolute path from Step B.3 (or B.5 on replay); read the whole file before reviewing
 
 ## Changed Files
 {{diff_files}}
-
-## Project Rules
-{{project_rules — see below}}
 
 ## Axis
 {{axis_name}}
@@ -224,13 +221,9 @@ After the common blocks above, append per-axis hint blocks. Each is conditional 
   {{trigger_reason}}    # one of: "path", "code-pattern", "mandatory-new-file"
   ```
 
-**Project Rules** is the concatenation (capped at 1500 words; trim lowest-priority whole blocks if over):
-- `<repo_root>/CLAUDE.md`
-- `<repo_root>/.claude/CLAUDE.md`
-- `~/.claude/CLAUDE.md`
-- Any `*/CLAUDE.md` ancestor of any `diff_files` path (monorepo support)
+**Why a path, not the diff text.** Reviewers have Read and Bash, so the snapshot file reaches them intact; inlining the diff instead spends orchestrator output on one copy per axis and grows the orchestrator's context with every dispatch.
 
-If none exist, write the line: `No project rules found; review against general principles only.`
+**No project-rules block.** The reviewer agents are not Explore-type, so the harness already injects the same CLAUDE.md files the orchestrator sees, and loads a nested `CLAUDE.md` when a reviewer reads files under its directory. Copying them into the prompt duplicates what is already there.
 
 ### Step D.3 — Dispatch in parallel
 

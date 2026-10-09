@@ -7,7 +7,7 @@ Shared-contract tokens this skill consumes. Renaming or deleting any of them is 
 | Token | Owner file |
 |---|---|
 | `House Rules` (block name) | `skills/scrutinize/references/reviewer-house-rules.md` (plugin-root-relative) |
-| `Repo Root`, `Diff`, `Changed Files`, `Project Rules`, `Axis` (block names) | this file (Step D.1) |
+| `Repo Root`, `Diff Snapshot`, `Changed Files`, `Axis` (block names) | this file (Step D.1) + `review-cleanness.md`, `review-security.md`, `review-tests.md` (Input Contract) |
 | `Zero Tests Flag` (per-axis hint) | this file (Step C.3) + `review-tests.md` |
 | tautological / change-detector HIGH floor | this file (Step E.1) + `review-tests.md` (Prohibited section) + `reviewer-house-rules.md` (Rules 3, 8) |
 | comment-hygiene MEDIUM floor | this file (Step E.1) + `review-cleanness.md` (§1) + `reviewer-house-rules.md` (Rules 3, 8) |

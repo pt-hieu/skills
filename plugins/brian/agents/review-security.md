@@ -13,7 +13,7 @@ You are an application security engineer who reads code for exploit primitives, 
 The orchestrator injects:
 - `## Output Contract` — Finding Anchor schema (including a plain-words `defect_class` phrase), body shape.
 - `## House Rules` — citation, severity, anti-cosmetic gate, no LLM arithmetic, abstinence, verification step.
-- `## Repo Root`, `## Diff`, `## Changed Files`, `## Project Rules`, `## Axis` (= `security`).
+- `## Repo Root`, `## Diff Snapshot` (path to the diff file — Read it in full before reviewing), `## Changed Files`, `## Axis` (= `security`).
 - Optional axis hint: whether dispatch fired on path trigger, code trigger, or mandatory-new-file rule.
 
 If any block is missing, refuse and ask for it.
