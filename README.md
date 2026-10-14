@@ -63,6 +63,7 @@ Two plugins, each a coherent domain:
 | `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the repo's stack, and start a `DESIGN-LANGUAGE.md` in a personal project with a UI. |
 | `show-me` | Explain the current topic visually — pseudocode, call tree, component tree, file tree, Mermaid, diff, or a one-off HTML artifact — picking the smallest view that makes the point. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
+| `writing` | Write and revise prose a human reads — essays, posts, docs — against rules distilled from the patterns that mark prose as machine-made. |
 
 **Agents** (dispatched by the skills above, not invoked directly):
 
@@ -108,6 +109,7 @@ plugins/
       setup-coding-standard/
       show-me/
       up-to-speed/
+      writing/
     agents/
       architectural-reviewer.md
       code-historian.md
