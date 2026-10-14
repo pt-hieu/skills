@@ -76,9 +76,9 @@ mkdir -p "$scrutinize_dir"
   ```
   In both branches, append synthesized fully-added diffs for untracked files:
   ```
-  git ls-files --others --exclude-standard
+  git ls-files --others --exclude-standard | while read -r untracked_file; do git diff --no-index /dev/null "$untracked_file"; done
   ```
-  For each path, `git diff --no-index /dev/null <path>` to synthesize.
+  The loop variable is `untracked_file` because the shell is zsh, where `path` is tied to `$PATH`.
 
 - **branch mode**: resolve `<main-fallback>` by trying `main` → `master` → `origin/HEAD`. If none resolve, exit with a clear error. Then:
   ```

@@ -4,10 +4,10 @@ On-demand branches of the `$scrutinize_dir` snapshot lifecycle (Step B). `$scrut
 
 ## Retention prune (Step B.4)
 
-After the run completes (end of Step F), prune `$scrutinize_dir` to keep the 30 most recent of each artifact class by mtime:
+After the run completes (end of Step F), prune `$scrutinize_dir` to keep the 30 most recent of each artifact class by mtime. `command` bypasses any `ls` alias, whose decorated output would reach `rm`:
 
 ```
-ls -t "$scrutinize_dir/"*.diff 2>/dev/null | tail -n +31 | xargs -r rm --
+command ls -t "$scrutinize_dir/"*.diff 2>/dev/null | tail -n +31 | xargs -r rm --
 ```
 
 ## Replay mode — `--input <sha-ts>` (Step B.5)
