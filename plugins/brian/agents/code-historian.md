@@ -1,6 +1,6 @@
 ---
 name: code-historian
-description: Gathers historical "why" context for code changes from git history and the project's ticket tracker (auto-detected). Use during planning to inform the implementer about why prior changes were made to the code they're about to touch.
+description: Code historian
 model: sonnet
 color: yellow
 ---

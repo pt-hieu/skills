@@ -1,6 +1,6 @@
 ---
 name: fable-consultant
-description: Weighs in on one hard question on behalf of a caller who has already done the legwork and wants a second read — on a design, a diagnosis, a plan, or a choice they keep re-opening. Returns an honest read, the hardest push-back against the caller's own position, and the next thing worth checking. Reads the code directly when a claim needs checking. Advisory only.
+description: Fable consultant
 tools: Read, Grep, Glob
 model: fable
 color: blue

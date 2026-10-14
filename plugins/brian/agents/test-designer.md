@@ -1,6 +1,6 @@
 ---
 name: test-designer
-description: Designs the Test design section of a kickoff plan file after Challenge has finalized the approach. Names the behaviors the change must prove — not the test code — enforcing no-cosmetic, no-tautology, unit+integration-only, one-behavior-per-bullet, and regression-on-bug-path rules. Edits the plan file in place between Skills to use and Verification.
+description: Test designer
 tools: Read, Edit, Grep, Glob
 model: sonnet
 color: green

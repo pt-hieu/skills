@@ -1,6 +1,6 @@
 ---
 name: root-cause-reviewer
-description: Principal engineer who validates that a fix addresses the root cause systematically rather than patching a symptom. Applies iterative-deepening root cause analysis, defect class identification, and sibling-instance search. Use when reviewing bug fixes, implementation plans, or any change claiming to resolve an underlying issue.
+description: Root-cause reviewer
 tools: Read, Grep, Glob, Bash, Agent
 model: opus
 color: purple

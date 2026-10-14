@@ -1,6 +1,6 @@
 ---
 name: review-cleanness
-description: Code-cleanness reviewer 
+description: Code-cleanness reviewer
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: blue

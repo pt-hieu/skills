@@ -1,6 +1,6 @@
 ---
 name: review-security
-description: Application-security reviewer for a diff — authn, authz/IDOR, injection, SSRF, secrets, input validation at trust boundaries. Findings are exploit-shaped, not best-practice nags.
+description: Security reviewer
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: yellow

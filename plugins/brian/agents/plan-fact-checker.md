@@ -1,6 +1,6 @@
 ---
 name: plan-fact-checker
-description: Fact-checker for plan documents — verifies every file:line, count, path, name, and version claim the plan makes against the actual repo and installed toolchain, and audits the plan's internal numeric consistency. Use in a plan-mode challenge run alongside the architectural and root-cause reviewers.
+description: Plan fact-checker
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: yellow

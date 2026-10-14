@@ -1,6 +1,6 @@
 ---
 name: architectural-reviewer
-description: Senior software architect who stress-tests a plan or diff for architectural drift, coupling, expandability, and historical coherence. Use when auditing architectural health of proposed or just-written changes.
+description: Architectural reviewer
 tools: Read, Grep, Glob, Bash
 model: opus
 color: orange

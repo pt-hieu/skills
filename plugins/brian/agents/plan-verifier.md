@@ -1,6 +1,6 @@
 ---
 name: plan-verifier
-description: Final gate on a kickoff plan file before ExitPlanMode — verifies the plan reads as one coherent narrative for a fresh-context implementer, then injects the post-implementation protocol block. Reports findings; the orchestrator fixes.
+description: Plan verifier
 tools: Read, Edit
 model: sonnet
 color: cyan

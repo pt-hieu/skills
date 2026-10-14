@@ -4,12 +4,13 @@ A skill exists to make an agent take the same process every run. It does not nee
 
 ## Invocation and description
 
-A skill is invoked in one of two ways, and each has a cost.
+A skill is invoked in one of three ways, and each has a cost.
 
-- **Model-invoked**: leave out `disable-model-invocation` and write the description as triggers ("Use when…"). The agent, or another skill, can then reach it without help. The cost is context: the description is loaded into every session.
+- **Model-invoked**: leave out `disable-model-invocation` and write the description as triggers ("Use when…"). The agent can then reach it without help. The cost is context: the description is loaded into every session.
 - **User-invoked**: set `disable-model-invocation: true` and write the description as a one-line summary for a person. It costs no context, but the person has to remember that the skill exists. When there are too many user-invoked skills to remember, add a router skill that names them and says when to use each.
+- **Called by other skills**: a skill or subagent meant to be called by other skills gets a one-line description that restates its title. Its caller names it directly, and the description loads into every session.
 
-A description does two things: it says what the skill is, and it lists the situations that should trigger it. Put the skill's leading word early. Give each situation one trigger, because synonyms for the same situation are repetition. Leave out anything the body already says.
+A model-invoked description does two things: it says what the skill is, and it lists the situations that should trigger it. Put the skill's leading word early. Give each situation one trigger, because synonyms for the same situation are repetition. Leave out anything the body already says.
 
 ## Information hierarchy
 
