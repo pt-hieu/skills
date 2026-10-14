@@ -14,6 +14,18 @@ The enum is the source of truth. Do not declare the set as a union type. Lookup 
 
 Boolean variants are not string sets and stay booleans. A type alias that only re-exports a third-party type is not a string set and stays an alias in `types.ts`.
 
+## Types admit only valid states
+
+> Applies to every TypeScript repo, with or without a UI.
+
+A type admits the states the program can be in, and the compiler rejects the rest.
+
+- Variants that hold different data are a discriminated union keyed on an enum member. `{ completed: boolean; completedAt?: Date }` admits a completed task with no date, and `{ status: TaskStatus.Open } | { status: TaskStatus.Done; completedAt: Date }` admits valid tasks alone. A comment explaining which combinations of fields are valid marks a type that is a union.
+- A `switch` over a union handles every member and ends in a `default` that assigns the value to `never`, so adding a member fails compilation at every `switch` that misses it.
+- Two values that share a primitive and differ in meaning, such as a `UserId` and an `OrderId`, are branded types, each created by one function that validates it.
+- `as`, a non-null `!`, and `any` each assert a fact the compiler cannot prove. The fact is proven where the data enters (see Boundaries), and the assertion goes.
+- A runtime check or a "should never happen" throw marks a type that is wider than the data. The type narrows at that spot and no further: a type tracks what each caller must handle, and a function that has an answer for every input keeps the plain type.
+
 ## Components are folders
 
 > Applies to every repo that defines React components in TypeScript.

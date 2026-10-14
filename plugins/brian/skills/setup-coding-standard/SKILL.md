@@ -21,8 +21,8 @@ Done when you can state each of these and name the file that proves it: language
 
 Each catalog section opens with a blockquote stating when it applies and what to adapt. Open a catalog file when the survey meets its condition:
 
-- `references/any-stack.md` — always. Source text, Grouping, and the base Tests section.
-- `references/typescript-react.md` — when the repo has TypeScript. Enums for any TypeScript repo; Components are folders and the React additions to Tests when it defines React components.
+- `references/any-stack.md` — always. Source text, Grouping, Domain state, Boundaries, and the base Tests section.
+- `references/typescript-react.md` — when the repo has TypeScript. Types admit only valid states, and Enums, for any TypeScript repo; Components are folders and the React additions to Tests when it defines React components.
 - `references/styling.md` — when the repo defines React components. Tailwind + cva, or CSS Modules + design tokens.
 
 A section is selected when the survey proves its condition, and left out otherwise. Where the repo's stack reaches past the catalog (another language's idioms, another UI framework, another styling approach), the file carries no section for it: the catalog has no wording to select, and the gap goes in the Step 5 report.
@@ -33,7 +33,7 @@ Done when every catalog section you opened is marked selected or left out, each 
 
 Apply each selected section's adapt notes. Every placeholder becomes a real path from the repo, every example names files that exist or that the rule implies, and an ADR is cited only when that ADR exists in the repo. Text with no adapt note is copied as the catalog has it.
 
-Assemble the sections in this order under a `# Coding standards` title: Source text, Grouping, Components are folders, Class names live in classnames.ts, Enums, not string unions, Tests.
+Assemble the sections in this order under a `# Coding standards` title: Source text, Grouping, Domain state, Boundaries, Types admit only valid states, Components are folders, Class names live in classnames.ts, Enums, not string unions, Tests.
 
 ## Step 4 — Write the file
 
