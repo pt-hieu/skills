@@ -59,7 +59,7 @@ Two plugins, each a coherent domain:
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Write the prose LLMs read — agent prompts, skills, subagent instructions, and handoffs — and remove instructions written for older models from an existing prompt surface, applied in place and never committed. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
-| `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, and tests axes. |
+| `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, tests, and the repo's own `CODING_STANDARDS.md`. |
 | `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the repo's stack, and start a `DESIGN-LANGUAGE.md` in a personal project with a UI. |
 | `show-me` | Explain the current topic visually — pseudocode, call tree, component tree, file tree, Mermaid, diff, or a one-off HTML artifact — picking the smallest view that makes the point. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
@@ -74,7 +74,7 @@ Two plugins, each a coherent domain:
 | `fable-consultant` | Weighs in on one hard question — an honest read, the hardest push-back against the caller's position, and the next thing worth checking. Advisory only. |
 | `plan-fact-checker` | Verifies a plan's file:line, count, path, and toolchain claims against the actual repo; audits internal numeric consistency. |
 | `plan-verifier` | Final gate on a kickoff plan file before exiting plan mode. |
-| `review-cleanness` | Flags every non-WHY comment, shim residue, and reuse defects, plus behavior-preserving quality angles. |
+| `review-cleanness` | Flags every non-WHY comment, shim residue, reuse defects, and breaks of the repo's `CODING_STANDARDS.md`, plus behavior-preserving quality angles. |
 | `review-security` | Application-security reviewer for a diff. |
 | `review-tests` | Test-coverage reviewer for a diff. |
 | `root-cause-reviewer` | Validates that a fix addresses the root cause rather than a symptom. |

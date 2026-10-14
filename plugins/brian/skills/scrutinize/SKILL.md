@@ -1,6 +1,6 @@
 ---
 name: scrutinize
-description: "Use to review local code changes against Brian's house rules — code-cleanness (comments, reuse), security, and tests."
+description: "Use to review local code changes against Brian's house rules — code-cleanness (comments, reuse), security, tests, and the repo's own CODING_STANDARDS.md."
 ---
 
 # Scrutinize
@@ -136,7 +136,11 @@ _spec\.rb$
 
 Compute `zero_tests_flag = (production_files >= 1 AND test_files == 0)`. Pass into the tests agent's user-turn prompt as `## Zero Tests Flag: true|false`.
 
-### C.4 Override semantics
+### C.4 Coding standards
+
+When `$repo_root/CODING_STANDARDS.md` exists, record its absolute path as `standards_path`; the cleanness reviewer checks the diff against it (Step D.2).
+
+### C.5 Override semantics
 
 - `--axes=all`: dispatch every axis in the registry regardless of triggers. `skipped[]` is empty.
 - `--axes=<csv>`: dispatch the listed axes. The always-on `cleanness` axis still runs unless `--axes=<csv>` explicitly excludes it (the comma-list is authoritative). Mandatory-Security still forces security on when its rule fires.
@@ -215,6 +219,12 @@ After the common blocks above, append per-axis hint blocks. Each is conditional 
   {{zero_tests_flag}}    # literal "true" or "false" from Step C.3
   ```
 
+- **If `axis_name == cleanness` and `standards_path` is set** — append:
+  ```
+  ## Coding Standards
+  {{standards_path}}    # absolute path from Step C.4; read the whole file before reviewing
+  ```
+
 - **If `axis_name == security`** — append:
   ```
   ## Security Trigger
@@ -248,10 +258,11 @@ When all dispatched agents have returned:
 
    | Floor | Fires on | Why it cannot be demoted |
    |---|---|---|
+   | HIGH | a `review-cleanness` finding whose defect class names a coding-standard violation | a rule the repo's owner wrote into `CODING_STANDARDS.md` is a must-fix, and the gate would otherwise drop it wherever fewer than three land in one directory |
    | HIGH | a `review-tests` finding whose prose identifies it as the zero-tests obligation, a tautology, or a change detector | a test that can only pass is not a weak test but a false negative wearing a green check; at LOW, the grouping gate (rule 4) would drop the one finding explaining why the suite is lying |
    | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene | a house-rule prohibition, not a style preference; the gate would otherwise drop it wherever fewer than three land in one directory |
 
-   The floors are the only severity override; dedupe and the rest of the logic below are unchanged. Comment-hygiene findings arrive already grouped one-per-file from `review-cleanness`, so its floor promotes whole files rather than individual lines and cannot flood the report.
+   The floors are the only severity override; dedupe and the rest of the logic below are unchanged. `review-cleanness` groups comment-hygiene findings one per file and coding-standard findings one per file and section, so both its floors promote whole files rather than individual lines and cannot flood the report.
 
 2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
 3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
