@@ -6,18 +6,29 @@ argument-hint: "[focus topic]"
 
 # Commit
 
-`commit` turns a mixed diff into atomic commits — one concern each, every one named for the behavior it changes — where the default is a single commit under a summary message. Atomic is the leading word: a commit that `git bisect` can land on and `git revert` can undo without taking anything unrelated with it.
+`commit` commits the working tree as it is, in one commit per concern where staging can separate the concerns and in a bundle where it cannot.
 
-## Steps
+## Done
 
-1. **Pick the changes.** If something is staged, commit only what is staged; the caller chose it. If nothing is staged, take every working-tree change, including untracked files, but leave out anything that looks like a secret (`.env`, keys, credentials) or a build artifact, and name what you left out in the report. When a focus topic is given, commit only the changes that belong to it and leave the rest in the working tree.
-2. **Read the whole diff** (`git diff --cached`, or `git diff` plus the untracked files), and group the changes by concern: one bug fix, one feature, one rename, one config change. Done when every hunk belongs to exactly one group.
-3. **Split by staging.** For each group, stage its files, or its hunks with `git add -p`, and commit it before staging the next. When two groups cannot be separated by staging alone, bundle them (see "Bundling" below).
-4. **Report.** List each commit's short hash and subject line, then anything left uncommitted and why.
+The run is done when every change in scope is in exactly one commit and the caller has the report.
 
-The run is done when every change picked in step 1 is in exactly one commit. Keep going without asking: grouping, splitting, bundling, and messages are your call. Push, amend, or rewrite existing commits only when the caller asks, because those change history other people may already have.
+- **Scope.** When something is staged, the scope is what is staged, because the caller chose it. When nothing is staged, the scope is every working-tree change, including untracked files, minus anything that looks like a secret (`.env`, keys, credentials) or a build artifact. A focus topic narrows the scope to the changes that belong to it, and the rest stays in the working tree.
+- **Report.** Each commit's short hash and subject line, then anything left uncommitted and why.
 
-Commit hooks run. When a hook fails, fix what it reports and create the commit again. In the `interface` repository or any of its worktrees, commit with `-n` to skip the hooks.
+Keep going without asking: grouping, bundling, and messages are your call. Push, amend, or rewrite existing commits only when the caller asks, because those change history other people may already have.
+
+Every commit passes its hooks. In the `interface` repository or any of its worktrees, commit with `-n` to skip the hooks.
+
+## Splitting and bundling
+
+Separate concerns and separate types go in separate commits when staging whole files or hunks can pull them apart, and so does a diff too large to review in one sitting. Tests go in the commit with the feature or fix they cover, so that every commit passes its own tests.
+
+When separating concerns would mean editing file content, bundle them into one commit. An intermediate state rebuilt by hand never compiled or ran, so the bundle is the better commit. Two common cases:
+
+- Two iterations in the same session rewrote the same lines, so the final text is all that exists.
+- A piece of logic moved between subsystems mid-session, so neither the old home nor the new home holds a complete version.
+
+A bundle's message names the design decision that ties its changes together, not the steps and not the fact that you bundled.
 
 ## Message
 
@@ -27,36 +38,21 @@ Commit hooks run. When a hook fails, fix what it reports and create the commit a
 
 Type is one of `feat|fix|docs|style|refactor|perf|test|chore|ci|wip`, and the emoji is the gitmoji that fits the change most closely, since a reader scanning `git log` takes in the emoji before the words. Write the description in the imperative present tense ("prevent", not "prevented") and keep the whole line under 72 characters, because longer subjects wrap or get cut in `git log --oneline` and in PR views.
 
-A message describes one atomic change. Check it against the diff before committing:
+Check each message against its diff:
 
-- It names the specific behavior that changed: you can complete "this commit makes ___ work when ___" in concrete terms. If you cannot, the commit holds more than one concern; split it.
-- It carries no count ("5 bugs", "multiple issues"). A count means several concerns; split them.
+- It names the specific behavior that changed: you can complete "this commit makes ___ work when ___" in concrete terms. If you cannot, the commit holds more than one concern; split it or bundle it as "Splitting and bundling" describes.
+- It has no count ("5 bugs", "multiple issues"); a count lists the concerns and leaves the change unnamed.
 - It describes the change, not the session that produced it ("from review", "from the audit"), because a later reader of `git log` never saw that session.
-- It mentions tests only when the commit changes nothing but tests.
+- It names the code change and leaves the tests that cover it unmentioned, unless the commit is all tests.
 
 Illustrative:
 
 <bad_example>
 fix(pipeline): 5 critical bugs from 2026-03-30 morning brief review
-<reasoning>A count and a session reference, and nothing about what changed — it cannot be bisected or reverted one bug at a time.</reasoning>
+<reasoning>A count and a session reference, and nothing about what changed.</reasoning>
 </bad_example>
 
 <good_example>
 fix(pipeline): prevent null pointer when stage has no artifacts
-<reasoning>Names the behavior and the condition; bisectable and safe to revert on its own.</reasoning>
+<reasoning>Names the behavior and the condition.</reasoning>
 </good_example>
-
-## Grouping
-
-Separate concerns and separate types go in separate commits, and so does a diff too large to review in one sitting. Tests go in the same commit as the feature or fix they cover, so that every commit passes its own tests; a test-only commit holds only test changes.
-
-## Bundling
-
-When separating two concerns would mean editing file content — so that each commit stands on its own — bundle them into one commit instead. Two common cases:
-
-- Two iterations in the same session rewrote the same lines. Only the final text exists.
-- A piece of logic moved between subsystems mid-session. Neither the old home nor the new home holds a complete version.
-
-Leave the working tree as it is. An intermediate state rebuilt by hand never compiled and never ran, so it is worse for `git bisect` than the bundle. Bundle without asking the caller.
-
-The bundled message names the design decision that ties the changes together, not the steps and not the fact that you bundled. Every check under "Message" still applies.
