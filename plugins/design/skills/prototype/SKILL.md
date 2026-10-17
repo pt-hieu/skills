@@ -47,8 +47,8 @@ Done when the component list is in hand and each step of the flow is mapped to t
 Build the flow embedded into the current host application or whatever matches the arguments.
 
 - **Components** — add what the host lacks with `shadcn add @flyingsalmon/<component>`, without asking. When the flow needs something the registry lacks, or lists with no files, compose a stand-in from registry components and theme tokens and mark it as a stand-in in the code. A stock shadcn component or a hand-rolled copy of something the registry has fails this step.
-- **Scenarios** — a scenario is one named fake-data fixture: a data state (empty, error) or a starting condition (new user, paid plan). Every prototype has at least populated, empty, loading, error, and worst case; add the ones the flow's question needs. Each scenario is one fixture object, so adding one is a single edit.
-- **Fixtures** — realistic content from the subject's domain: plausible names, amounts, and dates. `Item 1` and lorem ipsum fail this step. Populated shows the flow as designed; the worst-case fixture is built the way the `design:break-ui` skill builds one, spreading plausible extreme values across the first rows on screen.
+- **Scenarios** — a scenario is one named fake-data fixture: a data state (empty, error) or a starting condition (new user, paid plan). Every prototype has at least populated, empty, loading, and error; add the ones the flow's question needs. Each scenario is one fixture object, so adding one is a single edit.
+- **Fixtures** — realistic content from the subject's domain: plausible names, amounts, dates, and one long value per list so truncation and wrapping show. `Item 1` and lorem ipsum fail this step. When the flow's question is how the layout holds up under real data, the `design:break-ui` skill adds its worst-case fixture as one more scenario.
 - **Variants** — when the brief has variants, each is one component per direction behind the same flow and fixtures, so any variant runs in any scenario.
 - **Switcher** — a floating bottom bar listing the scenarios, plus a variant group when there are variants. The switcher is test-harness chrome that reviewers look past: built from registry components like the rest, kept plain and visibly apart from the flow, and moved to the top edge whenever the flow uses the bottom of the screen (a bottom sheet, a sticky action row). The selection lives in `sessionStorage` and defaults to populated and the first variant, so a full reload keeps the state under review.
 
@@ -58,7 +58,7 @@ Done when the flow runs end to end by clicking, in every scenario and every vari
 
 ### 6. Verify
 
-Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. The worst-case scenario also has to look right in a screenshot at the host's narrowest supported width: every value stays inside its box and every action stays in reach, following the long-text convention in `design:principles`. With variants, check every variant in every scenario; when two variants came out looking the same, cut one and say so at hand-over. Fix every failure before anything reaches the user.
+Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. With variants, check every variant in every scenario; when two variants came out looking the same, cut one and say so at hand-over. Fix every failure before anything reaches the user.
 
 Done when every scenario passes in every variant.
 
@@ -77,5 +77,5 @@ Reply with the localhost URL. With variants, add one line per variant on when it
 - The session moved into a `prototype/<name>` worktree before any file was written.
 - A host that failed preflight got a discrepancy report and the run stopped.
 - Every import of UI comes from the host's installed flyingsalmon components, and each stand-in is marked.
-- The floating bar lists at least populated, empty, loading, error, and worst case, plus the variants when the brief has them.
+- The floating bar lists at least populated, empty, loading, and error, plus the variants when the brief has them.
 - The branch ends in a commit whose body names the question, scenarios, variants, added components, and gaps.

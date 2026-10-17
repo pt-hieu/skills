@@ -1,6 +1,6 @@
 {
   "name": "design",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Design skills: UI design principles, component patterns, formatting, interaction, motion, and touch rules, worst-case data stress tests, and throwaway prototyping on the flyingsalmon design system. Bundled skills: break-ui, principles, prototype.",
   "author": {
     "name": "Brian Pham",
