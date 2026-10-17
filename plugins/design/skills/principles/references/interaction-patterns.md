@@ -13,6 +13,8 @@ Every interactive element must advertise itself; nothing should be discoverable 
 
 Destructive or irreversible actions (delete, exit position, cancel order) must require explicit confirmation before they execute.
 
+A reversible action (archive, hide, mark as read) runs at once and offers undo on the affected item itself: the row shows "Archived · Undo" in place. A confirmation dialog in front of every action trains people to click through it, which spends the attention the irreversible ones need. Distilled from Emil Kowalski's [`apple-design`](https://github.com/emilkowalski/skills/tree/main/skills/apple-design) skill (MIT License).
+
 ## Progressive Disclosure
 
 Dense surfaces deliver value at a glance. Long supplementary text — interpretation, secondary analysis — is collapsed by default and revealed via a toggle. Never wall the primary content with paragraphs.

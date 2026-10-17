@@ -12,9 +12,9 @@ Builds a **throwaway** clickable flow inside the host app, out of flyingsalmon r
 
 ### 1. Brief
 
-State three things and wait for the go-ahead: the question the prototype answers, the steps of the flow from entry to end, and the scenario list (step 5 sets the floor). Pick `<name>`, a short kebab-case name for the flow. When the argument already states all three, proceed without waiting.
+State three things and wait for the go-ahead: the question the prototype answers, the steps of the flow from entry to end, and the scenario list (step 5 sets the floor). When the question compares alternatives (side panel or page, grouped by customer or by issue, dense or roomy), add the variants: two or three directions, each named with the dimension it differs on, such as layout, density, hierarchy, container choice, or grouping. flyingsalmon fixes the look, so two directions that differ in color, type, or copy are one direction. Pick `<name>`, a short kebab-case name for the flow. When the argument already states everything the brief needs, proceed without waiting.
 
-Done when the question, the flow steps, and the scenarios are agreed.
+Done when the question, the flow steps, the scenarios, and any variants are agreed.
 
 ### 2. Worktree
 
@@ -47,34 +47,35 @@ Done when the component list is in hand and each step of the flow is mapped to t
 Build the flow embedded into the current host application or whatever matches the arguments.
 
 - **Components** — add what the host lacks with `shadcn add @flyingsalmon/<component>`, without asking. When the flow needs something the registry lacks, or lists with no files, compose a stand-in from registry components and theme tokens and mark it as a stand-in in the code. A stock shadcn component or a hand-rolled copy of something the registry has fails this step.
-- **Scenarios** — a scenario is one named fake-data fixture: a data state (empty, error) or a starting condition (new user, paid plan). Every prototype has at least populated, empty, loading, and error; add the ones the flow's question needs. Each scenario is one fixture object, so adding one is a single edit.
-- **Fixtures** — realistic content from the subject's domain: plausible names, amounts, dates, and one long value per list so truncation and wrapping show. `Item 1` and lorem ipsum fail this step.
-- **Switcher** — a floating bottom bar listing the scenarios. The selected scenario lives in `sessionStorage` and defaults to populated, so a full reload keeps the scenario under review.
+- **Scenarios** — a scenario is one named fake-data fixture: a data state (empty, error) or a starting condition (new user, paid plan). Every prototype has at least populated, empty, loading, error, and worst case; add the ones the flow's question needs. Each scenario is one fixture object, so adding one is a single edit.
+- **Fixtures** — realistic content from the subject's domain: plausible names, amounts, and dates. `Item 1` and lorem ipsum fail this step. Populated shows the flow as designed; the worst-case fixture is built the way the `design:break-ui` skill builds one, spreading plausible extreme values across the first rows on screen.
+- **Variants** — when the brief has variants, each is one component per direction behind the same flow and fixtures, so any variant runs in any scenario.
+- **Switcher** — a floating bottom bar listing the scenarios, plus a variant group when there are variants. The switcher is test-harness chrome that reviewers look past: built from registry components like the rest, kept plain and visibly apart from the flow, and moved to the top edge whenever the flow uses the bottom of the screen (a bottom sheet, a sticky action row). The selection lives in `sessionStorage` and defaults to populated and the first variant, so a full reload keeps the state under review.
 
 Every screen is reachable by clicking through the flow from its entry; state is in memory.
 
-Done when the flow runs end to end by clicking, in every scenario.
+Done when the flow runs end to end by clicking, in every scenario and every variant.
 
 ### 6. Verify
 
-Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. Fix every failure before anything reaches the user.
+Start the host's dev command in the worktree as a background process on a free port. With the `agent-browser` skill, open the prototype and select each scenario from the switcher. A scenario passes when the page renders its content with no error overlay and no uncaught console error. The worst-case scenario also has to look right in a screenshot at the host's narrowest supported width: every value stays inside its box and every action stays in reach, following the long-text convention in `design:principles`. With variants, check every variant in every scenario; when two variants came out looking the same, cut one and say so at hand-over. Fix every failure before anything reaches the user.
 
-Done when every scenario passes.
+Done when every scenario passes in every variant.
 
 ### 7. Commit
 
-Commit on the prototype branch and never push. The commit message is the record a later reader of the branch starts from, so its body states: the question the prototype answers, the scenarios, the flyingsalmon components added to the host, and the gaps filled with stand-ins.
+Commit on the prototype branch and never push. The commit message is the record a later reader of the branch starts from, so its body states: the question the prototype answers, the scenarios, the variants and the dimension each differs on, the flyingsalmon components added to the host, and the gaps filled with stand-ins.
 
 Done when the working tree is clean.
 
 ### 8. Hand over
 
-Reply with the localhost URL. Each round of feedback is a change followed by steps 6 and 7 again. Leave the dev server and the worktree running; leave the worktree only when the user asks. What happens to the prototype afterwards is the user's decision.
+Reply with the localhost URL. With variants, add one line per variant on when it is the right choice and what it costs, and leave the pick to the user; when the user leans toward one, the next round can branch new variants around it. Each round of feedback is a change followed by steps 6 and 7 again. Leave the dev server and the worktree running; leave the worktree only when the user asks. What happens to the prototype afterwards is the user's decision.
 
 ## It's working if
 
 - The session moved into a `prototype/<name>` worktree before any file was written.
 - A host that failed preflight got a discrepancy report and the run stopped.
 - Every import of UI comes from the host's installed flyingsalmon components, and each stand-in is marked.
-- The floating bar lists at least populated, empty, loading, and error.
-- The branch ends in a commit whose body names the question, scenarios, added components, and gaps.
+- The floating bar lists at least populated, empty, loading, error, and worst case, plus the variants when the brief has them.
+- The branch ends in a commit whose body names the question, scenarios, variants, added components, and gaps.

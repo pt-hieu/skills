@@ -38,9 +38,11 @@ Stops Claude from writing the kind of commit message a future `git blame` won't 
 
 ### 5. When I'm building UI — `design`
 
-`principles` collects the UI design rules I otherwise re-explain on every project: component patterns, formatting, interaction defaults. Loads automatically when Claude is touching frontend.
+`principles` collects the UI design rules I otherwise re-explain on every project: component patterns, formatting, interaction defaults, motion, and touch. Loads automatically when Claude is touching frontend.
 
-`prototype` builds a throwaway clickable flow inside an app that consumes my flyingsalmon design system: fake data, a scenario switcher, its own worktree branch, and only registry components.
+`prototype` builds a throwaway clickable flow inside an app that consumes my flyingsalmon design system: fake data, a scenario switcher, design variants when the question compares directions, its own worktree branch, and only registry components.
+
+`break-ui` feeds a component the worst data its real users will produce (unbreakable emails, one-letter names, missing fields, huge counts) behind a toggle, then reports what broke and waits for me to pick the fixes.
 
 ## What's inside
 
@@ -84,8 +86,9 @@ Two plugins, each a coherent domain:
 
 | Skill | Purpose |
 | --- | --- |
-| `principles` | UI design principles, component patterns, formatting, interaction rules. |
-| `prototype` | Throwaway clickable flow on fake data with a scenario switcher, built from flyingsalmon registry components on a worktree branch. |
+| `break-ui` | Worst-case data behind a toggle, a report of every break with its fix, and fixes applied on request. |
+| `principles` | UI design principles, component patterns, formatting, interaction, motion, and touch rules. |
+| `prototype` | Throwaway clickable flow on fake data with a scenario switcher and optional design variants, built from flyingsalmon registry components on a worktree branch. |
 
 ## Layout
 
@@ -124,6 +127,7 @@ plugins/
   design/
     .claude-plugin/plugin.json
     skills/
+      break-ui/
       principles/
       prototype/
 ```

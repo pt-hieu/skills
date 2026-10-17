@@ -12,7 +12,7 @@ Borders, dividers, numbering, and labels encode something about the content. Num
 
 ## Spend boldness in one place
 
-Let one element of the flow be the memorable thing and keep everything around it quiet. Cut any decoration that does not serve the question the prototype answers. Non-user-triggered motion is for drawing attention to one moment; motion that answers the user's action is welcome when it shows what changed.
+Let one element of the flow be the memorable thing and keep everything around it quiet. Cut any decoration that does not serve the question the prototype answers. Whether and how anything moves follows `design:principles`' motion reference.
 
 ## Words
 

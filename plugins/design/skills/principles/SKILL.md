@@ -31,7 +31,8 @@ Non-negotiable. Every build and review run tests against all nine; violations ar
 
 - **Text casing** — Reserve ALL CAPS for short card/section titles; use sentence case for labels and navigation, and Title Case for chips and badges.
 - **Dates** — Display as `DD MMM YYYY` (e.g., "02 Feb 2026"), one format across the entire product so users never re-parse.
-- **Numbers** — Keep currency, percent, and compact-number formatting consistent everywhere. Render null/missing values as a single placeholder character or an empty state, never as "null", "N/A", or a blank cell.
+- **Numbers** — Keep currency, percent, and compact-number formatting consistent everywhere. In a table cell, render a null/missing value as a single placeholder character, never as "null", "N/A", or a blank cell; in a stacked layout such as a card, omit the missing field's line. Pluralize every count by its value, so 1 reads "1 member".
+- **Long text** — Decide per field what a long value does. Wrap text that identifies something (names, titles in a detail view). Truncate secondary metadata at the end. Truncate in the middle when values differ at the end (file names, paths, emails sharing a domain). Clamp multi-line previews in cards to a fixed line count. Numbers, amounts, dates, and anything the user compares keep their full value on screen. A truncated value is readable in full in its detail view or drawer, following the tooltip rule in [references/interaction-patterns.md](references/interaction-patterns.md). To stress a surface with worst-case data, use the `design:break-ui` skill.
 
 ## Component states
 
@@ -42,7 +43,9 @@ Non-negotiable. Every build and review run tests against all nine; violations ar
 ## References
 
 - When choosing between a side panel/drawer and a modal/dialog — sizing, content budgets, or the inspect-then-act chaining pattern — read [references/drawer-dialog.md](references/drawer-dialog.md).
-- When building expand/collapse, progressive disclosure, confirmations for critical operations, or wiring up interactive cues (chevron placement, clickable affordances, metric info icons), read [references/interaction-patterns.md](references/interaction-patterns.md).
+- When building expand/collapse, progressive disclosure, confirmations for critical or reversible operations, or wiring up interactive cues (chevron placement, clickable affordances, metric info icons), read [references/interaction-patterns.md](references/interaction-patterns.md).
+- When adding, changing, or reviewing any animation or transition, read [references/motion.md](references/motion.md).
+- When the UI ships to phones, read [references/touch.md](references/touch.md).
 
 ## Auditing an existing UI
 
@@ -51,7 +54,9 @@ When reviewing a UI for visual consistency, run each block below as a checklist 
 1. **The 9 principles** — test the UI against each; record every violation tagged with its principle number.
 2. **Hard rules** — scan for accent stripes, off-scale font sizes, and text-opacity softening; record each occurrence with its location.
 3. **Component states** — confirm every async, empty, and error surface has its state handled.
-4. **Conventions** — verify text casing, dates, and numbers against the rules above.
-5. **Interaction cues and container choices** — confirm cues match [references/interaction-patterns.md](references/interaction-patterns.md) and container choices match [references/drawer-dialog.md](references/drawer-dialog.md).
+4. **Conventions** — verify text casing, dates, numbers, and long text against the rules above.
+5. **Interaction, motion, and containers** — confirm cues match [references/interaction-patterns.md](references/interaction-patterns.md), container choices match [references/drawer-dialog.md](references/drawer-dialog.md), motion matches [references/motion.md](references/motion.md), and, when the UI ships to phones, touch behavior matches [references/touch.md](references/touch.md).
 
-The audit is done only when all five passes are complete and every violation found is listed with a file/location and the rule it breaks.
+Before listing a violation, re-read it at its location and confirm it. A deviation the project's own design system documents as a chosen exception is noted as such and kept out of the violation list, since that system wins on conflicts.
+
+The audit is done when all five passes are complete and every confirmed violation is listed with a file/location and the rule it breaks, ordered so the ones that do the most damage to the user come first: a hierarchy failure leads, a casing slip trails.

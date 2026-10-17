@@ -19,7 +19,7 @@ The drawer is a parallel reading pane, not a navigation event. The parent list s
 - Wide — metrics tables or side-by-side comparisons.
 - **Never wider than 50% of viewport** — the parent list must remain usable.
 
-**Transitions:** Opening compresses main content — never overlays it. Parent list must remain visible. On mobile, use a bottom sheet with a clear "back to list" gesture.
+**Transitions:** Opening compresses main content — never overlays it. Parent list must remain visible. The drawer slides in on `transform`, and the main content takes its narrower width in one re-layout; animating the column's width or margin re-lays out the whole page on every frame. On mobile, use a bottom sheet with a clear "back to list" gesture, built to [touch.md](touch.md).
 
 ---
 
