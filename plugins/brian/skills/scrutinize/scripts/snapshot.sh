@@ -3,13 +3,16 @@
 #
 # Usage: snapshot.sh working-tree | branch <name> | commit <sha> | base <ref> | replay <sha-ts>
 #
-# A snapshot is a directory under /tmp/scrutinize/<flattened-repo-path>/<short-sha>-<UTC-ISO>/:
+# A snapshot is a directory under /tmp/scrutinize/<flattened-repo-path>/<short-sha>-<UTC-ISO>[-N]/:
 #   full.diff    the whole diff, for replay and the trigger scan
 #   files/       one diff per changed file, at files/<repo-path>.diff
 #   index.tsv    one line per changed file: status, diff line count, repo path, per-file diff path
 #
 # Runs under bash 3.2 (the macOS default), so it uses no associative arrays.
 set -euo pipefail
+
+# Paths with non-ASCII characters print as themselves, so diff headers and index paths match the repo.
+git() { command git -c core.quotePath=false "$@"; }
 
 mode=${1:?usage: snapshot.sh working-tree | branch <name> | commit <sha> | base <ref> | replay <sha-ts>}
 ref=${2:-}
@@ -25,7 +28,9 @@ if [ "$mode" = replay ]; then
 else
   short_sha=$(git rev-parse --short HEAD 2>/dev/null || echo nohead)
   snapshot="$scrutinize_dir/${short_sha}-$(date -u +%Y%m%dT%H%M%SZ)"
-  mkdir -p "$snapshot"
+  # Two runs in the same second get separate directories.
+  base_name=$snapshot; suffix=1
+  while ! mkdir "$snapshot" 2>/dev/null; do suffix=$((suffix + 1)); snapshot="$base_name-$suffix"; done
   full="$snapshot/full.diff"
   case $mode in
     working-tree)
@@ -47,7 +52,12 @@ else
       ;;
     commit)
       [ -n "$ref" ] || { echo "scrutinize: commit mode needs a sha" >&2; exit 2; }
-      git show --format= "$ref" > "$full"
+      # A merge commit is reviewed against its first parent; git show would print an empty combined diff.
+      if git rev-parse -q --verify "$ref^1" >/dev/null; then
+        git diff "$ref^1" "$ref" > "$full"
+      else
+        git show --format= "$ref" > "$full"
+      fi
       ;;
     base)
       [ -n "$ref" ] || { echo "scrutinize: base mode needs a ref" >&2; exit 2; }
@@ -70,7 +80,7 @@ else
     }
     /^diff --git / {
       flush()
-      path = $0; sub(/^.* b\//, "", path); gsub(/"/, "", path)
+      path = $0; gsub(/"/, "", path); sub(/^.* b\//, "", path)
       file = out "/" path ".diff"
       dir = file; sub(/\/[^\/]*$/, "", dir)
       system("mkdir -p \"" dir "\"")
@@ -112,14 +122,17 @@ while IFS="$(printf '\t')" read -r status lines path file_diff; do
     production_files="$production_files$path
 "
   fi
-  if printf '%s\n' "$path" | grep -Eq "$path_regex"; then path_hits="$path_hits $path"; fi
+  if printf '%s\n' "$path" | grep -Eq "$path_regex"; then path_hits="$path_hits$path
+"; fi
   if ! printf '%s\n' "$path" | grep -Eq "$prose_file_regex" \
-    && grep -E '^\+' "$file_diff" | grep -Ev '^\+\+\+ ' | grep -Eq "$code_regex"; then
-    code_hits="$code_hits $path"
+    && grep -E '^\+' "$file_diff" | grep -Ev '^\+\+\+ ' | grep -E "$code_regex" >/dev/null; then
+    code_hits="$code_hits$path
+"
   fi
   if [ "$status" = A ]; then
     path_dir=$(dirname "$path")/
-    if printf '%s\n' "$path_dir" | grep -Eq "$boundary_dir_regex|$path_regex"; then new_file_hits="$new_file_hits $path"; fi
+    if printf '%s\n' "$path_dir" | grep -Eq "$boundary_dir_regex|$path_regex"; then new_file_hits="$new_file_hits$path
+"; fi
   fi
 done < "$index"
 
@@ -144,7 +157,7 @@ if [ "$production_count" -gt 0 ] && [ "$test_count" -eq 0 ]; then
       done
       case " $checked_packages " in *" $package_dir "*) continue ;; esac
       checked_packages="$checked_packages $package_dir"
-      if git ls-files -- "$package_dir" | grep -Eq "$test_path_regex"; then
+      if git ls-files -- "$package_dir" | grep -E "$test_path_regex" >/dev/null; then
         tests_home=yes; tests_home_reason="$package_dir has test files"; break
       fi
       if [ -f "$package_dir/package.json" ] && grep -Eq '"test"[[:space:]]*:' "$package_dir/package.json"; then
@@ -159,12 +172,10 @@ EOF
   fi
 fi
 
-# Names the first three matching paths and counts the rest.
+# Names the first three matching paths (one per line in $1) and counts the rest.
 first_paths() {
-  set -- $1
-  shown="$1${2:+ $2}${3:+ $3}"
-  [ $# -gt 3 ] && shown="$shown (and $(($# - 3)) more)"
-  printf '%s' "$shown"
+  printf '%s' "$1" | awk 'NF { count++; if (count <= 3) shown = shown (count > 1 ? " " : "") $0 }
+    END { printf "%s", shown; if (count > 3) printf " (and %d more)", count - 3 }'
 }
 if [ -n "$path_hits" ]; then security_trigger="path: $(first_paths "$path_hits")"
 elif [ -n "$new_file_hits" ]; then security_trigger="mandatory-new-file: $(first_paths "$new_file_hits")"
