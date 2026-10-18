@@ -49,15 +49,15 @@ Then check `CLAUDE.md` (or `AGENTS.md`): when neither points at `CODING_STANDARD
 
 The file describes the standards as they are. It carries no mention of the catalog, this skill, or an earlier version of itself.
 
-**Design language** — when the survey found a UI whose look Brian decides and no `DESIGN-LANGUAGE.md`, write one at the repo root from the template in `references/design-language.md`. An existing `DESIGN-LANGUAGE.md` holds Brian's taste; leave it as it is. When `CLAUDE.md` (or `AGENTS.md`) does not point at `DESIGN-LANGUAGE.md`, add one line that does: "Every rule for how the product looks is in `DESIGN-LANGUAGE.md`."
+**Design language** — when the survey found a UI whose look Brian decides, read `references/design-language.md`. With no `DESIGN-LANGUAGE.md` in the repo, write one at the repo root holding the single line `# Design language`; Brian's rules join it as his feedback arrives. An existing `DESIGN-LANGUAGE.md` holds Brian's taste; leave it as it is. Then give `CLAUDE.md` (or `AGENTS.md`) the block from the reference: the block replaces an existing pointer line to `DESIGN-LANGUAGE.md`, and goes where the reference says when there is none. The rules live in `CLAUDE.md` because that file is loaded into every session, where they shape what gets written into `DESIGN-LANGUAGE.md`.
 
 ## Step 5 — Report
 
-Tell Brian which sections went in and the survey fact behind each, whether `DESIGN-LANGUAGE.md` was written and why, which were left out and why, what the catalog had no section for, and any repo-own section that looks general enough to join the catalog.
+Tell Brian which sections went in and the survey fact behind each, whether `DESIGN-LANGUAGE.md` was written and the design-language block added to `CLAUDE.md`, and why, which were left out and why, what the catalog had no section for, and any repo-own section that looks general enough to join the catalog.
 
 ## It's working if
 
 - Every section in the written file traces to a catalog section, and every selected section to a named file in the repo.
-- The written file has no `<placeholder>` left, and no path or ADR number that belongs to flyingsalmon.
+- The written file and the design-language block have no `<placeholder>` left, and no path or ADR number that belongs to flyingsalmon.
 - An existing file's own sections are byte-identical after the run, and an existing `DESIGN-LANGUAGE.md` is untouched.
-- Every `DESIGN-LANGUAGE.md` in the repo has a pointer in `CLAUDE.md` or `AGENTS.md`.
+- Every `DESIGN-LANGUAGE.md` in the repo has the pointer and the rules from `references/design-language.md` in `CLAUDE.md` or `AGENTS.md`.
