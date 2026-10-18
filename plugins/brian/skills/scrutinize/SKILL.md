@@ -5,7 +5,7 @@ description: "Use to review local code changes against Brian's house rules — c
 
 # Scrutinize
 
-`brian:scrutinize` reviews a local diff with one reviewer subagent per axis (cleanness, security, tests), each in its own context, then synthesizes their findings into one report whose verdict line says whether every axis covered the whole diff. It needs the Agent tool, so it runs from a main session or from a subagent that has one; a workflow worker has none.
+`brian:scrutinize` reviews a local diff with one reviewer subagent per axis (cleanness, security, tests), each in its own context, then synthesizes their findings into one report whose verdict line says whether every axis covered the whole diff. It dispatches through the Agent tool, which a main session and a regular subagent have and a workflow worker lacks.
 
 The leading word is **coverage**: a review counts for the files its reviewers read, and the report says which those were.
 
@@ -29,7 +29,7 @@ The leading word is **coverage**: a review counts for the files its reviewers re
 | `security` | `brian:review-security` | no | the snapshot script's `security trigger` line is not `none` |
 | `tests` | `brian:review-tests` | no | any production or test file changed, and on a zero-tests diff a home for tests exists (Step C) |
 
-Every reviewer runs on `sonnet`. Steps C through F refer to this table and enumerate no axes of their own.
+Every reviewer runs on `sonnet`.
 
 ---
 
@@ -37,7 +37,7 @@ Every reviewer runs on `sonnet`. Steps C through F refer to this table and enume
 
 Map the invocation onto a mode (`working-tree`, `branch`, `commit`, `base`, or `replay`) and an axis override. Reject incompatible flags, such as `--branch` with `--commit`, with a one-line error.
 
-A caller may pass prose instead of flags ("review f18c77f..HEAD, report only rule-named findings"). Map the range onto a mode and keep the rest of the prose for Step E: a caller's filter decides what it does with the report, and it never reaches a reviewer.
+A caller may pass prose instead of flags ("review f18c77f..HEAD, report only rule-named findings"). Map the range onto a mode and keep the rest of the prose for Step E (D.2 says why it stays out of reviewer prompts).
 
 ## Step B. Snapshot the diff
 
@@ -49,7 +49,7 @@ Run the bundled script as a single plain command, with the mode and its argument
 
 `${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory. The script writes the snapshot directory under `/tmp`, outside the repo: `full.diff`, one diff per changed file under `files/`, and `index.tsv` with one line per file (status, diff line count, repo path, per-file diff path). It prunes old snapshots, and prints the facts Steps C and F use: the snapshot path, file and line counts, the security trigger, and the zero-tests facts. Exit 3 means the diff is empty: report that there is nothing to review and stop.
 
-The script is the only snapshot path, because a hand-written equivalent drifts from it and loses replay. When the shell refuses or fails to run it, report the refusal and stop.
+A hand-written snapshot drifts from the script's layout and breaks replay, so when the shell refuses or fails to run the script, report the refusal and stop.
 
 ## Step C. Decide the axes
 
@@ -89,7 +89,7 @@ Every finding starts with a Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-Name the defect class in plain words — a short phrase for the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Synthesis merges and renders by `defect_class`, so every anchor carries it.
+Name the defect class in plain words — a short phrase in your own words for the underlying defect (e.g. "missing validation — external input to a DB query"). Synthesis merges and renders by `defect_class`, so every anchor carries it.
 
 After the anchor, the body is:
 
@@ -133,7 +133,7 @@ Caller context stays out of these prompts: accepted risks, out-of-scope notes, f
 - **tests**: `## Zero Tests Flag` with `true` or `false` from the script, and `## Coding Standards` with its path when the file exists, so the fixes it proposes follow the repo's test rules.
 - **security**: `## Security Trigger` with the Step C reason.
 
-The reviewers are not Explore-type, so the harness already gives them the CLAUDE.md files the orchestrator sees, and a project-rules block would duplicate them.
+The harness gives the reviewers the same CLAUDE.md files you see, so the prompt leaves project rules out.
 
 ### D.4 Dispatch in parallel
 

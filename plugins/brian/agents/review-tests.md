@@ -42,8 +42,8 @@ Both are worse than no test. They catch no defects, block refactoring, and docum
 
 For each assertion, run both directions — a test can fail either, both, or neither, and must survive both.
 
-1. **Mutate the implementation.** Reason through flipping a `+` to a `-` or an `==` to a `!=`, dropping a guard, returning a wrong constant of the right type, returning the input unchanged, or replacing the body with one that does nothing. Does the test go red? If you cannot name a single mutation that turns it red, it is **tautological** — flag it, and name in the finding the exact mutation the test survives (file, line, change). You reason about mutations and run none (House Rule 10); the orchestrator runs the one you name before the finding reaches the report, so say plainly that the check was reasoned.
-2. **Refactor the implementation.** Reason through renaming a private helper, reorder two independent calls, swap a hand-rolled loop for a `map`, or extract a step into a new function — changing nothing a caller can observe. Does the test go red? If it does, it is a **change detector** — flag it.
+1. **Mutate the implementation.** Reason through flipping a `+` to a `-` or an `==` to a `!=`, dropping a guard, returning a wrong constant of the right type, returning the input unchanged, or replacing the body with one that does nothing. Does the test go red? If you cannot name a single mutation that turns it red, it is **tautological** — flag it, and name in the finding the exact mutation the test survives (file, line, change). You reason through mutations and leave running them to the orchestrator (House Rule 10), which runs the one you name before the finding reaches the report, so say in the finding that the check was reasoned.
+2. **Refactor the implementation.** Reason through renaming a private helper, reordering two independent calls, swapping a hand-rolled loop for a `map`, or extracting a step into a new function — changing nothing a caller can observe. Does the test go red? If it does, it is a **change detector** — flag it.
 
 ### Syntactic screen
 

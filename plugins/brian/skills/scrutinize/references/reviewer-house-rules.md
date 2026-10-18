@@ -11,7 +11,7 @@ Say how confident you are in each finding, and why, as plain prose in the findin
 ## 3. Anti-cosmetic gate
 This is the anti-cosmetic gate. Drop these — do not emit findings for any of them:
 - Style, formatting, or anything a linter/formatter would enforce.
-- Pre-existing acknowledged issues that the current diff does not change. Code this diff adds or changes is never pre-existing, even when it moves an older behavior.
+- Pre-existing acknowledged issues that the current diff does not change. Code this diff adds or changes counts as new, even when it moves an older behavior.
 - Speculation without disk evidence.
 - "Could refactor" advisory without a concrete defect.
 
@@ -27,7 +27,7 @@ Counts, ratios, line-spans come from tool output (`grep -c`, `wc -l`, `git diff 
 If two of your own findings overlap on the same `file:line`, pick one (higher severity wins) or treat both as low-confidence. Do not emit both.
 
 ## 7. Abstinence
-If you cannot assess from disk, say so plainly in prose — state that you could not assess this axis and name what's missing — and move on. Do not invent filler. `NO FINDINGS` is clean and welcome — emit it when honest, and only for the files your coverage statement (Rule 9) says you read.
+If you cannot assess from disk, say so plainly in prose — state that you could not assess this axis and name what's missing — and move on. Do not invent filler. `NO FINDINGS` is clean and welcome — emit it when honest, for the files your coverage statement (Rule 9) says you read.
 
 ## 8. Axis routing constraints
 
@@ -44,11 +44,11 @@ One defect, one axis. These six rules say who owns what, so two reviewers never 
 
 `## Diff Snapshot` names the snapshot directory, and `## Changed Files` lists the files assigned to you, one line each: status, the line count of the file's diff, its repo path, and the path of its own diff file. Read the per-file diff of every listed file before reviewing it. Read returns a large file in slices and says nothing about the rest, so compare the last line number a Read returned with the listed count, and read on with `offset` until you reach it. `full.diff` in the snapshot directory holds the whole diff, other reviewers' files included, for when you need a neighbor's change for context.
 
-End your report with a coverage statement: either that you read every listed file's diff in full, or which files you did not read in full and why. A file that holds no code for your axis, such as a lockfile or an image, may be left out with that reason. The orchestrator turns this statement into the report's coverage line, and an axis with any other gap is reported as incomplete, so name every file you left out: a gap you leave unnamed reaches the caller as a clean review.
+End your report with a coverage statement: that you read every listed file's diff in full, or which files you read in part or skipped, and why. A lockfile, an image, or another file with no code for your axis can be left out with that reason. The orchestrator builds the report's coverage line from this statement and marks the axis incomplete for any other gap, so a file you leave out without naming it reaches the caller as reviewed.
 
 ## 10. Leave the files as you found them
 
-Edit, mutate, stash, and check out nothing in the repo, including to try a mutation. Other reviewers read the same files while you work, and in working-tree mode the diff is the user's uncommitted work, which `git checkout` and `git stash` destroy. When a finding rests on a mutation, name it exactly (the file, the line, and the change); the orchestrator runs it after every reviewer has returned.
+Leave every file in the repo as you found it, including when you want to try a mutation. Other reviewers read the same files while you work, and in working-tree mode the diff is the user's uncommitted work, which `git checkout` and `git stash` destroy. When a finding rests on a mutation, name it exactly (the file, the line, and the change); the orchestrator runs it after every reviewer has returned.
 
 ## Verification step (run before returning)
 
