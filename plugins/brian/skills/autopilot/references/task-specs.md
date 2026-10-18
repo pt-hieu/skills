@@ -130,8 +130,9 @@ Each section below is the full spec for one task — the target of its Step-0 po
   > **Action**: invoke `brian:scrutinize` via the `Skill` tool on the working-tree diff (safe — chat-only, no terminal prompt, no internal loop). Treat findings as a hostile audit. Disposition each:
   > - Medium-severity → **Fix**, **Rebut** with citable evidence, or **Defer** with a follow-up reference recorded into the design's Assumptions register (so it surfaces in the PR).
   > - High-severity → **must Fix or Rebut with citable evidence. A high-severity finding may NOT be deferred** (severity floor). A high-severity finding that can be neither fixed nor citably rebutted → fire the terminal: **`🛑 BLOCKED` draft PR** (title leads with the unresolved finding, do not mark ready-for-review, post to chat, halt).
+  > - Read the report's `verdict:` line before the findings. `incomplete` means some axis left part of the diff unreviewed: record each axis and the files it did not cover, as the header's `coverage:` line names them, at the top of the Assumptions register, so the PR leads with what no reviewer read. If scrutinize reports that it did not run, fire the **`🛑 BLOCKED` draft PR** terminal: the diff has no review.
   > One scrutinize pass — do not re-run it after dispositioning. Apply the fixes and proceed to T11. Severity is judged from each finding's prose.
-  > **Gate**: no unaddressed high-severity finding; every medium-severity finding dispositioned and register-surfaced (or a blocked terminal fired).
+  > **Gate**: no unaddressed high-severity finding; every medium-severity finding dispositioned and register-surfaced; an `incomplete` verdict's gaps recorded in the register (or a blocked terminal fired).
 
 ---
 

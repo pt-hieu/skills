@@ -5,320 +5,195 @@ description: "Use to review local code changes against Brian's house rules — c
 
 # Scrutinize
 
-## What it does
-Reviews a local diff by axis (cleanness, security, tests) with parallel reviewer subagents instead of one generalist pass, then synthesizes their findings under Brian's house rules into a severity-ordered list in chat. The diff is also snapshotted under a per-repo directory in `/tmp` (outside the repo) for replay.
+`brian:scrutinize` reviews a local diff with one reviewer subagent per axis (cleanness, security, tests), each in its own context, then synthesizes their findings into one report whose verdict line says whether every axis covered the whole diff. It needs the Agent tool, so it runs from a main session or from a subagent that has one; a workflow worker has none.
+
+The leading word is **coverage**: a review counts for the files its reviewers read, and the report says which those were.
 
 ## Args
-- *(no args)* — working-tree mode: stages + unstaged + untracked files.
-- `--branch <name>` — diff a branch against its merge-base with `main`/`master`/`origin/HEAD`.
-- `--commit <sha>` — review a single commit.
-- `--base <ref>` — diff `<ref>..HEAD`.
-- `--axes=all` — force every axis (override smart-dispatch).
-- `--axes=<csv>` — force a specific axis set (the always-on cleanness axis still runs).
-- `--input <sha-ts>` — replay against a prior cached snapshot (see Output for the path).
 
-## Output
-- Diff snapshot: `/tmp/scrutinize/<flattened-repo-path>/<sha>-<UTC-ISO>.diff` — lives outside the repo (no `.gitignore` entry needed); used by `--input <sha-ts>` to replay against the cached diff.
+- *(no args)*: working-tree mode, meaning staged, unstaged, and untracked changes.
+- `--branch <name>`: the branch against its merge-base with `main`, `master`, or `origin/HEAD`.
+- `--commit <sha>`: one commit.
+- `--base <ref>`: `<ref>..HEAD`.
+- `--axes=all`: every axis, whatever the triggers say.
+- `--axes=<csv>`: the listed axes. The mandatory-new-file security rule still adds security.
+- `--input <sha-ts>`: replay a prior snapshot, named by its directory under `/tmp/scrutinize/<flattened-repo-path>/`.
 
 ---
 
-`brian:scrutinize` dispatches axis-specialized reviewer subagents in parallel against a local diff, synthesizes findings under Brian's house rules, and prints a severity-ordered findings list to chat. Chat output is the canonical and sole output mode; the diff is snapshotted to disk under a per-repo directory in `/tmp` to support `--input <sha-ts>` replay. The snapshot lives outside the repo root so it never pollutes the working tree or needs a `.gitignore` entry.
+## Axis Registry
 
-The orchestrator owns the I/O contract. Reviewer agents narrate the contract in their Input Contract sections — they do not own the Finding Anchor format, the defect-class wording, or the house rules. The orchestrator Read-injects the shared blocks at invocation time.
+| axis | `subagent_type` (Agent tool) | always-on? | trigger |
+|---|---|---|---|
+| `cleanness` | `brian:review-cleanness` | yes | — |
+| `security` | `brian:review-security` | no | the snapshot script's `security trigger` line is not `none` |
+| `tests` | `brian:review-tests` | no | any production or test file changed, and on a zero-tests diff a home for tests exists (Step C) |
 
----
-
-## Axis Registry (single source of truth)
-
-| axis | `subagent_type` (Agent tool) | agent file | always-on? | trigger (one-line) | default model |
-|---|---|---|---|---|---|
-| `cleanness` | `brian:review-cleanness` | `review-cleanness.md` | yes (never dropped) | — | sonnet |
-| `security` | `brian:review-security` | `review-security.md` | no | path/code regex OR new-file under security-trigger dir (mandatory) | sonnet |
-| `tests` | `brian:review-tests` | `review-tests.md` | no | production-code OR test file in diff | sonnet |
-
-Steps C, D, E, F all reference this table. This table is the only place axes are enumerated in this file — everywhere else refers back to it.
-
-**Dispatch invariant**: the `subagent_type` argument of each axis's `Agent` call is the second column above, `brian:` prefix included — the harness registers plugin agents under that prefix. Each axis has its own agent type, so no two calls in one dispatch share a `subagent_type`.
+Every reviewer runs on `sonnet`. Steps C through F refer to this table and enumerate no axes of their own.
 
 ---
 
 ## Step A. Parse args
 
-Extract from the user's `/scrutinize` invocation:
+Map the invocation onto a mode (`working-tree`, `branch`, `commit`, `base`, or `replay`) and an axis override. Reject incompatible flags, such as `--branch` with `--commit`, with a one-line error.
 
-- `mode ∈ {working-tree, branch, commit, base}` — driven by which flag is present (default: `working-tree`).
-- `axes_override ∈ {all, <comma-list>, default}` — from `--axes=...`.
-- `replay_input ∈ {<sha-ts> | none}` — from `--input <sha-ts>`.
+A caller may pass prose instead of flags ("review f18c77f..HEAD, report only rule-named findings"). Map the range onto a mode and keep the rest of the prose for Step E: a caller's filter decides what it does with the report, and it never reaches a reviewer.
 
-Reject incompatible combinations (e.g. `--branch` and `--commit` together) with a one-line error and exit non-zero.
+## Step B. Snapshot the diff
 
----
-
-## Step B. Resolve diff base and gather diff
+Run the bundled script as a single plain command, with the mode and its argument:
 
 ```
-repo_root=$(git rev-parse --show-toplevel)
-scrutinize_dir="/tmp/scrutinize/$(printf '%s' "$repo_root" | sed 's#^/##; s#/#_#g')"
-mkdir -p "$scrutinize_dir"
+"${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/scripts/snapshot.sh" <working-tree | branch <name> | commit <sha> | base <ref> | replay <sha-ts>>
 ```
 
-`scrutinize_dir` is a per-repo subdirectory under `/tmp` (the repo path is flattened into the dir name so distinct repos and worktrees never collide). All snapshot paths below resolve under `$scrutinize_dir`, never inside the repo.
+`${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory. The script writes the snapshot directory under `/tmp`, outside the repo: `full.diff`, one diff per changed file under `files/`, and `index.tsv` with one line per file (status, diff line count, repo path, per-file diff path). It prunes old snapshots, and prints the facts Steps C and F use: the snapshot path, file and line counts, the security trigger, and the zero-tests facts. Exit 3 means the diff is empty: report that there is nothing to review and stop.
 
-### B.1 Compute diff_text and diff_files
+The script is the only snapshot path, because a hand-written equivalent drifts from it and loses replay. When the shell refuses or fails to run it, report the refusal and stop.
 
-- **working-tree mode**: if `git rev-parse --verify HEAD` succeeds:
-  ```
-  diff_text = $(git diff HEAD)
-  ```
-  Else (fresh repo, no commits):
-  ```
-  diff_text = $(git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904)   # the empty-tree SHA
-  ```
-  In both branches, append synthesized fully-added diffs for untracked files:
-  ```
-  git ls-files --others --exclude-standard | while read -r untracked_file; do git diff --no-index /dev/null "$untracked_file"; done
-  ```
-  The loop variable is `untracked_file` because the shell is zsh, where `path` is tied to `$PATH`.
+## Step C. Decide the axes
 
-- **branch mode**: resolve `<main-fallback>` by trying `main` → `master` → `origin/HEAD`. If none resolve, exit with a clear error. Then:
-  ```
-  diff_text = $(git diff $(git merge-base <main-fallback> <name>)..<name>)
-  ```
+Produce `dispatched[]` and `skipped[{axis, reason}]`. Every registry axis ends in exactly one of the two.
 
-- **commit mode**: `diff_text = $(git show <sha>)`.
+- **cleanness** always dispatches, unless an explicit `--axes=<csv>` leaves it out.
+- **security** dispatches when the script's `security trigger` line names a reason. Record that reason; Step D.3 passes it on.
+- **tests** dispatches when any file changed. On a zero-tests diff (the script prints `zero tests: true`), it dispatches only when the script prints `tests home: yes`; on `tests home: no`, record `tests: <the script's reason>; pass --axes=tests to force` in `skipped[]`. A package with no tests and no test script means its owner chose to have none, and a diff review is the wrong place to overturn that choice.
+- `--axes=all` dispatches everything, and `--axes=<csv>` dispatches the list plus a mandatory-new-file security trigger.
 
-- **base mode**: `diff_text = $(git diff <ref>..HEAD)`.
+**Coding standards.** When `$repo_root/CODING_STANDARDS.md` exists, record its absolute path for Step D.3.
 
-### B.2 Identify changed file paths and statuses
+**Groups.** Read `index.tsv`. A reviewer reads every line of every file it is given (House Rule 9), so a large diff is split into groups of about 3,000 diff lines each: keep files from one directory together, and give a single file over 3,000 lines a group of its own. Leave out lockfiles, and files the repo itself marks generated or vendored (`.gitattributes`, `CODING_STANDARDS.md`, or a generated-file banner at the top of the file); list them as `excluded` for the header. A diff under 3,000 lines is one group. Every dispatched axis reviews every group.
 
-```
-diff_files = $(git diff --name-status <base>..<head>)   # status + path; same base+head as B.1
-```
+## Step D. Dispatch
 
-For working-tree mode, also include untracked files (status `A`).
+### D.0 The Agent tool
 
-### B.3 Snapshot the diff
+Check that the Agent tool is available, in your tool list or through `ToolSearch` with `select:Agent`. When it is not, stop with this message and nothing else, filled in:
 
-```
-short_sha=$(git rev-parse --short HEAD 2>/dev/null || echo nohead)
-iso_ts=$(date -u +%Y%m%dT%H%M%SZ)
-snapshot="$scrutinize_dir/${short_sha}-${iso_ts}.diff"
-printf '%s' "$diff_text" > "$snapshot"
-```
+> scrutinize did not run: the Agent tool is not available here, so no reviewer was dispatched. The diff is saved at `<snapshot>`; run `brian:scrutinize --input <sha-ts>` from a session that has the Agent tool. Report this to your caller as a failed review.
 
-### B.4 / B.5 — Retention prune and replay mode
+No reviewing the diff yourself in its place. One context holding three reviews misses what three separate reviewers catch, and its result would reach the caller as a scrutinize pass.
 
-Retention prune (B.4, run at end of Step F) and replay mode (B.5, taken only when `--input <sha-ts>` is set) are on-demand branches. When `replay_input` is set, or when running the end-of-run prune, read `references/snapshot-replay-retention.md` and follow it.
+### D.1 Run the suite
 
----
+Find the repo's test command from its manifests (a `test` script in `package.json`, `swift test` for `Package.swift`, `go test ./...`, `pytest`, `cargo test`, a `test` target in a `Makefile` or `justfile`). Run it once, with a five-minute timeout, when the reviewed tree is the checked-out one: working-tree mode, `--base`, or a `--branch` or `--commit` that names `HEAD`. Record the outcome as `<command>: passed`, `<command>: N failing` with each failing test's name and file, or `not run: <reason>`. A red test is a fact, and it reaches every reviewer before any of them argues a change is a pure refactor.
 
-## Step C. Smart-dispatch
+### D.2 The reviewer prompt
 
-Produces the pair `(dispatched_axes[], skipped[{axis, reason}])`.
-
-### C.1 Always-on
-
-`cleanness` is always dispatched — on every diff size, with no downgrade — unless `--axes=<csv>` explicitly excludes it (in which case the explicit list wins, augmented by anything matching mandatory triggers below). Every run therefore has at least one reviewer.
-
-### C.2 Security trigger
-
-Dispatch `security` when a changed-file path, an added code line, or a mandatory new-file under a security/module-boundary directory matches the trigger catalog. When evaluating the security trigger, read `references/security-triggers.md` for the full path regex, code-pattern regexes, and the Mandatory-Security rule, and record the trigger reason (path / code-pattern / mandatory-new-file) in `axes_dispatched[]` metadata.
-
-### C.3 Tests trigger
-
-Dispatch `tests` if at least one production-code file **or** at least one test file is in the diff. Test-only diffs dispatch too: a diff that touches nothing but tests is exactly where a tautological or change-detector test enters the codebase with no production change to draw a reviewer's eye. A file is production-code if its path does NOT match any of:
-```
-^(test|tests|spec|specs|__tests__)/
-\.(test|spec)\.(ts|tsx|js|jsx|py|go|rs|java|rb)$
-_test\.(go|py)$
-_spec\.rb$
-```
-
-Compute `zero_tests_flag = (production_files >= 1 AND test_files == 0)`. Pass into the tests agent's user-turn prompt as `## Zero Tests Flag: true|false`.
-
-### C.4 Coding standards
-
-When `$repo_root/CODING_STANDARDS.md` exists, record its absolute path as `standards_path`; the cleanness reviewer checks the diff against it (Step D.2).
-
-### C.5 Override semantics
-
-- `--axes=all`: dispatch every axis in the registry regardless of triggers. `skipped[]` is empty.
-- `--axes=<csv>`: dispatch the listed axes. The always-on `cleanness` axis still runs unless `--axes=<csv>` explicitly excludes it (the comma-list is authoritative). Mandatory-Security still forces security on when its rule fires.
-- Default (no flag): always-on + triggered axes; everything else is recorded in `skipped[]` with a one-sentence `reason` string explaining the gap ("no production-code files changed; pass `--axes=tests` to force").
-
-The dispatch decision flows through to the chat-print step (Step F), which renders `axes_dispatched`, `axes_skipped`, and `axes_abstained` in the header line.
-
----
-
-## Step D. Launch dispatched agents in parallel
-
-### Step D.0 — Pre-launch Read
-
-Before the parallel dispatch, the orchestrator Reads the shared house-rules file; its text is injected into every reviewer so all of them and the synthesis step work from the same wording.
-
-```
-house_rules_txt   = Read("${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/reviewer-house-rules.md")
-```
-
-`${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory (the harness substitutes it); the path must resolve from any repo the skill runs in, so it is always plugin-root-relative, never repo-relative.
-
-Inject the file's text as read; do not paraphrase it — a paraphrase gives the reviewers and Step E two different rule sets.
-
-### Step D.1 — Per-axis prompt assembly
-
-For each dispatched axis, build the user-turn prompt as the concatenation, in this order:
+Each reviewer's prompt is the following blocks, in this order, and nothing else:
 
 ```
 ## Output Contract
 
-Every finding MUST start with a structured Finding Anchor on its own line:
+Every finding starts with a Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-Name the defect class in plain words — a short phrase describing the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Keep the `defect_class` field on every anchor: synthesis merges and renders by it, so the phrase is critical.
+Name the defect class in plain words — a short phrase for the underlying defect (e.g. "missing validation — external input to a DB query"), not a label from a fixed list. Synthesis merges and renders by `defect_class`, so every anchor carries it.
 
-After the Finding Anchor, the body is:
+After the anchor, the body is:
 
   Claim:    <one-sentence root-cause framing>
   Evidence: <repo-relative file:line>
             ```<lang>
             <quoted snippet from disk, ≤8 lines>
             ```
-  Fix:      <concrete suggestion, optional; "—" if none>
+  Fix:      <concrete suggestion, or "—">
 
-State your confidence and its basis in plain words as part of the Claim or a short closing sentence — high when verified against cited code, low when it rests mostly on the diff. Do not append a tag.
+State your confidence and its basis in plain words in the Claim or a closing sentence: high when verified against cited code, low when it rests mostly on the diff.
 
-If zero findings: emit a single line `NO FINDINGS`.
+If you have no findings, write `NO FINDINGS` on its own line. Either way, end with the coverage statement House Rule 9 describes.
 
 ## House Rules
-
-{{house_rules_txt}}
+<absolute path of ${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/references/reviewer-house-rules.md>; read it in full before reviewing
 
 ## Repo Root
-{{repo_root}}
+<repo_root>
 
 ## Diff Snapshot
-{{snapshot}}    # absolute path from Step B.3 (or B.5 on replay); read the whole file before reviewing
+<snapshot directory>
 
 ## Changed Files
-{{diff_files}}
+<this group's lines from index.tsv, verbatim>
 
 ## Axis
-{{axis_name}}
+<axis>
 
-<axis-specific hints — see Step D.2>
+## Failing Tests
+<the D.1 suite outcome, verbatim>
 ```
 
-### Step D.2 — Axis-specific hint blocks (conditional)
+followed by the axis hints in D.3.
 
-After the common blocks above, append per-axis hint blocks. Each is conditional on the dispatched axis:
+Caller context stays out of these prompts: accepted risks, out-of-scope notes, focus lists, the implementer's account of the change, and a caller's filter. A reviewer told what not to report stops looking there, and that is how a committed passphrase and an unauthenticated write API passed review. Step E is where caller context applies.
 
-- **If `axis_name == tests`** — append:
-  ```
-  ## Zero Tests Flag
-  {{zero_tests_flag}}    # literal "true" or "false" from Step C.3
-  ```
+### D.3 Axis hints
 
-- **If `axis_name == cleanness` and `standards_path` is set** — append:
-  ```
-  ## Coding Standards
-  {{standards_path}}    # absolute path from Step C.4; read the whole file before reviewing
-  ```
+- **cleanness**, when `CODING_STANDARDS.md` exists: `## Coding Standards` with its absolute path.
+- **tests**: `## Zero Tests Flag` with `true` or `false` from the script, and `## Coding Standards` with its path when the file exists, so the fixes it proposes follow the repo's test rules.
+- **security**: `## Security Trigger` with the Step C reason.
 
-- **If `axis_name == security`** — append:
-  ```
-  ## Security Trigger
-  {{trigger_reason}}    # one of: "path", "code-pattern", "mandatory-new-file"
-  ```
+The reviewers are not Explore-type, so the harness already gives them the CLAUDE.md files the orchestrator sees, and a project-rules block would duplicate them.
 
-**Why a path, not the diff text.** Reviewers have Read and Bash, so the snapshot file reaches them intact; inlining the diff instead spends orchestrator output on one copy per axis and grows the orchestrator's context with every dispatch.
+### D.4 Dispatch in parallel
 
-**No project-rules block.** The reviewer agents are not Explore-type, so the harness already injects the same CLAUDE.md files the orchestrator sees, and loads a nested `CLAUDE.md` when a reviewer reads files under its directory. Copying them into the prompt duplicates what is already there.
+Send one Agent call per (axis, group) in a single message: `subagent_type` from the registry, `model: sonnet`, `run_in_background: true`, and the D.2 prompt. Then wait for every completion notification.
 
-### Step D.3 — Dispatch in parallel
-
-Emit ALL dispatched-axis Agent calls in a **single assistant message** with multiple `Agent` tool-use blocks. Each call:
-
-- `subagent_type`: the second column of the Axis Registry for this axis (see the dispatch invariant there).
-- `model`: the Axis Registry's default-model column (`sonnet` for every axis).
-- `run_in_background: true`.
-- `prompt`: the assembled user-turn from D.1.
-
-After dispatch, wait for the harness's task-completion notifications; polling adds nothing.
-
----
+A reviewer's return is input to Step E. Nothing acts on it: no edit, no fix, no commit, no reply to the caller, until the Step F report is printed. A finding exists once it appears under the verdict line, after dedupe, floors, and coverage have run over every return; a fix started on the first return to arrive is a fix to a finding the report might drop or merge.
 
 ## Step E. Synthesize
 
-When all dispatched agents have returned:
+When every reviewer has returned:
 
-1. **Parse Finding Anchors** from each agent's return. Discard any text that is not a Finding Anchor + body block. Tag each finding with `axis = <agent_name>` (orchestrator-side metadata; NOT a field in the anchor). **Judge severity from the prose**: read each finding's body and decide whether it reads as high, medium, or low severity from how the reviewer described it and grounded it. **Default to low when the claim isn't grounded in a cited file/line** (so the finding flows through citation-enforcement / severity gate per rules 5+4).
+1. **Coverage first.** Read each return's coverage statement and judge each axis `full`, `partial`, or `none`. `full` means its reviewers read every file in their groups, or left a file out because it holds no code for the axis (a lockfile, an image). `partial` means any other gap: a file skipped for size or time, a diff read in part, a reviewer that says it sampled. `none` means the reviewers abstained, refused for a missing block, or never returned. Keep each gap in the reviewer's own words; it goes in the header.
+2. **Parse Finding Anchors.** Tag each finding with its axis. Judge severity from the prose, defaulting to low when the claim does not cite a file and line. Then apply the floors, which no prose can lower:
 
-   Two floors override that default. Recognize each from the reviewer's own words rather than a sentinel token — every reviewer that carries a floor is told to claim it in prose. Never demote a floored finding below its level, however terse the prose:
+   | Floor | Fires on |
+   |---|---|
+   | HIGH | a `review-cleanness` finding whose defect class names a coding-standard violation, because the repo's owner wrote the rule down as binding |
+   | HIGH | a `review-tests` finding whose prose identifies a tautology or a change detector, because a test that can only pass hides the regression it claims to catch |
+   | HIGH | a `review-tests` zero-tests finding, on a run whose Zero Tests Flag was `true`; on a `false` flag it is a coverage gap judged on its prose |
+   | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene, because it is a house-rule prohibition |
+   | HIGH | each failing test from the D.1 suite run, rendered as a finding of axis `suite` at the test file, line `cross` |
 
-   | Floor | Fires on | Why it cannot be demoted |
-   |---|---|---|
-   | HIGH | a `review-cleanness` finding whose defect class names a coding-standard violation | a rule the repo's owner wrote into `CODING_STANDARDS.md` is a must-fix, and the gate would otherwise drop it wherever fewer than three land in one directory |
-   | HIGH | a `review-tests` finding whose prose identifies it as the zero-tests obligation, a tautology, or a change detector | a test that can only pass is not a weak test but a false negative wearing a green check; at LOW, the grouping gate (rule 4) would drop the one finding explaining why the suite is lying |
-   | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene | a house-rule prohibition, not a style preference; the gate would otherwise drop it wherever fewer than three land in one directory |
+3. **Check the mutation behind a tautology floor.** When a tautology or change-detector finding names a mutation the test survives, the suite command exists, and the reviewed tree is checked out, run that mutation yourself, one finding at a time: copy the file to a backup, apply the mutation, run the one test, and restore the file from the backup, never with `git checkout` or `git stash`, which would destroy uncommitted work. A test that goes red under the named mutation refutes the finding; drop it and say so below the report.
+4. **Normalize and dedupe.** A bare line `N` becomes `N-N`. Findings on the same file with overlapping ranges merge, keeping the higher severity; at equal severity, keep both axes.
+5. **Severity gate.** HIGH and MEDIUM pass through. LOW findings group by (axis, directory): three or more render as one LOW theme, and smaller groups are dropped and counted. A finding with no Evidence snippet is LOW.
+6. **Caller context.** When the caller marked a risk as accepted or out of scope, the finding stays in the report with the caller's note beside it; the caller decides what to do with it after reading.
+7. **Verdict.** `incomplete` when any dispatched axis is `partial` or `none`, whatever the finding count; otherwise `findings` when any finding renders; otherwise `clean`. `incomplete` is never a pass: it means part of the diff went unreviewed on some axis, and the header says which part.
 
-   The floors are the only severity override; dedupe and the rest of the logic below are unchanged. `review-cleanness` groups comment-hygiene findings one per file and coding-standard findings one per file and section, so both its floors promote whole files rather than individual lines and cannot flood the report.
+## Step F. Report
 
-2. **Normalize line spans before dedupe.** Normalize each Finding Anchor's `line` field: a bare `N` becomes the range `N-N`; a `N-M` stays as-is; `cross` stays as-is. Two findings overlap if their normalized ranges intersect on the same `file`. This collapses single-line vs range anchors emitted by different agents over the same span.
-3. **Dedupe by `(file, line)`** axis-agnostically using the normalized overlap rule. Overlapping findings: keep the higher-severity one; same-severity → merge the two, preserve both axes in the `axes[]` array of the merged finding.
-4. **Severity gate**:
-   - `HIGH` and `MEDIUM` findings pass through verbatim.
-   - `LOW` findings are grouped by `(axis, file_dir)`. If a group has ≥3, render as one collapsed "LOW theme" card. Else drop. Track `counts.low_dropped`.
-5. **Citation enforcement**: any finding without an Evidence snippet → auto-downgrade to `LOW` (which then flows back through rule 4).
-6. **Abstinence tracking**: read each agent's return for meaning — if it states it could not assess the axis from the available context, record `{axis: <axis>, reason: <what was missing, in the agent's own words>}` in the in-memory `axes_abstained[]` list (handed to Step F as part of the data dict). Do not invent findings on the abstaining axis's behalf.
-
-The synthesized `findings[]` list, plus run metadata (repo_root, refs, short_sha, iso_ts, axes_dispatched, axes_skipped, axes_abstained, counts), is held in orchestrator memory as a single `data` dict and handed directly to the chat-print step (Step F).
-
----
-
-## Step F. Chat print
-
-Print the findings directly to chat using the in-memory `data` dict from Step E. This is the canonical and sole output mode.
-
-### F.1 — Header line
-
-Print one header block summarizing the run:
+The report is the last thing the skill prints, and the run is done when it is printed with its verdict line. Fixing findings, committing, and answering the caller come after it.
 
 ```
-scrutinize | <repo_root> @ <short_sha> (<iso_ts>)
-dispatched: <axes_dispatched joined by ", ">
-skipped:    <axis>: <reason>; ...   (omit line if empty)
-abstained:  <axis>: <reason>; ...   (omit line if empty)
-diff snapshot: <scrutinize_dir>/<sha>-<ts>.diff
+scrutinize | <repo_root> @ <short_sha> (<iso_ts>) | <mode and refs>
+verdict:    <clean | findings | incomplete>
+dispatched: <axis (trigger)>, ...
+coverage:   <axis>: <full | partial | none> (<files read> of <files> files[; <gap in the reviewer's words>]); ...
+suite:      <the D.1 suite outcome>
+skipped:    <axis>: <reason>; ...      (omit when empty)
+excluded:   <paths left out of every group>   (omit when empty)
+snapshot:   <snapshot directory>
 ```
 
-### F.2 — Findings
-
-Print findings grouped by severity, in this order: HIGH → MEDIUM → LOW themes (the collapsed groups produced in Step E.4). For each finding, format:
+Then the findings, HIGH, then MEDIUM, then LOW themes, each card carrying the reviewer's Claim, Evidence, and Fix as written:
 
 ```
-[<SEVERITY>] <file>:<line>  (<defect_class>; axes: <axes joined>)
+[<SEVERITY>] <file>:<line>  (<defect_class>; axes: <axes>)
   Claim:    <claim>
-  Evidence: <evidence.file_line>
-            ```<evidence.lang>
-            <evidence.snippet>
+  Evidence: <file:line>
+            ```<lang>
+            <snippet>
             ```
-  Fix:      <fix or "—">
-  Confidence: <HIGH|MEDIUM|LOW>
+  Fix:      <fix>
+  Confidence: <the reviewer's stated confidence, in a few words>
 ```
 
-If `findings[]` is empty, still print the header (so the run is legible) followed by a one-line acknowledgement:
+Rewording a card changes what the reviewer claimed and what the caller acts on, so a card quotes its reviewer. Your own view of a finding, a caller's filter applied to the list, and any refuted mutation go after the cards, under a line that marks them as yours.
 
-```
-No findings. (axes ran clean.)
-```
-
-### F.3 — Retention prune
-
-Run the Step B.4 retention prune on `$scrutinize_dir` to keep the 30 most recent `.diff` snapshots (see `references/snapshot-replay-retention.md`). Done.
-
----
+When no finding renders, the line after the header reads `No findings.` on a `clean` verdict, and `No findings in the files reviewed; <axes> did not cover the whole diff.` on an `incomplete` one.
 
 ## Contract Audit
 
-This skill consumes shared-contract tokens whose renaming or deletion is a multi-file change. When renaming or deleting a shared contract token (`defect_class`, `Finding Anchor`, an `Output Contract` / `House Rules` / prompt block name, a per-axis hint block, a run-state variable, or a data-dict field), read `references/contract-audit.md` for the token→owner-file table and grep every listed owner in the same commit.
+When renaming or deleting a token this skill shares with its reviewers or callers (a prompt block name, `Finding Anchor`, `defect_class`, `NO FINDINGS`, a severity floor, the snapshot layout, or a verdict keyword), read `references/contract-audit.md` for every file that emits or consumes it, and change them in the same commit.

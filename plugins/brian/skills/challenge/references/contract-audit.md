@@ -12,6 +12,7 @@ The reviewer agents narrate the contract in their Input Contract sections, and t
 Currently-live contract tokens (alphabetized):
 
 - `accurate` / `discrepancies` / `unsound` (Step 3 closing-verdict keywords, emitted by `plan-fact-checker` per `plugins/brian/agents/plan-fact-checker.md:53-60`; consumed by challenge/SKILL.md's Step 3 keyword-mapping table, which reads the keyword deterministically rather than inferring a verdict from tone)
+- `clean` / `findings` / `incomplete` (scrutinize's `verdict:` header keywords, emitted by `plugins/brian/skills/scrutinize/SKILL.md` Steps E.7 and F; consumed by `plugins/brian/skills/autopilot/references/task-specs.md` T10, which gates on them. `incomplete` means some dispatched axis left part of the diff unreviewed, and a consumer treats it as unreviewed code rather than a pass.)
 - `defect_class` (now a free-prose field — reviewers name the defect class in plain words; there is no fixed vocabulary, no shared SSOT file, and no runtime injection sentinel. The field itself stays on the anchor as the `(file, defect_class)` merge key.)
 - `Finding Anchor`
 - `INSUFFICIENT CONTEXT`
