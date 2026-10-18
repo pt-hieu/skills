@@ -43,7 +43,7 @@ Non-negotiable. Every build and review run tests against all nine; violations ar
 ## References
 
 - When choosing between a side panel/drawer and a modal/dialog — sizing, content budgets, or the inspect-then-act chaining pattern — read [references/drawer-dialog.md](references/drawer-dialog.md).
-- When building expand/collapse, progressive disclosure, confirmations for critical or reversible operations, or wiring up interactive cues (chevron placement, clickable affordances, metric info icons), read [references/interaction-patterns.md](references/interaction-patterns.md).
+- When building expand/collapse, progressive disclosure, confirmations for critical or reversible operations, toasts or other messages on a timer, or wiring up interactive cues (chevron placement, clickable affordances, metric info icons), read [references/interaction-patterns.md](references/interaction-patterns.md).
 - When adding, changing, or reviewing any animation or transition, read [references/motion.md](references/motion.md).
 - When the UI ships to phones, read [references/touch.md](references/touch.md).
 

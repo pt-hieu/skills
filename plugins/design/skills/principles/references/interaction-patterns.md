@@ -13,7 +13,15 @@ Every interactive element must advertise itself; nothing should be discoverable 
 
 Destructive or irreversible actions (delete, exit position, cancel order) must require explicit confirmation before they execute.
 
-A reversible action (archive, hide, mark as read) runs at once and offers undo on the affected item itself: the row shows "Archived · Undo" in place. A confirmation dialog in front of every action trains people to click through it, which spends the attention the irreversible ones need. Distilled from Emil Kowalski's [`apple-design`](https://github.com/emilkowalski/skills/tree/main/skills/apple-design) skill (MIT License).
+A reversible action (archive, hide, mark as read) runs at once and offers undo on the affected item itself: the row shows "Archived · Undo" in place. A confirmation dialog in front of every action trains people to click through it, which spends the attention the irreversible ones need.
+
+A destructive action on a control the user reaches often can confirm by holding in place of a dialog. While held, the control fills at a slow, steady pace and commits when full; on release before then, it snaps back at the system's fastest duration. The slow fill gives the user time to decide, and the fast release shows the interface responding.
+
+Distilled from Emil Kowalski's [`apple-design`](https://github.com/emilkowalski/skills/tree/main/skills/apple-design) and [`emil-design-eng`](https://github.com/emilkowalski/skills/tree/main/skills/emil-design-eng) skills (MIT License).
+
+## Messages That Dismiss Themselves
+
+A toast or any message on a timer pauses that timer while the tab is hidden and while the pointer rests on it, so every message stays until the user has had the chance to read it. Distilled from Emil Kowalski's [`emil-design-eng`](https://github.com/emilkowalski/skills/tree/main/skills/emil-design-eng) skill (MIT License).
 
 ## Progressive Disclosure
 

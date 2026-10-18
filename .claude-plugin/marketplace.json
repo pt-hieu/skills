@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Brian Pham's personal collection of Claude Code skills: debugging, prompting, writing, architecture review, commit workflow, merge conflict resolution, UI design principles, worst-case UI stress tests, prototyping, and skill authoring.",
-    "version": "3.27.3"
+    "version": "3.27.4"
   },
   "plugins": [
     {
@@ -41,7 +41,7 @@
       "name": "design",
       "source": "./plugins/design",
       "description": "Design skills: UI design principles, component patterns, formatting, interaction, motion, and touch rules, worst-case data stress tests, and throwaway prototyping on the flyingsalmon design system. Bundled skills: break-ui, principles, prototype.",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "category": "design",
       "tags": [
         "skills",

@@ -17,6 +17,9 @@ Data the user is reading or acting on holds still. Numbers that count up, charts
 
 ## How it moves
 
+- **Quick when the user is waiting.** A transition the user waits on uses the system's shortest duration that still reads as motion. A slower transition makes the whole app feel slower, even when the work behind it takes the same time.
+- **Presses answer.** Every pressable control scales down slightly on `:active`, around 0.97, on every device, so the user sees the interface heard them while their finger or button is still down.
+- **Transform and opacity.** Motion moves, scales, and fades through `transform` and `opacity`, which the browser composites without re-laying out the page. An element that changes width, height, padding, or margin takes its new layout in one step, and any motion around that change runs on `transform` and `opacity`; animating a layout property re-lays out the page on every frame.
 - **Interruptible.** Input during a transition retargets the motion from where the element is now, and the click it received takes effect. Use transitions or springs for anything the user can toggle quickly; keyframe animations restart from zero, which reads as a jump. Tailwind's `animate-in` utilities are keyframes.
 - **From its origin.** A popover or menu grows from the control that opened it. A dialog stays centred, since it belongs to the page and to no single control. Enter from close to full size (around 0.95 scale with a fade); an element growing from a dot reads as a glitch.
 - **Out the way it came.** An element leaves along its entry path, and exits run at the system's faster duration: the user has already decided, and the interface is responding.
