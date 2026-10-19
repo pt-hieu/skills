@@ -16,6 +16,7 @@ Currently-live contract tokens (alphabetized):
 - `defect_class` (now a free-prose field — reviewers name the defect class in plain words; there is no fixed vocabulary, no shared SSOT file, and no runtime injection sentinel. The field itself stays on the anchor as the `(file, defect_class)` merge key.)
 - `Finding Anchor`
 - `INSUFFICIENT CONTEXT`
+- `misread-intent` / `broke-rule` / `wrong-fact` / `overreach` / `underreach` / `process` / `style` / `other` (grade-sessions correction categories, defined for the graders in `plugins/brian/skills/grade-sessions/references/rubric.md` and enforced by the grader schema in `plugins/brian/skills/grade-sessions/scripts/grade.js`, which counts corrections per category; a change edits both files)
 - `Output Contract`
 - `pass` / `concerns` / `rethink` (Step 3 closing-verdict keywords, emitted by `architectural-reviewer` per `plugins/brian/agents/architectural-reviewer.md:180-185` and required of the runtime-authored bespoke critic per `references/bespoke-critic.md`'s authoring rules; consumed by challenge/SKILL.md's Step 3 keyword-mapping table)
 - `Premise Audit` (plan-mode contract section — narrated by all three plugin reviewer agents, and injected verbatim into the bespoke critic's prompt)

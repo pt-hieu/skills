@@ -58,6 +58,7 @@ Two plugins, each a coherent domain:
 | `consult-fable` | Spawn a Fable second opinion on anything hard — a design, a diagnosis, a plan, or a choice you keep re-opening. |
 | `coordinate` | Coordinate opus subagents through several work items in parallel worktrees — unblock them, settle conflicts between them, and deliver the result: stacked PRs unless the brief names another. |
 | `diagnose` | Root-cause debugging, proven by a reproduction. |
+| `grade-sessions` | Grade past Claude Code sessions on Claude's work and Brian's prompting with a fleet of sonnet graders, then rank the recurring patterns with the edits that would fix them. |
 | `kickoff` | Turn a new requirement, ticket, or task description into a planned kickoff file. |
 | `prompting` | Write the prose LLMs read — agent prompts, skills, subagent instructions, and handoffs — and remove instructions written for older models from an existing prompt surface, applied in place and never committed. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
@@ -105,6 +106,7 @@ plugins/
       consult-fable/
       coordinate/
       diagnose/
+      grade-sessions/
       kickoff/
       prompting/
       resolve-merge-conflicts/
