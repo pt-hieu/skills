@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+os.umask(0o077)
 output_file, out_dir = sys.argv[1], sys.argv[2]
 result = json.load(open(output_file))['result']
 with open(os.path.join(out_dir, 'report.md'), 'w') as handle:

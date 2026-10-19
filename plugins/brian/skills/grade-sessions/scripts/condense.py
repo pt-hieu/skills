@@ -73,6 +73,8 @@ def condense(path):
 
 
 def main():
+    # The transcripts hold Brian's pasted links, paths, and commands, so the run directory is his alone.
+    os.umask(0o077)
     parser = argparse.ArgumentParser()
     parser.add_argument('out_dir')
     parser.add_argument('--since')
