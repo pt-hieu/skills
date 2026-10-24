@@ -15,7 +15,7 @@ Each session gets 1 to 5 on six dimensions for Claude and three for Brian; [`ref
 
 1. **Condense.** Make the run directory `/tmp/grade-sessions/<YYYY-MM-DD-HHMM>/` and run `python3 -I <skill dir>/scripts/condense.py <run dir>` with the arguments Brian passed. It keeps sessions with at least three of Brian's messages, cuts tool output, and balances the sessions into one batch per grader. Done when it prints its summary line; when it reports zero sessions, tell Brian which filter emptied the set and stop.
 
-2. **Grade.** Run `Workflow({scriptPath: "<skill dir>/scripts/grade.js", args: {batches, rubricPath}})`, where `batches` is the array read from `<run dir>/batches.json` and `rubricPath` is the absolute path to `references/rubric.md`. The workflow grades every batch, regrades any session a grader dropped, and synthesizes. Done when its completion notification arrives.
+2. **Grade.** Run `Workflow({scriptPath: "<skill dir>/scripts/grade.js", args: {batches, rubricPath, skillsDir}})`, where `batches` is the array read from `<run dir>/batches.json`, `rubricPath` is the absolute path to `references/rubric.md`, and `skillsDir` is the absolute path to `${CLAUDE_PLUGIN_ROOT}/skills`. The workflow grades every batch, regrades any session a grader dropped, and synthesizes. Done when its completion notification arrives.
 
 3. **Collect.** Run `python3 -I <skill dir>/scripts/collect.py <workflow output file> <run dir>`, using the output file path from the notification. Done when it writes `report.md` and `sessions.json` and prints the coverage line.
 

@@ -8,7 +8,7 @@ export const meta = {
   ],
 }
 
-// args: { batches: string[][], rubricPath: string }
+// args: { batches: string[][], rubricPath: string, skillsDir: string }
 
 const SCALE = { type: 'integer', minimum: 1, maximum: 5 }
 const CATEGORIES = ['misread-intent', 'broke-rule', 'wrong-fact', 'overreach', 'underreach', 'process', 'style', 'other']
@@ -50,7 +50,7 @@ const SESSION = {
 }
 const BATCH = { type: 'object', properties: { sessions: { type: 'array', items: SESSION } }, required: ['sessions'] }
 
-const gradePrompt = files => `Read ${args.rubricPath} and grade each of these transcripts by it, returning one entry per file with "file" set to the path as written here:
+const gradePrompt = files => `Read ${args.rubricPath} and grade each of these transcripts by it (the skills directory is ${args.skillsDir}), returning one entry per file with "file" set to the path as written here:
 ${files.map(file => `- ${file}`).join('\n')}`
 
 const gradeBatches = (batches, phaseTitle) => parallel(batches.map((files, index) => () =>
@@ -115,7 +115,7 @@ All sessions:
 ${JSON.stringify(sessions)}
 
 Write a markdown report:
-1. Claude's recurring failure patterns, ranked by frequency times severity, where severity is how much rework Brian had to drive. For each: a name, how many sessions, two or three of Brian's verbatim quotes with the session file, the rule or skill implicated, and the concrete edit that would prevent it, naming the file. Read the implicated files (skills under ~/hello/skills/plugins/, ~/.claude/CLAUDE.md, ~/.claude/output-styles/brian.md, project CLAUDE.md files, and code a pattern traces to) so each edit quotes the current text it changes.
+1. Claude's recurring failure patterns, ranked by frequency times severity, where severity is how much rework Brian had to drive. For each: a name, how many sessions, two or three of Brian's verbatim quotes with the session file, the rule or skill implicated, and the concrete edit that would prevent it, naming the file. Read the implicated files (skills under ${args.skillsDir}, ~/.claude/CLAUDE.md, project CLAUDE.md files, the output-style files the rubric points graders to, and code a pattern traces to) so each edit quotes the current text it changes.
 2. Brian's recurring patterns as a prompter, ranked the same way, each with quotes and a concrete habit change.
 3. What works: patterns in the highest-graded sessions worth keeping.
 4. Outliers: the three lowest and three highest sessions for each side, one line each.

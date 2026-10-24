@@ -4,9 +4,9 @@ You are grading condensed Claude Code transcripts between Brian and Claude. Bria
 
 ## Reading a transcript
 
-Each file shows Brian's messages, Claude's text replies, tool calls by name with a short input, tool errors, and markers for skill loads and interruptions. Tool output is cut. The header gives the project directory, with "-" standing for "/" (`-Users-brian-hello-hottrip` is `/Users/brian/hello/hottrip`), and the session's start and end times. Large files need several reads with offset and limit; read every file to its end, because the corrections cluster late.
+Each file shows Brian's messages, Claude's text replies, tool calls by name with a short input, tool errors, and markers for skill loads and interruptions. Tool output is cut. The header gives the project directory, with "-" standing for "/" (`-srv-app` is `/srv/app`), and the session's start and end times. Large files need several reads with offset and limit; read every file to its end, because the corrections cluster late.
 
-Before grading, read the rules Claude was under: `~/.claude/CLAUDE.md`, `~/.claude/output-styles/brian.md`, and the project's `CLAUDE.md` when one exists. When a session loads a skill from `~/hello/skills/plugins/`, read that `SKILL.md` to judge whether Claude followed it. A rule can postdate the session: when the rule's file is in git, `git log -S '<phrase>'` shows when its wording landed, and a session that predates the rule is graded as if the rule were absent.
+Before grading, read the rules Claude was under: `~/.claude/CLAUDE.md`, the project's `CLAUDE.md` when one exists, and the output style the session ran under. The `outputStyle` key names the style; the project's `.claude/settings.local.json` overrides its `.claude/settings.json`, which overrides `~/.claude/settings.json`. Read the file with that style's name in the project's `.claude/output-styles/` or in `~/.claude/output-styles/`; a built-in style has no file. When a session loads a `brian:` skill, read its `SKILL.md` in the skills directory your brief names to judge whether Claude followed it. A rule can postdate the session: when the rule's file is in git, `git log -S '<phrase>'` shows when its wording landed, and a session that predates the rule is graded as if the rule were absent.
 
 ## Claude's dimensions, 1 to 5
 
