@@ -1,21 +1,21 @@
 ---
 name: setup-coding-standard
-description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog."
+description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog, and its CODE_MAP.md."
 argument-hint: "[repo path]"
 disable-model-invocation: true
 ---
 
 # Setup Coding Standard
 
-Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in.
+Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in. The skill also writes `CODE_MAP.md`, a guide to where things live in the repo.
 
 The target is the repo at the path given as the argument, or the current working directory.
 
 ## Step 1 — Survey the stack
 
-Read the repo's manifests and configuration (`package.json` and workspace packages, `tsconfig*.json`, the test runner's config, the formatter's config, `components.json`, `registry.json`), its directory layout, `docs/` for ADRs, `CLAUDE.md` / `AGENTS.md`, and any existing `CODING_STANDARDS.md` or `DESIGN-LANGUAGE.md`. In a monorepo, survey each package: a section applies when any package meets its condition.
+Read the repo's manifests and configuration (`package.json` and workspace packages, `tsconfig*.json`, the test runner's config, the formatter's config, `components.json`, `registry.json`), its directory layout, `docs/` for ADRs, `CLAUDE.md` / `AGENTS.md`, and any existing `CODING_STANDARDS.md`, `DESIGN-LANGUAGE.md`, or `CODE_MAP.md`. In a monorepo, survey each package: a section applies when any package meets its condition.
 
-Done when you can state each of these and name the file that proves it: languages, UI framework, styling approach, test runner and its DOM environment, formatter, the directory components live in, whether a `CODING_STANDARDS.md` and a `DESIGN-LANGUAGE.md` exist, and whether the repo has a UI whose look Brian decides.
+Done when you can state each of these and name the file that proves it: languages, UI framework, styling approach, test runner and its DOM environment, formatter, the directory components live in, the entry points, whether a `CODING_STANDARDS.md`, a `DESIGN-LANGUAGE.md`, and a `CODE_MAP.md` exist, and whether the repo has a UI whose look Brian decides.
 
 ## Step 2 — Select from the catalog
 
@@ -25,7 +25,7 @@ Each catalog section opens with a blockquote stating when it applies and what to
 - `references/typescript-react.md` — when the repo has TypeScript. Types admit only valid states, and Enums, for any TypeScript repo; Components are folders and the React additions to Tests when it defines React components.
 - `references/styling.md` — when the repo defines React components. Tailwind + cva, or CSS Modules + design tokens.
 
-A section is selected when the survey proves its condition, and left out otherwise. Where the repo's stack reaches past the catalog (another language's idioms, another UI framework, another styling approach), the file carries no section for it: the catalog has no wording to select, and the gap goes in the Step 5 report.
+A section is selected when the survey proves its condition, and left out otherwise. Where the repo's stack reaches past the catalog (another language's idioms, another UI framework, another styling approach), the file carries no section for it: the catalog has no wording to select, and the gap goes in the Step 6 report.
 
 Done when every catalog section you opened is marked selected or left out, each with the survey fact that decided it.
 
@@ -51,13 +51,20 @@ The file describes the standards as they are. It carries no mention of the catal
 
 **Design language** — when the survey found a UI whose look Brian decides, read `references/design-language.md`. With no `DESIGN-LANGUAGE.md` in the repo, write one at the repo root holding the single line `# Design language`; Brian's rules join it as his feedback arrives. An existing `DESIGN-LANGUAGE.md` holds Brian's taste; leave it as it is. Then give `CLAUDE.md` (or `AGENTS.md`) the block from the reference: the block replaces an existing pointer line to `DESIGN-LANGUAGE.md`, and goes where the reference says when there is none. The rules live in `CLAUDE.md` because that file is loaded into every session, where they shape what gets written into `DESIGN-LANGUAGE.md`.
 
-## Step 5 — Report
+## Step 5 — Write the code map
 
-Tell Brian which sections went in and the survey fact behind each, whether `DESIGN-LANGUAGE.md` was written and the design-language block added to `CLAUDE.md`, and why, which were left out and why, what the catalog had no section for, and any repo-own section that looks general enough to join the catalog.
+Read `references/code-map.md` and follow it: write `CODE_MAP.md` at the repo root or update the existing one, and add the reference's block to `CLAUDE.md` (or `AGENTS.md`).
+
+Done when every path the map names exists in the repo, and every top-level directory, package, and entry point from the survey appears in it.
+
+## Step 6 — Report
+
+Tell Brian which sections went in and the survey fact behind each, whether `DESIGN-LANGUAGE.md` was written and the design-language block added to `CLAUDE.md`, and why, which were left out and why, what the catalog had no section for, any repo-own section that looks general enough to join the catalog, and whether `CODE_MAP.md` was written new or updated, with the paths the update fixed.
 
 ## It's working if
 
 - Every section in the written file traces to a catalog section, and every selected section to a named file in the repo.
 - The written file and the design-language block have no `<placeholder>` left, and no path or ADR number that belongs to flyingsalmon.
 - An existing file's own sections are byte-identical after the run, and an existing `DESIGN-LANGUAGE.md` is untouched.
+- Every path in `CODE_MAP.md` exists in the repo, and `CLAUDE.md` or `AGENTS.md` points to it.
 - Every `DESIGN-LANGUAGE.md` in the repo has the pointer and the rules from `references/design-language.md` in `CLAUDE.md` or `AGENTS.md`.

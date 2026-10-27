@@ -63,7 +63,7 @@ Two plugins, each a coherent domain:
 | `prompting` | Write the prose LLMs read — agent prompts, skills, subagent instructions, and handoffs — and remove instructions written for older models from an existing prompt surface, applied in place and never committed. |
 | `resolve-merge-conflicts` | Resolve Git merge conflicts. |
 | `scrutinize` | Review local code changes against Brian's house rules across cleanness (comments, reuse), security, tests, and the repo's own `CODING_STANDARDS.md`. |
-| `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the repo's stack, and start a `DESIGN-LANGUAGE.md` in a personal project with a UI. |
+| `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the repo's stack, write a `CODE_MAP.md` that guides an agent to the right files, and start a `DESIGN-LANGUAGE.md` in a personal project with a UI. |
 | `show-me` | Explain the current topic visually — pseudocode, call tree, component tree, file tree, Mermaid, diff, or a one-off HTML artifact — picking the smallest view that makes the point. |
 | `up-to-speed` | Context briefing that explains how existing work fits together so you can start contributing. |
 | `writing` | Write and revise prose a human reads — essays, posts, docs — against rules distilled from the patterns that mark prose as machine-made. |
