@@ -61,6 +61,7 @@ I build a lot of LLM agents and skills, and all of them run on prose a model rea
 | `scrutinize` | Review local code changes against Brian's house rules for cleanness (comments, reuse), security, tests, and the repo's own `CODING_STANDARDS.md`. |
 | `setup-coding-standard` | Write or update a repo's `CODING_STANDARDS.md` from a catalog of standards, picking the sections that fit the stack; write a `CODE_MAP.md` that guides an agent to the right files; and start a `DESIGN-LANGUAGE.md` in a personal project with a UI. |
 | `show-me` | Explain the current topic visually as pseudocode, a call tree, a component tree, a file tree, Mermaid, a diff, or a one-off HTML artifact, picking the smallest view that makes the point. |
+| `teach` | Build a lesson for a complete newbie: one scrolling desktop HTML page of levels from simple to complex, with storybook-style illustrations and self-playing animations, using up to five opus subagents. |
 | `up-to-speed` | Brief you on how existing work fits together so you can start contributing. |
 | `writing` | Write and revise prose a human reads (essays, posts, docs) against rules distilled from the patterns that mark prose as machine-made. |
 
@@ -109,6 +110,7 @@ plugins/
       scrutinize/
       setup-coding-standard/
       show-me/
+      teach/
       up-to-speed/
       writing/
     agents/
