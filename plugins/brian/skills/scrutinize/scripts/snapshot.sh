@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Writes a scrutinize snapshot and prints the facts Step C dispatches on.
+# Writes a scrutinize snapshot and prints the facts the axes dispatch on.
 #
 # Usage: snapshot.sh working-tree | branch <name> | commit <sha> | base <ref> | replay <sha-ts>
 #

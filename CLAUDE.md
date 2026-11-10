@@ -8,8 +8,8 @@ Before writing or editing a skill, an agent, or a reference file, read `plugins/
 
 This repo adds two rules of its own:
 
-- A skill prescribes the steps and the gate that closes each one, and leaves the method within a step to the agent. Leave out personas, step-by-step recipes, and catalogs of techniques the model would pick anyway.
-- `plugins/brian/skills/challenge/references/contract-audit.md` is the registry of literal tokens that one agent emits and another parses, with every file that emits or consumes each one. A new token gets its row in the same commit that introduces it, and a rename or deletion updates every listed file in that commit. `scrutinize` keeps the tokens local to it in `scrutinize/references/contract-audit.md`. Its Step E is the reference example of a parsing consumer: it parses Finding Anchors, normalizes line spans, and dedupes on `(file, line)`, and judges severity from the reviewer's prose.
+- A skill states the result and how to verify it, and leaves the steps to the agent, because a frontier model plans its own route. Besides the result and its verification, a skill holds only what the agent cannot infer: constraints that hold throughout the run, the agents, models, and scripts to use, when to stop and ask, and any format that something parses. Leave out numbered procedures, personas, and catalogs of techniques the model would pick anyway.
+- `plugins/brian/skills/challenge/references/contract-audit.md` is the registry of literal tokens that one agent emits and another parses, with every file that emits or consumes each one. A new token gets its row in the same commit that introduces it, and a rename or deletion updates every listed file in that commit. `scrutinize` keeps the tokens local to it in `scrutinize/references/contract-audit.md`. Its "From returns to findings" section is the reference example of a parsing consumer: it parses Finding Anchors, normalizes line spans, and dedupes on `(file, line)`, and judges severity from the reviewer's prose.
 
 ## Before committing
 

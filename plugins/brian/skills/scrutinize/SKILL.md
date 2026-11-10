@@ -27,60 +27,86 @@ The leading word is **coverage**: a review counts for the files its reviewers re
 |---|---|---|---|
 | `cleanness` | `brian:review-cleanness` | yes | — |
 | `security` | `brian:review-security` | no | the snapshot script's `security trigger` line is not `none` |
-| `tests` | `brian:review-tests` | no | any production or test file changed, and on a zero-tests diff a home for tests exists (Step C) |
+| `tests` | `brian:review-tests` | no | any production or test file changed, and on a zero-tests diff a home for tests exists ("Axes and groups") |
 
 Every reviewer runs on `sonnet`.
 
 ---
 
-## Step A. Parse args
+## The result
 
-Map the invocation onto a mode (`working-tree`, `branch`, `commit`, `base`, or `replay`) and an axis override. Reject incompatible flags, such as `--branch` with `--commit`, with a one-line error.
+One report, printed last, whose verdict line says whether every axis covered the whole diff. Nothing acts on a reviewer's return before the report is printed: no edit, no fix, no commit, no reply to the caller. A finding exists once it appears under the verdict line, after coverage, floors, and dedupe have run over every return; a fix started on the first return to arrive is a fix to a finding the report might drop or merge.
 
-A caller may pass prose instead of flags ("review f18c77f..HEAD, report only rule-named findings"). Map the range onto a mode and keep the rest of the prose for Step E (D.2 says why it stays out of reviewer prompts).
+```
+scrutinize | <repo_root> @ <short_sha> (<iso_ts>) | <mode and refs>
+verdict:    <clean | findings | incomplete>
+dispatched: <axis (trigger)>, ...
+coverage:   <axis>: <full | partial | none> (<files read> of <files> files[; <gap in the reviewer's words>]); ...
+suite:      <the suite outcome>
+skipped:    <axis>: <reason>; ...      (omit when empty)
+excluded:   <paths left out of every group>   (omit when empty)
+snapshot:   <snapshot directory>
+```
 
-## Step B. Snapshot the diff
+Then the findings, HIGH, then MEDIUM, then LOW themes, each card carrying the reviewer's Claim, Evidence, and Fix as written:
 
-Run the bundled script as a single plain command, with the mode and its argument:
+```
+[<SEVERITY>] <file>:<line>  (<defect_class>; axes: <axes>)
+  Claim:    <claim>
+  Evidence: <file:line>
+            ```<lang>
+            <snippet>
+            ```
+  Fix:      <fix>
+  Confidence: <the reviewer's stated confidence, in a few words>
+```
+
+The findings come HIGH, then MEDIUM, then LOW themes, each card carrying the reviewer's Claim, Evidence, and Fix as written. Rewording a card changes what the reviewer claimed and what the caller acts on, so a card quotes its reviewer. Your own view of a finding, a caller's filter applied to the list, and any refuted mutation go after the cards, under a line that marks them as yours.
+
+When no finding renders, the line after the header reads `No findings.` on a `clean` verdict, and `No findings in the files reviewed; <axes> did not cover the whole diff.` on an `incomplete` one.
+
+Three cases end the run with one line in place of a report:
+
+- **Incompatible flags**, such as `--branch` with `--commit`: a one-line error.
+- **An empty diff** (the snapshot script exits 3): there is nothing to review.
+- **No Agent tool**, in your tool list or through `ToolSearch` with `select:Agent`: this message and nothing else, filled in.
+
+  > scrutinize did not run: the Agent tool is not available here, so no reviewer was dispatched. The diff is saved at `<snapshot>`; run `brian:scrutinize --input <sha-ts>` from a session that has the Agent tool. Report this to your caller as a failed review.
+
+  Reviewing the diff yourself is no substitute. One context holding three reviews misses what three separate reviewers catch, and its result would reach the caller as a scrutinize pass.
+
+## The snapshot
+
+Every reviewer reads the same snapshot, written by the bundled script, run as a single plain command with the mode and its argument:
 
 ```
 "${CLAUDE_PLUGIN_ROOT}/skills/scrutinize/scripts/snapshot.sh" <working-tree | branch <name> | commit <sha> | base <ref> | replay <sha-ts>>
 ```
 
-`${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory. The script writes the snapshot directory under `/tmp`, outside the repo: `full.diff`, one diff per changed file under `files/`, and `index.tsv` with one line per file (status, diff line count, repo path, per-file diff path). It prunes old snapshots, and prints the facts Steps C and F use: the snapshot path, file and line counts, the security trigger, and the zero-tests facts. Exit 3 means the diff is empty: report that there is nothing to review and stop.
+`${CLAUDE_PLUGIN_ROOT}` is the plugin's install directory. The script writes the snapshot directory under `/tmp`, outside the repo: `full.diff`, one diff per changed file under `files/`, and `index.tsv` with one line per file (status, diff line count, repo path, per-file diff path). It prunes old snapshots, and prints the facts the axes and the report header use: the snapshot path, file and line counts, the security trigger, and the zero-tests facts.
 
 A hand-written snapshot drifts from the script's layout and breaks replay, so when the shell refuses or fails to run the script, report the refusal and stop.
 
-## Step C. Decide the axes
+A caller may pass prose in place of flags ("review f18c77f..HEAD, report only rule-named findings"). The range maps onto a mode, and the rest of the prose is caller context, which applies to the findings and stays out of reviewer prompts ("Reviewers" says why).
 
-Produce `dispatched[]` and `skipped[{axis, reason}]`. Every registry axis ends in exactly one of the two.
+## Axes and groups
+
+Every registry axis is either dispatched or skipped with a reason, and the header names both.
 
 - **cleanness** always dispatches, unless an explicit `--axes=<csv>` leaves it out.
-- **security** dispatches when the script's `security trigger` line names a reason. Record that reason; Step D.3 passes it on.
-- **tests** dispatches when any file changed. On a zero-tests diff (the script prints `zero tests: true`), it dispatches only when the script prints `tests home: yes`; on `tests home: no`, record `tests: <the script's reason>; pass --axes=tests to force` in `skipped[]`. A package with no tests and no test script means its owner chose to have none, and a diff review is the wrong place to overturn that choice.
+- **security** dispatches when the script's `security trigger` line names a reason, and that reason goes to the reviewer.
+- **tests** dispatches when any file changed. On a zero-tests diff (the script prints `zero tests: true`), it dispatches only when the script prints `tests home: yes`; on `tests home: no`, the skip reason is `tests: <the script's reason>; pass --axes=tests to force`. A package with no tests and no test script means its owner chose to have none, and a diff review is the wrong place to overturn that choice.
 - `--axes=all` dispatches everything, and `--axes=<csv>` dispatches the list plus a mandatory-new-file security trigger.
 
-**Coding standards.** When `$repo_root/CODING_STANDARDS.md` exists, record its absolute path for Step D.3.
+A reviewer reads every line of every file it is given (House Rule 9), so a large diff is split into groups of about 3,000 diff lines each, read from `index.tsv`: files from one directory stay together, and a single file over 3,000 lines gets a group of its own. A diff under 3,000 lines is one group. Lockfiles, and files the repo itself marks generated or vendored (`.gitattributes`, `CODING_STANDARDS.md`, or a generated-file banner at the top of the file), are left out of every group and listed as `excluded` in the header. Every dispatched axis reviews every group.
 
-**Groups.** Read `index.tsv`. A reviewer reads every line of every file it is given (House Rule 9), so a large diff is split into groups of about 3,000 diff lines each: keep files from one directory together, and give a single file over 3,000 lines a group of its own. Leave out lockfiles, and files the repo itself marks generated or vendored (`.gitattributes`, `CODING_STANDARDS.md`, or a generated-file banner at the top of the file); list them as `excluded` for the header. A diff under 3,000 lines is one group. Every dispatched axis reviews every group.
+## Reviewers
 
-## Step D. Dispatch
+One Agent call per (axis, group), all sent in a single message: `subagent_type` from the registry, `model: sonnet`, `run_in_background: true`. The report waits for every completion notification.
 
-### D.0 The Agent tool
+**The suite outcome.** A red test is a fact, and it reaches every reviewer before any of them argues a change is a pure refactor. The repo's test command comes from its manifests (a `test` script in `package.json`, `swift test` for `Package.swift`, `go test ./...`, `pytest`, `cargo test`, a `test` target in a `Makefile` or `justfile`). It runs once, with a five-minute timeout, when the reviewed tree is the checked-out one: working-tree mode, `--base`, or a `--branch` or `--commit` that names `HEAD`. The outcome is `<command>: passed`, `<command>: N failing` with each failing test's name and file, or `not run: <reason>`.
 
-Check that the Agent tool is available, in your tool list or through `ToolSearch` with `select:Agent`. When it is not, stop with this message and nothing else, filled in:
-
-> scrutinize did not run: the Agent tool is not available here, so no reviewer was dispatched. The diff is saved at `<snapshot>`; run `brian:scrutinize --input <sha-ts>` from a session that has the Agent tool. Report this to your caller as a failed review.
-
-No reviewing the diff yourself in its place. One context holding three reviews misses what three separate reviewers catch, and its result would reach the caller as a scrutinize pass.
-
-### D.1 Run the suite
-
-Find the repo's test command from its manifests (a `test` script in `package.json`, `swift test` for `Package.swift`, `go test ./...`, `pytest`, `cargo test`, a `test` target in a `Makefile` or `justfile`). Run it once, with a five-minute timeout, when the reviewed tree is the checked-out one: working-tree mode, `--base`, or a `--branch` or `--commit` that names `HEAD`. Record the outcome as `<command>: passed`, `<command>: N failing` with each failing test's name and file, or `not run: <reason>`. A red test is a fact, and it reaches every reviewer before any of them argues a change is a pure refactor.
-
-### D.2 The reviewer prompt
-
-Each reviewer's prompt is the following blocks, in this order, and nothing else:
+**The prompt.** Each reviewer's prompt is the following blocks, in this order, and nothing else but its axis hints:
 
 ```
 ## Output Contract
@@ -120,79 +146,47 @@ If you have no findings, write `NO FINDINGS` on its own line. Either way, end wi
 <axis>
 
 ## Failing Tests
-<the D.1 suite outcome, verbatim>
+<the suite outcome, verbatim>
 ```
 
-followed by the axis hints in D.3.
+**Axis hints**, appended after the blocks:
 
-Caller context stays out of these prompts: accepted risks, out-of-scope notes, focus lists, the implementer's account of the change, and a caller's filter. A reviewer told what not to report stops looking there, and that is how a committed passphrase and an unauthenticated write API passed review. Step E is where caller context applies.
-
-### D.3 Axis hints
-
-- **cleanness**, when `CODING_STANDARDS.md` exists: `## Coding Standards` with its absolute path.
+- **cleanness**, when `$repo_root/CODING_STANDARDS.md` exists: `## Coding Standards` with its absolute path.
 - **tests**: `## Zero Tests Flag` with `true` or `false` from the script, and `## Coding Standards` with its path when the file exists, so the fixes it proposes follow the repo's test rules.
-- **security**: `## Security Trigger` with the Step C reason.
+- **security**: `## Security Trigger` with the reason its axis dispatched on.
 
 The harness gives the reviewers the same CLAUDE.md files you see, so the prompt leaves project rules out.
 
-### D.4 Dispatch in parallel
+Caller context stays out of these prompts: accepted risks, out-of-scope notes, focus lists, the implementer's account of the change, and a caller's filter. A reviewer told what not to report stops looking there, and that is how a committed passphrase and an unauthenticated write API passed review.
 
-Send one Agent call per (axis, group) in a single message: `subagent_type` from the registry, `model: sonnet`, `run_in_background: true`, and the D.2 prompt. Then wait for every completion notification.
+## From returns to findings
 
-A reviewer's return is input to Step E. Nothing acts on it: no edit, no fix, no commit, no reply to the caller, until the Step F report is printed. A finding exists once it appears under the verdict line, after dedupe, floors, and coverage have run over every return; a fix started on the first return to arrive is a fix to a finding the report might drop or merge.
+These rules turn the reviewers' returns into the report. They hold for every run, because a caller compares one report with the next.
 
-## Step E. Synthesize
+- **Coverage.** Each axis is `full`, `partial`, or `none`, judged from its reviewers' coverage statements. `full` means its reviewers read every file in their groups, or left a file out because it holds no code for the axis (a lockfile, an image). `partial` means any other gap: a file skipped for size or time, a diff read in part, a reviewer that says it sampled. `none` means the reviewers abstained, refused for a missing block, or never returned. Each gap goes in the header in the reviewer's own words.
+- **Severity.** Each Finding Anchor is parsed and tagged with its axis. Severity is judged from the prose, and is low when the claim does not cite a file and line or carries no Evidence snippet. These floors apply on top, and no prose can lower them:
 
-When every reviewer has returned:
+  | Floor | Fires on |
+  |---|---|
+  | HIGH | a `review-cleanness` finding whose defect class names a coding-standard violation, because the repo's owner wrote the rule down as binding |
+  | HIGH | a `review-tests` finding whose prose identifies a tautology or a change detector, because a test that can only pass hides the regression it claims to catch |
+  | HIGH | a `review-tests` zero-tests finding, on a run whose Zero Tests Flag was `true`; on a `false` flag it is a coverage gap judged on its prose |
+  | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene, because it is a house-rule prohibition |
+  | HIGH | each failing test from the suite run, rendered as a finding of axis `suite` at the test file, line `cross` |
 
-1. **Coverage first.** Read each return's coverage statement and judge each axis `full`, `partial`, or `none`. `full` means its reviewers read every file in their groups, or left a file out because it holds no code for the axis (a lockfile, an image). `partial` means any other gap: a file skipped for size or time, a diff read in part, a reviewer that says it sampled. `none` means the reviewers abstained, refused for a missing block, or never returned. Keep each gap in the reviewer's own words; it goes in the header.
-2. **Parse Finding Anchors.** Tag each finding with its axis. Judge severity from the prose, defaulting to low when the claim does not cite a file and line. Then apply the floors, which no prose can lower:
+- **Refuted mutations.** A tautology or change-detector finding that names a mutation the test survives is checked by running that mutation, when the suite command exists and the reviewed tree is checked out. One finding at a time: copy the file to a backup, apply the mutation, run the one test, and restore the file from the backup, never with `git checkout` or `git stash`, which would destroy uncommitted work. A test that goes red under the named mutation refutes the finding; it is dropped, and the drop is stated below the report.
+- **Duplicates.** A bare line `N` is the span `N-N`. Findings on the same file with overlapping spans merge, keeping the higher severity; at equal severity, both axes are kept.
+- **LOW findings.** HIGH and MEDIUM render as cards. LOW findings group by (axis, directory): three or more render as one LOW theme, and smaller groups are dropped and counted.
+- **Caller context.** When the caller marked a risk as accepted or out of scope, the finding stays in the report with the caller's note beside it; the caller decides what to do with it after reading.
+- **Verdict.** `incomplete` when any dispatched axis is `partial` or `none`, whatever the finding count; otherwise `findings` when any finding renders; otherwise `clean`. `incomplete` is never a pass: it means part of the diff went unreviewed on some axis, and the header says which part.
 
-   | Floor | Fires on |
-   |---|---|
-   | HIGH | a `review-cleanness` finding whose defect class names a coding-standard violation, because the repo's owner wrote the rule down as binding |
-   | HIGH | a `review-tests` finding whose prose identifies a tautology or a change detector, because a test that can only pass hides the regression it claims to catch |
-   | HIGH | a `review-tests` zero-tests finding, on a run whose Zero Tests Flag was `true`; on a `false` flag it is a coverage gap judged on its prose |
-   | MEDIUM | a `review-cleanness` finding whose defect class names comment hygiene, because it is a house-rule prohibition |
-   | HIGH | each failing test from the D.1 suite run, rendered as a finding of axis `suite` at the test file, line `cross` |
+## Verify
 
-3. **Check the mutation behind a tautology floor.** When a tautology or change-detector finding names a mutation the test survives, the suite command exists, and the reviewed tree is checked out, run that mutation yourself, one finding at a time: copy the file to a backup, apply the mutation, run the one test, and restore the file from the backup, never with `git checkout` or `git stash`, which would destroy uncommitted work. A test that goes red under the named mutation refutes the finding; drop it and say so below the report.
-4. **Normalize and dedupe.** A bare line `N` becomes `N-N`. Findings on the same file with overlapping ranges merge, keeping the higher severity; at equal severity, keep both axes.
-5. **Severity gate.** HIGH and MEDIUM pass through. LOW findings group by (axis, directory): three or more render as one LOW theme, and smaller groups are dropped and counted. A finding with no Evidence snippet is LOW.
-6. **Caller context.** When the caller marked a risk as accepted or out of scope, the finding stays in the report with the caller's note beside it; the caller decides what to do with it after reading.
-7. **Verdict.** `incomplete` when any dispatched axis is `partial` or `none`, whatever the finding count; otherwise `findings` when any finding renders; otherwise `clean`. `incomplete` is never a pass: it means part of the diff went unreviewed on some axis, and the header says which part.
-
-## Step F. Report
-
-The report is the last thing the skill prints, and the run is done when it is printed with its verdict line. Fixing findings, committing, and answering the caller come after it.
-
-```
-scrutinize | <repo_root> @ <short_sha> (<iso_ts>) | <mode and refs>
-verdict:    <clean | findings | incomplete>
-dispatched: <axis (trigger)>, ...
-coverage:   <axis>: <full | partial | none> (<files read> of <files> files[; <gap in the reviewer's words>]); ...
-suite:      <the D.1 suite outcome>
-skipped:    <axis>: <reason>; ...      (omit when empty)
-excluded:   <paths left out of every group>   (omit when empty)
-snapshot:   <snapshot directory>
-```
-
-Then the findings, HIGH, then MEDIUM, then LOW themes, each card carrying the reviewer's Claim, Evidence, and Fix as written:
-
-```
-[<SEVERITY>] <file>:<line>  (<defect_class>; axes: <axes>)
-  Claim:    <claim>
-  Evidence: <file:line>
-            ```<lang>
-            <snippet>
-            ```
-  Fix:      <fix>
-  Confidence: <the reviewer's stated confidence, in a few words>
-```
-
-Rewording a card changes what the reviewer claimed and what the caller acts on, so a card quotes its reviewer. Your own view of a finding, a caller's filter applied to the list, and any refuted mutation go after the cards, under a line that marks them as yours.
-
-When no finding renders, the line after the header reads `No findings.` on a `clean` verdict, and `No findings in the files reviewed; <axes> did not cover the whole diff.` on an `incomplete` one.
+- The report is the last thing printed, and its verdict line is one of the three keywords.
+- Every registry axis appears under `dispatched` or `skipped`, and every dispatched axis has a `coverage` entry naming files read of files given.
+- Every file in `index.tsv` is in a group or under `excluded`.
+- Every (axis, group) reviewer returned before the report was written, and every card quotes its reviewer.
+- The working tree matches what it was before the run: every mutation check restored its file, and no finding was acted on.
 
 ## Contract Audit
 

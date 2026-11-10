@@ -68,7 +68,7 @@ Past commits and tickets often disprove a candidate problem framing or supply th
 
 **Skeptical Auditor frame**: the history is evidence, not flavor. Quote it; don't paraphrase. Treat absence of history as a §4 bedrock signal in its own right.
 
-The reviewer is often invoked downstream of an orchestrator that already gathered prior intent (kickoff Task 3, `/challenge` after kickoff). Use your own judgment: invoke the historian only when the input context doesn't already carry the answer.
+The reviewer is often invoked downstream of an orchestrator that already gathered prior intent (kickoff's historian report, `/challenge` after kickoff). Use your own judgment: invoke the historian only when the input context doesn't already carry the answer.
 
 **Two orthogonal checks — BOTH must hold to skip**:
 

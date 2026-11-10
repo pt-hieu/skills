@@ -4,11 +4,11 @@ Read this when persisting the panel's returns, the synthesis, the tension list, 
 
 ## Run lifecycle
 
-Every artifact appends to `$run_file` as a top-level `##` section, in the order the run produces them: `## Working-Tree Snapshot (Step 0)`, the panel returns, `## Synthesis`, `## Tensions`, and `## Directions Applied` (or `## PR Review Comments` in review-only mode). One file per run; no sub-directories.
+Every artifact appends to `$run_file` as a top-level `##` section, in the order the run produces them: `## Working-Tree Snapshot`, the panel returns, `## Synthesis`, `## Tensions`, and `## Directions Applied` (or `## PR Review Comments` in review-only mode). One file per run; no sub-directories.
 
-If a Step 3.1 retry fetches missing context, the re-launched agent's output replaces its prior block and the synthesis notes the prior attempt. If both fixed reviewers fail twice, append `## ABORTED — both fixed reviewers failed twice` and skip the synthesis (see SKILL.md Step 2's await protocol for the terminal disposition; auxiliary-agent failures degrade the run instead).
+If a retry fetches missing context, the re-launched agent's output replaces its prior block and the synthesis notes the prior attempt. If both fixed reviewers fail twice, append `## ABORTED — both fixed reviewers failed twice` and skip the synthesis (see SKILL.md's "When a reviewer fails or abstains" for the terminal disposition; auxiliary-agent failures degrade the run instead).
 
-## Step 3.0 — Persist agent returns
+## Agent returns
 
 Append one section per panel agent. Wrap each verbatim agent return in a fenced markdown code block so the agent's own `##`/`###` headings stay inert in the run file's outline:
 
@@ -36,11 +36,11 @@ Append one section per panel agent. Wrap each verbatim agent return in a fenced 
 
 Use `~~~` (tilde) fences so any ` ``` ` triple-backtick code blocks inside the agent's output don't terminate the wrapper.
 
-If a retry happens (Step 3.1), replace the affected agent's block with the retry output and note the prior attempt in the synthesis. Failures after retry abort the run (see SKILL.md Step 2's await protocol).
+If a retry happens, replace the affected agent's block with the retry output and note the prior attempt in the synthesis. What a failure after retry does to the run is in SKILL.md's "When a reviewer fails or abstains".
 
-## Step 3.3 — Persist the synthesis
+## The synthesis
 
-Runs only after 3.1 resolves (retries complete or aborted) and before the Step 4 tension render. On the aborted path (both fixed reviewers failed twice): skip it, and emit only one line to chat: `Challenge ABORTED — both fixed reviewers failed twice. See <run_file>.`
+Written once every retry has returned or aborted, and before the tensions are rendered. On the aborted path (both fixed reviewers failed twice): skip it, and emit only one line to chat: `Challenge ABORTED — both fixed reviewers failed twice. See <run_file>.`
 
 Append:
 
@@ -69,25 +69,25 @@ Append:
 {consolidated strengths from the whole panel. Omit subsection if none.}
 
 ### Insufficient Context Areas
-{dimensions any agent could not assess and that remain open after retry — each one becomes a tension in Step 4. Omit subsection if none.}
+{dimensions any agent could not assess and that remain open after retry — each one becomes a tension. Omit subsection if none.}
 
 ### Overall Verdict: {PASS | REVISE | RETHINK}
 - PASS: no high- AND no medium-severity concerns
 - REVISE: one or more medium-or-higher concerns with clear fix paths
 - RETHINK: any high-severity concern indicating fundamental issue
 
-(Verdict capped at REVISE if any unresolved INSUFFICIENT CONTEXT — see SKILL.md Step 3.1.)
+(Verdict capped at REVISE if any unresolved INSUFFICIENT CONTEXT — see SKILL.md's "When a reviewer fails or abstains".)
 ```
 
-The synthesis has no Action Items list. Action belongs to the user, and Step 4's `## Tensions` section is where each finding is put to them as a decision.
+The synthesis has no Action Items list. Action belongs to the user, and the `## Tensions` section is where each finding is put to them as a decision.
 
-## Step 4 — Persist the tension list
+## The tension list
 
 Append the chat-rendered tension blocks verbatim under `## Tensions`. Verbatim matters: the run file should show the user exactly the decision they were asked to make, in the words they were asked it.
 
-## Step 5 — Persist the directions
+## The directions
 
-Append one entry per tension, in the same numbering Step 4 used:
+Append one entry per tension, in the same numbering the tension list used:
 
 ```
 ## Directions Applied

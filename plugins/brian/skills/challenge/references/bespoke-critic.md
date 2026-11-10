@@ -1,14 +1,14 @@
 # Bespoke Critic — authoring the target-specific adversary
 
-Read this once SKILL.md's Step 2 gate has named an aspect and written it to the run file. The judgment lives there and stays there; reaching this file means the aspect is already chosen, and what remains is writing the critic well.
+Read this once you have named an aspect under SKILL.md's "The bespoke critic" and written it to the run file. The judgment lives there and stays there; reaching this file means the aspect is already chosen, and what remains is writing the critic well.
 
 A bespoke critic is one extra panel agent that goes deep on a single aspect of one target, in the way the standing reviewers go broad across many. Depth is the whole point — a one-sentence version of an angle inside a broad reviewer's prompt misses what a dedicated agent finds.
 
 ## Invocation shape
 
-Launch as a `general-purpose` agent in the same message as the standing panel, `model: "opus"`, `run_in_background: true`. Its prompt is the framing you author below, then the full orchestrator contract injection from Step 2 (Output Contract, Context, Affected Files, Project Domain Knowledge, and the plan-mode Premise Audit) verbatim.
+Launch as a `general-purpose` agent in the same message as the standing panel, `model: "opus"`, `run_in_background: true`. Its prompt is the framing you author below, then the full contract from SKILL.md's "The reviewer prompt" (Output Contract, Context, Affected Files, Project Domain Knowledge, and the plan-mode Premise Audit) verbatim.
 
-Persist the return as `## Bespoke Critic — {aspect}`, tilde-fenced like the standing reviewers' blocks. A twice-failed critic degrades the run per the Step 2 await protocol.
+Persist the return as `## Bespoke Critic — {aspect}`, tilde-fenced like the standing reviewers' blocks. A twice-failed critic degrades the run per SKILL.md's "When a reviewer fails or abstains".
 
 ## Authoring the framing
 
@@ -17,13 +17,13 @@ The `prompting` skill governs craft here; this section covers what the challenge
 1. **A stance** — a role that wants the plan to fail on the named aspect. The stance is what produces depth; a neutral "review this for X" returns the same altitude the standing panel already covers.
 2. **Three to five angles** that decompose the aspect into questions with checkable answers — answers living in the repo, the target's own text, or the toolchain.
 3. **A grounding requirement** — verify against the actual repo before asserting, and name the file or command checked.
-4. **The closing keyword**, as a hard requirement: close with one judgment sentence containing exactly one of `pass` / `concerns` / `rethink` (Step 3's mapping table parses it, on the architectural reviewer's row). Tell the critic that a plan surviving its strongest attack earns `pass` — absent that line an adversarial stance never closes positive, and the keyword stops carrying information.
+4. **The closing keyword**, as a hard requirement: close with one judgment sentence containing exactly one of `pass` / `concerns` / `rethink` (the keyword table under SKILL.md's "Verdict" parses it, on the architectural reviewer's row). Tell the critic that a plan surviving its strongest attack earns `pass` — absent that line an adversarial stance never closes positive, and the keyword stops carrying information.
 
 Findings also follow the Output Contract already in the injection: Finding Anchors and confidence in prose, exactly like the standing reviewers.
 
 ## Worked derivations
 
-Two critics authored for past targets, here to calibrate shape — stance, angle count, grounding — for a critic you derive from *your* target's text. Where a recorded aspect genuinely matches one of these, adapt it; what the framing must serve is the aspect written at Step 2.
+Two critics authored for past targets, here to calibrate shape — stance, angle count, grounding — for a critic you derive from *your* target's text. Where a recorded aspect genuinely matches one of these, adapt it; what the framing must serve is the aspect you recorded.
 
 ### Derived for: a plan sequencing a lint-rule rollout across two repos
 

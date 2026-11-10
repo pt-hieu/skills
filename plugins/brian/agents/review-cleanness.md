@@ -180,7 +180,7 @@ The dividing line: **cleanness = LOCAL code shape within the changed lines; MODU
 - Behavior-changing cleanups (removing a branch that handles `null`/throws differently, reordering side effects) → correctness concern; drop.
 - Bare "could refactor" with no named concrete cost → dropped by House Rule #3 (anti-cosmetic gate); do not emit it as a finding.
 
-Rely on synthesis dedupe (Step E.3) for residual same-line overlap; do not pre-suppress a legitimate local-shape finding just because an adjacent module-level one might also exist. If you find yourself reaching for one of the above, drop the finding — it is not yours to emit.
+Rely on scrutinize's synthesis dedupe for residual same-line overlap; do not pre-suppress a legitimate local-shape finding just because an adjacent module-level one might also exist. If you find yourself reaching for one of the above, drop the finding — it is not yours to emit.
 
 ## Methodology
 

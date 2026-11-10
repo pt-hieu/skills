@@ -1,6 +1,6 @@
-# Domain Knowledge Harvest — Step 1.5 pipeline
+# Domain knowledge — `{knowledge_context}`
 
-Gather project-specific knowledge so agents review against documented patterns, not just general principles. The 5-stage pipeline produces `{knowledge_context}` for Step 2.
+`{knowledge_context}` is the project's own knowledge that bears on the affected files, handed to every panel agent so it reviews against documented patterns and not only general principles.
 
 > Scope: this skill intentionally violates the `prompting` skill's
 > rule that code computes every number and the LLM only interprets.
@@ -9,28 +9,15 @@ Gather project-specific knowledge so agents review against documented patterns, 
 > file is sufficient for single-process loops. The prompting rule still
 > binds for any agent shipped for external consumers.
 >
-> The one concrete quantitative artifact this covers is the Stage 2 relevance
+> The one concrete quantitative artifact this covers is the relevance
 > formula below — keep it and this rationale together so a future editor does
 > not "fix" the formula blindly.
 
-## Stage 1 — Collect
+## What it holds
 
-Walk all sources, build a candidate list `[{source, path, name, description}]`:
+**Up to five Skill Context Blocks**, the five most relevant skills, most relevant first, at most 200 words each and 1500 words together. When the total runs over, the lowest-ranked whole block is dropped; a block is never truncated.
 
-- **Project skills** (deduped by name, in priority order):
-  - `.claude/skills/*/SKILL.md`
-  - `plugins/*/skills/*/SKILL.md` (catches plugin marketplaces)
-  - `<git-root>/.claude/skills/*/SKILL.md`
-- **User skills** (only if relevant per Stage 2 score):
-  - `~/.claude/plugins/marketplaces/*/plugins/*/skills/*/SKILL.md`
-- **Project rules sources** (separate from skill blocks; assembled into a Project Rules Block):
-  - `<git-root>/CLAUDE.md`, `<git-root>/.claude/CLAUDE.md`, `~/.claude/CLAUDE.md`
-  - Any `*/CLAUDE.md` whose directory is an ancestor of an affected file (monorepo support)
-  - `<git-root>/AGENTS.md`, `<git-root>/CONTRIBUTING.md` (skip `README.md` — too noisy by default)
-
-## Stage 2 — Score
-
-For each skill candidate compute:
+Candidates are the project's skills, deduped by name in this priority order: `.claude/skills/*/SKILL.md`, `plugins/*/skills/*/SKILL.md` (which catches plugin marketplaces), and `<git-root>/.claude/skills/*/SKILL.md`. User skills under `~/.claude/plugins/marketplaces/*/plugins/*/skills/*/SKILL.md` are candidates too, and compete on the same score. Relevance is:
 
 ```
 relevance = (path-overlap-with-affected-files * 3)
@@ -38,17 +25,7 @@ relevance = (path-overlap-with-affected-files * 3)
           + (description-domain-match * 1)
 ```
 
-## Stage 3 — Rank
-
-Stable sort skill candidates by relevance descending.
-
-## Stage 4 — Trim
-
-Keep the top 5 skill candidates after ranking. Discard the rest.
-
-## Stage 5 — Assemble
-
-Compose each kept skill as a Skill Context Block (max 200 words each):
+Each block has this shape:
 
 ```
 ### Skill: {name}
@@ -58,6 +35,6 @@ Compose each kept skill as a Skill Context Block (max 200 words each):
 **Deep-dive paths**: {file paths agents can Read for more context}
 ```
 
-Assemble blocks until the aggregate `{knowledge_context}` reaches 1500 words. On overflow drop the lowest-ranked **whole** block; never truncate mid-block. CLAUDE.md / AGENTS.md / CONTRIBUTING.md content goes into a separate Project Rules Block (not subject to the 5-skill trim, capped at 500 words).
+**One Project Rules Block**, at most 500 words and outside the five-skill limit, drawn from `<git-root>/CLAUDE.md`, `<git-root>/.claude/CLAUDE.md`, `~/.claude/CLAUDE.md`, any `*/CLAUDE.md` whose directory is an ancestor of an affected file (monorepo support), `<git-root>/AGENTS.md`, and `<git-root>/CONTRIBUTING.md`. `README.md` is left out as too noisy.
 
-If the pipeline yields zero blocks: `"No project-specific skills or CLAUDE.md found. Review using general software engineering principles only."`
+When there are no blocks at all, `{knowledge_context}` is this sentence: `"No project-specific skills or CLAUDE.md found. Review using general software engineering principles only."`

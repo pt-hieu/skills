@@ -1,6 +1,6 @@
 # Contract Audit — run before every spec-stripping change
 
-Fires when you delete, rename, or retire a field of the reviewer Output Contract (Step 2) or a Step 3 closing-verdict keyword. Not part of a normal challenge run — this is a maintenance gate for skill authors.
+Fires when you delete, rename, or retire a field of the reviewer Output Contract (SKILL.md "The reviewer prompt") or a closing-verdict keyword (SKILL.md "Verdict"). Not part of a normal challenge run — this is a maintenance gate for skill authors.
 
 Before deleting or renaming any field listed below, grep both scopes for the literal token:
 
@@ -11,19 +11,19 @@ The reviewer agents narrate the contract in their Input Contract sections, and t
 
 Currently-live contract tokens (alphabetized):
 
-- `accurate` / `discrepancies` / `unsound` (Step 3 closing-verdict keywords, emitted by `plan-fact-checker` per `plugins/brian/agents/plan-fact-checker.md:53-60`; consumed by challenge/SKILL.md's Step 3 keyword-mapping table, which reads the keyword deterministically rather than inferring a verdict from tone)
-- `clean` / `findings` / `incomplete` (scrutinize's `verdict:` header keywords, emitted by `plugins/brian/skills/scrutinize/SKILL.md` Steps E.7 and F; consumed by `plugins/brian/skills/autopilot/references/task-specs.md` T10, which gates on them. `incomplete` means some dispatched axis left part of the diff unreviewed, and a consumer treats it as unreviewed code rather than a pass.)
+- `accurate` / `discrepancies` / `unsound` (closing-verdict keywords, emitted by `plan-fact-checker` per `plugins/brian/agents/plan-fact-checker.md:53-60`; consumed by the keyword table under challenge/SKILL.md's "Verdict", which reads the keyword deterministically rather than inferring a verdict from tone)
+- `clean` / `findings` / `incomplete` (scrutinize's `verdict:` header keywords, emitted by `plugins/brian/skills/scrutinize/SKILL.md` under "From returns to findings" and "The result"; consumed by the Self-review paragraph of `plugins/brian/skills/autopilot/SKILL.md`, which branches on them. `incomplete` means some dispatched axis left part of the diff unreviewed, and a consumer treats it as unreviewed code rather than a pass.)
 - `defect_class` (now a free-prose field — reviewers name the defect class in plain words; there is no fixed vocabulary, no shared SSOT file, and no runtime injection sentinel. The field itself stays on the anchor as the `(file, defect_class)` merge key.)
 - `Finding Anchor`
 - `INSUFFICIENT CONTEXT`
 - `misread-intent` / `broke-rule` / `wrong-fact` / `overreach` / `underreach` / `process` / `style` / `other` (grade-sessions correction categories, defined for the graders in `plugins/brian/skills/grade-sessions/references/rubric.md` and enforced by the grader schema in `plugins/brian/skills/grade-sessions/scripts/grade.js`, which counts corrections per category; a change edits both files)
 - `Output Contract`
-- `pass` / `concerns` / `rethink` (Step 3 closing-verdict keywords, emitted by `architectural-reviewer` per `plugins/brian/agents/architectural-reviewer.md:180-185` and required of the runtime-authored bespoke critic per `references/bespoke-critic.md`'s authoring rules; consumed by challenge/SKILL.md's Step 3 keyword-mapping table)
+- `pass` / `concerns` / `rethink` (closing-verdict keywords, emitted by `architectural-reviewer` per `plugins/brian/agents/architectural-reviewer.md:180-185` and required of the runtime-authored bespoke critic per `references/bespoke-critic.md`'s authoring rules; consumed by the keyword table under challenge/SKILL.md's "Verdict")
 - `Premise Audit` (plan-mode contract section — narrated by all three plugin reviewer agents, and injected verbatim into the bespoke critic's prompt)
-- `Resolved Gaps` (Step 3.1 retry section — injected by the orchestrator into the re-launched agent's prompt)
+- `Resolved Gaps` (retry section — injected by the orchestrator into the re-launched agent's prompt)
 
-Retired — do not reintroduce without a consumer: `DEFERRED`, `ESCALATED-CRUX`, `FIXED`, `REBUTTED-CITE`, `REBUTTED-JUDGMENT`, `Prior Round Findings`, `Round N Changes`. Nothing branches on these any more: Step 4 hands each finding to the user as a decision, and the user's direction is recorded in prose.
+Retired — do not reintroduce without a consumer: `DEFERRED`, `ESCALATED-CRUX`, `FIXED`, `REBUTTED-CITE`, `REBUTTED-JUDGMENT`, `Prior Round Findings`, `Round N Changes`. Nothing branches on these any more: challenge hands each finding to the user as a decision, and the user's direction is recorded in prose.
 
-The Step 4 tension markers `➡️` / `🛑` / `？` are render shape, not contract tokens: no code or consumer parses them, and the user reads the block for meaning. They belong to `references/templates.md` and are not audited here.
+The tension markers `➡️` / `🛑` / `？` are render shape, not contract tokens: no code or consumer parses them, and the user reads the block for meaning. They are canonical under SKILL.md's "Tensions" and are not audited here.
 
 When the orchestrator-emit shape evolves (new field added, existing field renamed, token retired), update this list in the same commit. The list is the single source of truth — agents narrate it in their Input Contract sections; this audit step keeps both sides aligned.

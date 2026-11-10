@@ -28,7 +28,7 @@ When something breaks, Claude reaches for the first plausible cause. `diagnose` 
 
 ### 3. When Claude is writing prompts, agents, or skills: `prompting`
 
-I build a lot of LLM agents and skills, and all of them run on prose a model reads. `prompting` is how I write that prose: in sentences with reasons, addressed to a reader, with the no-ops cut. It adds what an agent prompt must ask for (missing-data handling, conflicts, the case against, confidence with its basis, citation) and lays a skill out so an agent follows the same process every run. On an existing prompt surface, it removes instructions written for older models, such as pressure language, thinking and prefill scaffolds, and version workarounds.
+I build a lot of LLM agents and skills, and all of them run on prose a model reads. `prompting` is how I write that prose: in sentences with reasons, addressed to a reader, with the no-ops cut. It adds what an agent prompt must ask for (missing-data handling, conflicts, the case against, confidence with its basis, citation) and lays a skill out as a result and the checks that verify it, so an agent reaches the same result every run. On an existing prompt surface, it removes instructions written for older models, such as pressure language, thinking and prefill scaffolds, and version workarounds.
 
 ### 4. When the work is done: `commit`
 

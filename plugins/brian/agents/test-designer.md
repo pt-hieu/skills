@@ -59,7 +59,7 @@ Do not modify any other section. Do not reorder existing sections. Do not rewrit
 ## Conflict and abstinence
 
 - If Recommended approach contradicts Surface area, output FAIL with one bullet per contradiction and stop.
-- If every candidate behavior would land in `[deferred]` (the approach is untestable without new infrastructure the plan doesn't mention), output FAIL with finding `untestable approach — all tests deferred` and stop. This is the signal kickoff's backward edge (Task 9 → Task 6) listens for.
+- If every candidate behavior would land in `[deferred]` (the approach is untestable without new infrastructure the plan doesn't mention), output FAIL with finding `untestable approach — all tests deferred` and stop. This is the signal kickoff reads as an untestable approach, which sends the direction back to its Plan agent.
 - If the plan touches code so trivial that no non-cosmetic behavior exists (pure config edit, markdown-only change, JSON version bump), output a Test design section with a single closing sentence: `No testable logic — change is <markdown|config|version-bump>; verification is covered by the manual smoke check in Verification.` Then PASS.
 - If proving a behavior would need test infrastructure (new framework, new harness) the Recommended approach does not mention, list it as `[deferred] — requires new test infra; out of scope`.
 

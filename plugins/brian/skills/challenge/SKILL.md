@@ -5,96 +5,71 @@ description: "Use before finalizing a significant plan, after complex implementa
 
 # Challenge
 
-Fire independent opus subagents in parallel to stress-test a plan or implementation. The panel challenges whether the changes keep the architecture healthy, expandable, and maintainable — whether they fix root causes vs patch symptoms — and, in plan mode, whether the plan's own factual claims and critical premises actually hold.
+`challenge` puts a plan or an implementation in front of a panel of independent reviewers and turns every concern that survives into a **tension**: a decision the user makes, with options and a recommendation. The orchestrator fixes, rebuts, defers, and accepts nothing on its own.
 
-The two fixed reviewers are first-class plugin agents, launched on every run:
-- `brian:architectural-reviewer` — coupling, cohesion, module depth, historical coherence, expandability, side effects
-- `brian:root-cause-reviewer` — iterative-deepening RCA, defect class identification, sibling-instance search
+The panel challenges whether the changes keep the architecture healthy, expandable, and maintainable, whether they fix root causes or patch symptoms, and, for a plan, whether its factual claims and critical premises hold.
 
-Plan mode adds a third fixed agent:
-- `brian:plan-fact-checker` — verifies every file:line, count, path, and version claim the plan makes against the actual repo and installed toolchain
+## The result
 
-The panel may also gain one **bespoke critic** — an adversary the orchestrator writes for this particular target, aimed at whichever aspect most deserves depth. Step 2 owns that judgment in full; `references/bespoke-critic.md` carries the authoring guidance, invocation shape, and two worked derivations, opened once the aspect is named.
+- **Every tension is in front of the user** in one chat turn, in the shape under "Tensions", and the turn closes there. Nothing is applied until the user answers.
+- **Every direction the user gives is applied as given**, including one that differs from your recommendation or that you did not offer. A decision the user has made is not re-argued.
+  - *Implementer*: the plan section or the code is changed, and you state what changed and where (plan section, or `file:line`).
+  - *Review-only*: each direction becomes a PR review comment, written to the run file per `references/templates.md`, with an offer to post via Bitbucket MCP or copy to clipboard.
+  - A direction that leaves something unfixed on purpose is recorded with the reason the user gave, so the run file shows a decision and not an omission.
+- **The run file holds the whole trail**: the working-tree snapshot, each reviewer's verbatim return, the synthesis, the tensions as rendered, and the directions applied. Persistence survives compaction. `references/run-file-mechanics.md` has the section shapes; read it before the first append.
+- **The closing chat turn** follows `references/templates.md`.
 
-The fixed reviewers' and fact-checker's system prompts live in `plugins/brian/agents/`; the bespoke critic is authored at runtime under this skill's `references/`. This skill orchestrates context assembly, parallel invocation, synthesis, and the hand-off to the user. **The orchestrator owns the I/O contract** (Output Contract sections, Finding Anchor format, INSUFFICIENT CONTEXT semantics, Premise Audit section). Agent files keep methodology, dimensions, examples, and their per-agent closing-judgment keywords only.
-
-This skill deliberately holds quantitative state verbally (deviating from the `prompting` skill's deterministic-split rule) — the rationale and the one concrete formula it defends live together in `references/domain-harvest.md`.
-
-## Step 0: Run Setup
-
-Compute a run file path and initialize it. Persistence survives compaction and gives the run a forensic trail.
+The run file is created before anything else, and its path is printed so the user can re-open it:
 
 ```
 run_file=/tmp/claude-challenge/$(date -u +%Y%m%dT%H%M%SZ)-$(openssl rand -hex 3).md
 mkdir -p /tmp/claude-challenge
 printf "# Challenge Run — $(date -u +%FT%TZ)\n- Mode: <implementer|review-only>\n- Target: <plan path | git ref>\n\n" > "$run_file"
-{ printf "## Working-Tree Snapshot (Step 0)\n~~~\n"; git status --porcelain; printf "~~~\n\n"; } >> "$run_file"
+{ printf "## Working-Tree Snapshot\n~~~\n"; git status --porcelain; printf "~~~\n\n"; } >> "$run_file"
 ```
 
-The snapshot is the baseline for Step 5's working-tree hygiene check (experiment leftovers show up as paths new since Step 0).
+## Target and caller
 
-Print `$run_file` so the user can re-open it later. All artifacts append to it — for the persistence mechanics and section shapes, read `references/run-file-mechanics.md` (needed at every persistence point).
+**Target.** A plan is challenged before implementation: its text or task list goes into `## Context` verbatim, and the affected files are listed explicitly. An implementation is challenged as `git diff <base-ref>...HEAD`, with `<base-ref>` noted in the run file's header and the affected files taken from `git diff --name-only`.
 
-## Step 1: Determine Challenge Target
+**Caller.** The caller is the implementer, who can act on the user's directions directly, or a reviewer, whose output is PR comments. The mode changes only what happens to the directions; the tensions are the same in both. Decide it once, note it in the run file's header for the human reader, and hold it in working memory for the rest of the run.
 
-Identify what to challenge:
-- **Plan mode**: challenge the proposed approach before implementation.
-- **Implementation mode**: challenge code that was just written or changed.
+- Implementer signals: the working tree has uncommitted changes; HEAD is ahead of origin on a non-default branch; phrasing such as "my plan", "before I push", "I just changed".
+- Review-only signals: the diff comes from `gh pr diff` or `git fetch origin pull/<N>/head`; a clean working tree on a checked-out PR branch; phrasing like "review this PR", "audit X's branch".
+- When the signals are ambiguous, the mode is review-only, because writing comments is reversible and editing someone else's code is not. An interactive caller is asked once in plain text.
 
-Gather context:
-- If plan: read the plan content or task list verbatim into `## Context`.
-- If implementation: capture `git diff <base-ref>...HEAD`. Note `<base-ref>` in the run file's header line.
-- Identify affected files/modules — derive from `git diff --name-only` in impl mode; list explicitly in plan mode.
+## The panel
 
-## Step 1.0: Caller Disposition
+All panel agents are launched as tool-use blocks in one assistant message, each with `run_in_background: true`, so they run concurrently. Synthesis waits for every one of them to return.
 
-Determine whether the caller is the implementer (can act on the user's directions directly) or a reviewer (whose output is PR comments). Note the mode in the run file's header line — human-facing only. Mode is bound in the orchestrator's working memory at Step 1.0; later steps NEVER re-parse the header line to re-derive mode.
+- `brian:architectural-reviewer`, `model: "opus"`, on every run: coupling, cohesion, module depth, historical coherence, expandability, side effects.
+- `brian:root-cause-reviewer`, `model: "opus"`, on every run: iterative-deepening RCA, defect class identification, sibling-instance search.
+- `brian:plan-fact-checker`, `model: "sonnet"`, for a plan: verifies every file:line, count, path, and version claim against the repo and the installed toolchain. Claim verification is mechanical exploration, and opus is kept for the judgment-heavy reviewers.
+- **A bespoke critic**, at most one, written for this target.
 
-**Detection signals**:
-- Implementer: working tree has uncommitted changes; HEAD ahead of origin on a non-default branch; user phrasing such as "my plan", "before I push", "I just changed".
-- Review-only: diff comes from `gh pr diff` or `git fetch origin pull/<N>/head`; clean working tree on a checked-out PR branch; phrasing like "review this PR", "audit X's branch".
+The fixed agents' system prompts live in `plugins/brian/agents/` and hold their methodology, dimensions, examples, and closing keywords. This skill owns the I/O contract: the Output Contract sections, the Finding Anchor format, the INSUFFICIENT CONTEXT semantics, and the Premise Audit section.
 
-**Default on ambiguity**: review-only (writing comments is reversible; editing someone else's code is not). When the caller is interactive, ask once in plain text; otherwise default.
+### The bespoke critic
 
-Mode changes only what Step 5 does with the user's directions — implementer edits the plan or code, review-only turns each direction into a PR comment. Step 4 is identical in both modes.
+The standing panel buys breadth. This slot buys depth on one aspect of *this* target, and you write the critic, so its subject is whatever the target puts at risk, named in your own words and not drawn from a list. The question that decides it: **which critical aspect of this target will the standing panel only skim, where being wrong is expensive?**
 
-## Step 1.5: Domain Knowledge Harvest
+A critic launches only when both of these hold, and the run file records them:
 
-Before Step 2, run the 5-stage Domain Knowledge Harvest to produce `{knowledge_context}` — read and execute `references/domain-harvest.md` (it also carries the relevance-formula deviation rationale).
+- **Quoted**: the target's own text that makes the aspect critical. A claim you inferred from the repo's shape belongs to the standing panel; repo shape is a constant across every run and so tells you nothing about this one.
+- **Uncovered**: one line on why architectural review, root-cause analysis, and (for a plan) claim-checking will each only skim it. Generic depth is what those three already sell.
 
-## Step 2: Launch the Reviewer Panel in Parallel
-
-Compose the panel:
-
-- **Always**: `brian:architectural-reviewer` and `brian:root-cause-reviewer`, each with `model: "opus"`.
-- **Plan mode**: add `brian:plan-fact-checker` with `model: "sonnet"` (claim verification is mechanical exploration; reserve opus for the judgment-heavy reviewers).
-- **Bespoke critic** (0–1): decide with the gate below.
-
-### Bespoke-critic gate
-
-The standing panel buys breadth. This slot buys depth on one aspect of *this* target, and you write the critic — so its subject is whatever the target puts at risk, named in your own words rather than drawn from a list.
-
-Ask one question: **which critical aspect of this target will the standing panel only skim, where being wrong is expensive?**
-
-Launching wants both prongs, and the run file records them:
-
-- **Quoted** — the target's own text that makes the aspect critical. A claim you inferred from the repo's shape rather than read in the target belongs to the standing panel; repo shape is a constant across every run and so tells you nothing about this one.
-- **Uncovered** — one line on why architectural review, root-cause analysis, and (in plan mode) claim-checking will each only skim it. Generic depth is what those three already sell; the aspect earns its critic by being one they pass over.
-
-Write the record line before opening any reference — naming the aspect is the decision, and it happens in your words, not against a menu:
+The record line is written before any reference is opened, because naming the aspect is the decision and it happens in your words, not against a menu:
 
 ```
 Bespoke critic: none — {one-line reason}
 Bespoke critic: {aspect} — {quote from the target} — {why the standing panel only skims it}
 ```
 
-With the aspect recorded, read `references/bespoke-critic.md` to author the critic's prompt and launch it.
+With an aspect recorded, `references/bespoke-critic.md` has the authoring guidance and the invocation shape.
 
-### Emission
+### The reviewer prompt
 
-Once the panel is composed, all calls MUST be emitted as **tool-use blocks in the same assistant message** so they run concurrently, each with `run_in_background: true`.
-
-The orchestrator-injected contract goes into the user-turn `prompt` field. Identical for every panel agent:
+Every panel agent gets the same contract in its user-turn `prompt`, and no agent-definition content is repeated there:
 
 ```
 ## Output Contract
@@ -118,34 +93,33 @@ Abstinence rule (INSUFFICIENT CONTEXT): if you cannot assess a dimension with th
 {list of repo-relative paths}
 
 ## Project Domain Knowledge
-{knowledge_context from Step 1.5}
+{knowledge_context}
 ```
 
-**In plan mode**, append the `## Premise Audit` section to every panel agent's contract — read `references/premise-audit.md` for the block to inject and its rationale.
+`{knowledge_context}` is the project's own skills and rules that bear on the affected files, so the panel reviews against documented patterns and not only general principles. `references/domain-harvest.md` defines it.
 
-If gaps were resolved between attempts (Step 3.1 retry), append:
+For a plan, every agent's contract also carries the `## Premise Audit` block from `references/premise-audit.md`.
+
+A reviewer re-launched after a gap was closed gets one more block:
 
 ```
 ## Resolved Gaps
 {the missing context that was fetched, formatted for that agent}
 ```
 
-Do not re-embed agent-definition content in the prompt.
+Before deleting or renaming any Output Contract field, run the Contract Audit in `references/contract-audit.md`: it lists every copy of the contract (reviewer agents plus sibling skills), so a token rename touches them all in the same commit.
 
-**Before deleting or renaming any Output Contract field**, run the Contract Audit in `references/contract-audit.md` first — it greps every copy of the contract (reviewer agents plus sibling skills) so a token rename touches them all in the same commit.
+### When a reviewer fails or abstains
 
-### Await protocol
+An agent that errors or times out is retried once with the same prompt.
 
-After emitting the calls, wait until every launched agent has returned before starting Step 3. Use the harness's task-completion notifications; polling adds nothing.
+- **Both fixed reviewers fail twice.** The run file gets `## ABORTED — both fixed reviewers failed twice`, there is no synthesis and no tension list, and chat gets `Challenge ABORTED — both fixed reviewers failed twice. See <run_file>.` followed by a plain-text question: retry, proceed without challenge, or roll back. The user must reach a terminal disposition. A verdict is never synthesized from one fixed reviewer, because the conflict check between the two is the point of having both.
+- **An auxiliary agent** (`plan-fact-checker`, the bespoke critic) **fails twice.** The run degrades: `## {agent}: FAILED — degraded run` goes in the run file, the gap goes under the synthesis's Insufficient Context Areas, and the verdict is capped at `REVISE`.
+- **A reviewer reports `INSUFFICIENT CONTEXT`.** When the missing context is reachable (a file path, a ticket, a grep pattern), fetch it and re-launch only that agent with a `## Resolved Gaps` block, once. A gap that cannot be closed, or is still open after the retry, caps the verdict at `REVISE` and becomes a tension of its own: an unassessed dimension is a decision the user makes knowingly, not a footnote.
 
-On agent error or timeout: retry once with the same prompt. Failure handling splits by agent class:
+## Verdict
 
-- **Fixed reviewers** (`architectural-reviewer`, `root-cause-reviewer`): if both fail twice, append `## ABORTED — both fixed reviewers failed twice` to the run file. Skip Steps 3 and 4; chat emits one-line abort + run-file path, then asks in plain text: retry / proceed without challenge / roll back. Do NOT silently terminate — the user must reach a terminal disposition. **Do not synthesize a one-agent verdict** — the cross-agent conflict check between the two fixed reviewers is critical.
-- **Auxiliary agents** (`plan-fact-checker`, the bespoke critic): a twice-failed auxiliary agent degrades the run instead of aborting it — append `## {agent}: FAILED — degraded run` to the run file, note the gap in the synthesis's Insufficient Context Areas, and cap the verdict at `REVISE` (an unverified claims inventory is an unresolved gap, same as Step 3.1).
-
-## Step 3: Synthesize Results
-
-Each agent closes with a plain-language judgment sentence containing exactly one named keyword. Read that keyword — do not infer a verdict from the overall tone — and map it onto the report's verdict:
+Each agent closes with a judgment sentence containing exactly one named keyword. Read that keyword, not the overall tone:
 
 | Agent | Keyword in its closing sentence | Positive | Concerning | Fundamental issue |
 |---|---|---|---|---|
@@ -155,44 +129,22 @@ Each agent closes with a plain-language judgment sentence containing exactly one
 | bespoke critic (when launched) | `pass` / `concerns` / `rethink` | pass | concerns | rethink |
 | Final `Overall Verdict` | (orchestrator-owned) | PASS | REVISE | RETHINK |
 
-A positive-column keyword contributes a PASS-leaning signal, a concerning-column keyword a REVISE-leaning signal, and a fundamental-issue keyword a RETHINK-leaning signal; combining across the whole panel, the worst signal governs the verdict. The verdict describes how much of the target is in question — it does not decide anything, because Step 4 hands every decision to the user.
+The worst signal across the panel governs the verdict. The verdict describes how much of the target is in question; it decides nothing, because every decision goes to the user.
 
-After all panel agents complete:
+## Synthesis
 
-### 3.0 Persist agent returns
+The merged finding list is what the tensions are rendered from, and the run file's `## Synthesis` section records it.
 
-Append `## Architectural Review` and `## Root-Cause Review` verbatim to the run file, tilde-fenced — plus `## Fact Check` in plan mode and `## Bespoke Critic — {aspect}` when one launched. Full mechanics in `references/run-file-mechanics.md`.
+- **Duplicates.** Two findings are the same finding when they have the same `file` and the same underlying `defect_class`, judged by meaning, since `defect_class` is a plain-words phrase. A structural issue and a missing test on the same file are distinct and stay separate. A merged finding names both source agents.
+- **Priority.** Severity and confidence are judged from each finding's prose: high-severity blockers first, then medium.
+- **Cross-agent conflicts.** When one reviewer praises what another faults ("good abstraction" against "over-abstraction hides the root cause"), the conflict is carried forward as a tension of its own with both sides cited. The orchestrator does not pick a side.
+- **False consensus.** When every agent closed positive and none raised a concern it called medium or higher, re-examine the highest-risk areas of the diff or plan yourself for anything the panel normalized or overlooked. Anything found is a new finding tagged `[CONSENSUS-BLIND-SPOT]`; otherwise the synthesis records that the check ran and the agreement held.
 
-### 3.1 INSUFFICIENT CONTEXT gate (pre-verdict)
+## Tensions
 
-Count `INSUFFICIENT CONTEXT` dimensions across all panel agents.
+**What becomes a tension**: every high- and medium-severity finding from the merged list, `[CONSENSUS-BLIND-SPOT]` findings included, every cross-agent conflict, and every unresolved INSUFFICIENT CONTEXT gap. Low-confidence findings that no agent tied to a concrete risk get no block; they are one-liners under `Also raised`, so nothing is silently dropped.
 
-- If the gap is **closable** (file path / ticket / grep pattern reachable from the orchestrator): fetch the missing context (`Read` the file, `WebFetch` the ticket, run the grep), then re-launch **only the affected agent** with an extra `## Resolved Gaps` block. Cap at 1 retry. After retry, re-run 3.0 and re-evaluate the gate.
-- If the gap is **non-closable** OR remains unresolved after retry: verdict is capped at `REVISE` regardless of finding count. Cannot `PASS` with unresolved gaps. Surface the gap to the user in Step 4 as its own tension — an unassessed dimension is a decision the user should make knowingly, not a footnote.
-
-### 3.2 Merge / dedupe / prioritize
-
-1. Collect every panel agent's closing keyword and read each finding's confidence from its prose.
-2. Merge overlapping concerns by anchor similarity: same `file` AND the same underlying `defect_class`. `defect_class` is a plain-words phrase, so judge sameness by *meaning* — two findings on the same file are the same finding only when they describe the same underlying defect class. A structural issue and a missing test on the same file are distinct defect classes; do NOT merge them (this preserves the non-collapse guarantee). When merging genuine duplicates, note both source agents.
-3. Prioritize by severity × confidence, both judged from the prose: high-severity blockers first, then medium.
-4. **Detect cross-agent conflicts** — if architectural-reviewer says "good abstraction" but root-cause-reviewer says "over-abstraction hides the root cause", carry the conflict forward as its own tension in Step 4 with both sides cited. The orchestrator does NOT pick a side.
-5. **False Consensus Check** — if every panel agent closed positive (all positive-column keywords) AND none raised any concern they described as medium-or-higher severity, a unanimous panel is itself a signal to check: re-examine the highest-risk areas of the diff/plan yourself for anything the panel may have normalized or overlooked. Add anything you find as a new finding tagged `[CONSENSUS-BLIND-SPOT]`; otherwise record in the synthesis that the check ran and the agreement held.
-
-The merged finding list is held verbally through Step 4; that's all that's needed.
-
-### 3.3 Persist the synthesis
-
-Append `## Synthesis` to the run file using the template in `references/run-file-mechanics.md`. There is no separate compact chat synthesis — Step 4's tension list is the chat render, and it projects from the same merged finding list (fields are NOT re-derived).
-
-On the aborted path (both fixed reviewers failed twice): skip 3.3 and Step 4; emit only `Challenge ABORTED — both fixed reviewers failed twice. See <run_file>.`
-
-## Step 4: Surface Every Tension to the User
-
-This step is the point of the skill. The orchestrator does not fix, rebut, defer, or accept anything on its own. It converts each surviving concern into a decision the user makes.
-
-**What becomes a tension**: every high- and medium-severity finding from the merged list (including `[CONSENSUS-BLIND-SPOT]` findings), every cross-agent conflict, and every unresolved INSUFFICIENT CONTEXT gap. Low-confidence findings that no agent tied to a concrete risk do not get a block — list them as one-liners under `Also raised` so nothing is silently dropped.
-
-Render one status line, then one block per tension — this shape is canonical and lives nowhere else:
+One status line, then one block per tension. This shape is canonical and lives nowhere else:
 
 ```
 ## Challenge — {VERDICT} · arch: {✅|⚠️|❌} rca: {✅|⚠️|❌}{ facts: {✅|⚠️|❌}}{ critic: {✅|⚠️|❌}} · {N} tensions · artifact: <run_file>
@@ -208,35 +160,23 @@ Also raised (no decision needed unless you want one):
 Strengths: {brief, omit if none}
 ```
 
-Hard rules:
-
-- Each block gets at least two genuine options. "Leave it as proposed and accept the risk" is a legitimate option — name its cost when you offer it.
-- A recommendation is mandatory on every block. Options without a pick push the work back onto the user, which is the opposite of what this step is for.
+- Each block has at least two genuine options. "Leave it as proposed and accept the risk" is a legitimate option, offered with its cost.
+- Every block carries a recommendation. Options without a pick push the work back onto the user.
 - Recommend against the target when the evidence says so. The recommendation is your judgment, not a summary of what the plan already says.
-- Keep each of the three lines short enough to read as a decision. Depth lives in the run file, not the chat turn.
-- On a cross-agent conflict the options are the two reviewers' positions; the recommendation picks one and cites the evidence that decides it.
-- Never move a finding into `Also raised` to shorten the list. That line is for low-confidence findings with no concrete risk attached, and nothing else. The decisions are the payload; strengths and `Also raised` follow them.
-- The `facts` mark renders in plan mode only, the `critic` mark when a bespoke critic launched; both map straight off Step 3's keyword table. Source attribution and any violated skill name go in the 🛑 line, never a separate section or prefix.
-- `[CONSENSUS-BLIND-SPOT]` findings render as ordinary blocks — keep the tag in the title so the user sees where it came from.
-- Omit an empty section's header entirely; never write `N/A`.
+- Each of the three lines is short enough to read as a decision. Depth lives in the run file.
+- On a cross-agent conflict the options are the two reviewers' positions, and the recommendation picks one and cites the evidence that decides it.
+- `Also raised` holds low-confidence findings with no concrete risk attached, and nothing else. A finding is never moved there to shorten the list.
+- The `facts` mark renders for a plan only, and the `critic` mark when a bespoke critic launched; both map straight off the keyword table. Source attribution and any violated skill name go in the 🛑 line.
+- `[CONSENSUS-BLIND-SPOT]` findings render as ordinary blocks, with the tag kept in the title so the user sees where it came from.
+- An empty section's header is omitted, never written as `N/A`.
 
-If the panel surfaced nothing worth a decision, say so, note the strengths briefly, and go straight to Step 5.
+When the panel surfaced nothing worth a decision, say so, note the strengths briefly, and close the run.
 
-Append the rendered tension list verbatim to the run file as `## Tensions`, then close the turn and wait. Do not start applying anything until the user answers.
+## Verify
 
-## Step 5: Apply Directions and Close
-
-The user replies with a direction per tension — possibly a different one from what you recommended, possibly an option you did not offer. Take it as given; do not re-argue a decision the user has made.
-
-For each tension, in order:
-
-- **Implementer mode**: make the change the direction calls for — edit the plan section or the code. State what changed and where (plan section, or `file:line`).
-- **Review-only mode**: turn the direction into a PR review comment. Append the verbose comments (with code snippets) to the run file as `## PR Review Comments` per `references/templates.md`, then offer to post via Bitbucket MCP or copy to clipboard.
-
-A direction that leaves something unfixed on purpose still gets recorded — write it down with the reason the user gave, so the run file shows the decision rather than an omission.
-
-Append `## Directions Applied` to the run file (one entry per tension: the direction taken, and what it changed), then emit the closing chat turn per `references/templates.md`.
-
-### Working-tree hygiene check (plan mode, before the closing turn)
-
-Panel agents that ran premise-audit experiments were instructed to work in the scratchpad only. Verify: run `git status --porcelain` and compare against the same snapshot captured at Step 0. Any path new since Step 0 is an experiment leftover — remove it after confirming it matches experiment artifacts (paths that already existed at Step 0 stay untouched), and note the cleanup in the run file.
+- The run file has a section for the snapshot, for each launched agent's verbatim return, and for `## Synthesis`, `## Tensions`, and `## Directions Applied` (or `## PR Review Comments`), or it ends at `## ABORTED`.
+- Every high- and medium-severity finding, every cross-agent conflict, and every open INSUFFICIENT CONTEXT gap in the synthesis has a tension block, and every block has two or more options and a recommendation.
+- Nothing in the target changed between launching the panel and the user's answer.
+- `## Directions Applied` has one entry per tension, and each entry's change is in the plan or the code, or is recorded as left by decision.
+- The verdict is no better than `REVISE` when any gap stayed open or an auxiliary agent failed.
+- For a plan: `git status --porcelain` shows no path that is new since the run file's snapshot. Panel agents run premise-audit experiments in the scratchpad only, so a new path is an experiment leftover; it is removed once it is confirmed to be one, and the cleanup is noted in the run file. Paths in the snapshot stay untouched.

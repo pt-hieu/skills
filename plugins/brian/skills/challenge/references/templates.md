@@ -1,8 +1,8 @@
-# Render Templates — Step 5 closing renders
+# Render Templates — closing renders
 
-Read this at Step 5, when turning the user's directions into PR comments (review-only) or the closing chat turn (implementer). Use these blocks verbatim; project from the merged finding list and the directions the user gave — do NOT re-derive fields.
+Read this when turning the user's directions into PR comments (review-only) or the closing chat turn (implementer). Use these blocks verbatim; project from the merged finding list and the directions the user gave — do NOT re-derive fields.
 
-The Step 4 tension block (`➡️` / `🛑` / `？`) is not here: it is canonical in SKILL.md Step 4, together with the rules that govern it.
+The tension block (`➡️` / `🛑` / `？`) is not here: it is canonical in SKILL.md under "Tensions", together with the rules that govern it.
 
 ## Review-only — PR comments
 

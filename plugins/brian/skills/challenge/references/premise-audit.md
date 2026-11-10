@@ -1,6 +1,6 @@
 # Premise Audit — plan-mode contract section
 
-Read this at Step 2 in plan mode only. Append the block below to every panel agent's contract injection, substituting `{scratchpad_dir}` with the session scratchpad directory from your system prompt. Impl mode omits it — a diff's premises are its tests, not its prose.
+Read this when the target is a plan. Append the block below to every panel agent's contract injection, substituting `{scratchpad_dir}` with the session scratchpad directory from your system prompt. Impl mode omits it — a diff's premises are its tests, not its prose.
 
 Why it exists: the highest-value plan critique is empirical falsification of a premise the plan is built on (the Tailwind-class failure: "our config is active" was checkable by a 2-minute compile and false). Reviewers reading prose critique the approach; this section makes them attack the ground it stands on first.
 
@@ -14,4 +14,4 @@ For each premise that is empirically checkable against the installed toolchain, 
 Experiment hygiene: run every experiment inside {scratchpad_dir}, keep the repository working tree untouched, and delete your scratch files before returning.
 ```
 
-The Step 0 working-tree snapshot plus Step 5's hygiene check backstop the hygiene rule — any path new since Step 0 is an experiment leftover to remove.
+The run file's working-tree snapshot and the last check under SKILL.md's "Verify" backstop the hygiene rule — any path new since the snapshot is an experiment leftover to remove.
