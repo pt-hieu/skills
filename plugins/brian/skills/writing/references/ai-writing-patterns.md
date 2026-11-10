@@ -48,13 +48,13 @@ A single hit proves little. Readers who use LLMs daily spot machine prose at abo
 32. **Rule of three.** Three adjectives, three supports, three examples. Strongest where a human would never bother. Wikipedia; Russell et al. (ACL 2025).
 33. **Trailing participial analysis clause.** "..., highlighting the strong ties", "..., ensuring reliability". Reinhart et al. (PNAS 2025): the strongest grammatical signal, 2 to 5 times the human rate.
 34. **Copula avoidance.** "serves as", "stands as", "boasts", "features" for "is" and "has". Wikipedia; Geng and Trotta.
-35. **Flagging importance.** "This distinction matters because", "what matters more than X is Y". Graphite: "distinction matters" has zero occurrences in the human corpus.
+35. **Flagging importance.** "This distinction matters because", "what matters more than X is Y". Graphite: "distinction matters" has zero occurrences in the human corpus. The cleft form ranks a thing and withholds what it found: "It is the leg that answers the actual question."
 36. **Tradeoff-free promises.** "without sacrificing", "without losing", "without requiring". Graphite, strong for 2026 models.
-37. **Inanimate subjects doing the analysis.** "The data reveals", "the folktale subverts". The human analyst vanishes. Belcher (2025).
+37. **Inanimate subjects doing the analysis.** "The data reveals", "the folktale subverts". The human analyst vanishes. Belcher (2025). In technical prose the subject is a statistic or a figure: "Median hides it. The table shows it."
 38. **Pseudo-cleft frames.** "What makes this work is...", "The thing most people miss is...". Reinhart: that-clause subjects at 2.6 times the human rate.
 39. **Em-dash as contrast hinge.** Reliable for 2023 to 2025 text. Newer models are trained away from it, and Graphite finds Claude Opus 5 at about the human rate, so count it only when it carries a negative parallelism.
 40. **Elegant variation.** Cycling synonyms for one referent ("says", then "notes", then "explains"). Wikipedia; Belcher.
-41. **Mannered sensory metaphor.** "Sorrow tastes of metal", "a liminal day". Kriss (NYT, 2025); Graphite scores Claude at 2.5 times the human rate.
+41. **Mannered sensory metaphor.** "Sorrow tastes of metal", "a liminal day". Kriss (NYT, 2025); Graphite scores Claude at 2.5 times the human rate. The expository form lays a costume or disguise over a plain claim: "That is information loss wearing the costume of a style fix."
 42. **Emotion through stock bodily sensation.** Tight chest, stomach drop, cold sweat. StoryScope: 81% of AI stories against 38%; plain emotion labels ("I was bored") are the human marker.
 
 ### Word level (era-specific; weak alone)
@@ -102,7 +102,7 @@ Editors and critics:
 - explainx.ai, "Claude Opus 5 load-bearing Claudisms", Aug 2026.
 - GPTZero, "10 Phrases Most Overused by AI", Oct 2024.
 
-Gaps: no source catalogues aphoristic headings, numbers as texture, or log quotes as punchlines directly, so items 15, 18, and 19 are inferred from neighbouring patterns. The fiction studies (StoryScope, Tian) are the only quantitative narrative evidence, and the NYT, Atlantic, Economist, and Washington Post pieces were read through excerpts.
+Gaps: no source catalogues aphoristic headings, numbers as texture, or log quotes as punchlines directly, so items 15, 18, and 19 are inferred from neighbouring patterns. The cleft example in item 35, the statistic example in item 37, and the costume example in item 41 come from an unsourced table of tics Brian collected in November 2026, with no measured rate. The fiction studies (StoryScope, Tian) are the only quantitative narrative evidence, and the NYT, Atlantic, Economist, and Washington Post pieces were read through excerpts.
 
 ## Part 3: word replacements
 
