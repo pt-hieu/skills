@@ -1,6 +1,6 @@
 ---
 name: autopilot
-description: "Use when Brian hands over a requirement and asks for it to be taken all the way to a PR autonomously — phrased as autopilot, hands-off, unattended, end-to-end, or \"don't ask me anything\". Plans, implements, verifies, self-reviews, commits, and opens the PR as the single human gate, never entering plan mode. When Brian wants to approve a plan first, use kickoff instead."
+description: "Use when Brian hands over a requirement and asks for it to be taken all the way to a PR autonomously — phrased as autopilot, hands-off, unattended, end-to-end, or \"don't ask me anything\". Plans, implements, verifies, self-reviews, commits, and opens the PR as the single human gate, never entering plan mode. When Brian wants to approve a plan first, point him to `/brian:kickoff` instead."
 ---
 
 # Autopilot

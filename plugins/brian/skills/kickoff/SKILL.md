@@ -1,6 +1,7 @@
 ---
 name: kickoff
-description: "Use when a new requirement, ticket, or task description is handed off for planning."
+description: "Turn a new requirement, ticket, or task description into a challenged, code-grounded plan for Brian to approve."
+disable-model-invocation: true
 ---
 
 # Kickoff
