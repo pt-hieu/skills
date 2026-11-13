@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: "Use for a new requirement, ticket, or task description is handed off for planning."
+description: "Use when a new requirement, ticket, or task description is handed off for planning."
 ---
 
 # Kickoff
@@ -34,7 +34,7 @@ Each piece below is produced by the agent or skill named, at the model named (th
 
 | Evidence | Produced by | Model |
 | --- | --- | --- |
-| Code findings | up to three `Explore` subagents | `haiku` |
+| Code findings | up to three `Explore` subagents | `sonnet` |
 | Root cause, for a bug | `brian:diagnose`, inline via the `Skill` tool | — |
 | Prior intent | `brian:code-historian` | `sonnet` |
 | Architectural direction | one `Plan` subagent, high effort | `opus` |

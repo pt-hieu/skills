@@ -12,23 +12,25 @@ Decruft removes instructions that were written for an older model and now degrad
 - **Rewrite before deleting.** When an instruction has a live purpose, re-express it plainly (a shouted `NEVER delete without checking` becomes `Look before you delete`). Bare deletion is for lines with no live purpose.
 - **A removal is complete only when its references go too.** Grep the project for the removed text, symbol, and any retired model ID before finishing: tests asserting the old behaviour, helper functions that only served the old mechanism, docs, READMEs, and rule files. A prompt fixed while its smoke test still asserts the old shape is a broken app.
 
-## Steps
+## The pass
 
-### 1. Fix scope and target model
+Each part below ends in the check that shows it is done. Order the work as the run needs.
 
-Resolve both from the request and the repository, never by asking. Scope is whatever the request names (file, directory, list). With no name, scope is the working directory's whole prompt surface as found in step 2.
+### Scope and target model
+
+Resolve both from the request and the repository, never by asking. Scope is whatever the request names (file, directory, list). With no name, scope is the working directory's whole prompt surface as found by the inventory.
 
 Target model resolves in this order: the model the request names; else the destination of a migration the repository documents (vendor notes, TODOs); else the newest model the repository's code or docs point at; else Opus 5.5, the model this skill writes for. State both assumptions at the top of the final report so the user can re-run narrower.
 
 Done when: scope and target model are written down and every later judgement is relative to that model.
 
-### 2. Inventory the prompt surface
+### Inventory the prompt surface
 
 Find everything that reaches the model as text, not just the file called "prompt": system prompts and the code that assembles them; tool definitions (description and parameter descriptions); skill and rule files; request-building code (model IDs, thinking config, sampling parameters, stop sequences, prefill construction, retry loops, beta headers, `tool_choice`); few-shot blocks and embedded examples wherever they live.
 
 Done when: the inventory is listed and nothing in scope that reaches the model is missing from it.
 
-### 3. Establish provenance
+### Provenance
 
 Where git history exists, `git blame` the prompt files. For every emphatic or prohibitive line ask: which failure, on which model, did this prevent, and does that failure still reproduce on the target model? Lines added as mitigations for a retired model are presumptive removals. A line nobody can justify is suspect by default.
 
@@ -36,7 +38,7 @@ Idioms date text without history too: `<scratchpad>` / `<thinking>` tag instruct
 
 Done when: every emphatic, prohibitive, or scaffold-shaped line has a provenance note (model, era, or "unknown").
 
-### 4. Classify every line
+### Classify every line
 
 Ask one question per instruction: could the model already know this?
 
@@ -47,7 +49,7 @@ A second cut: is the line a constraint on behaviour (test it for removal) or con
 
 Done when: every line in the inventory is classified keep or candidate.
 
-### 5. Scan the pattern groups and edit
+### Scan the pattern groups and edit
 
 Read [`decruft-patterns.md`](decruft-patterns.md) and work through its four groups. Run the greppable signals over the inventory rather than eyeballing. For each candidate that matches a documented row with a target-model reason, apply the row's fix now: remove, rewrite (with the replacement), move (to the place named), replace with the API feature, or add (under-described tool contracts get *more* text).
 
@@ -55,7 +57,7 @@ A documented-pattern match is edited even when it seems minor, reads as a soft n
 
 Done when: every high- and medium-confidence finding is edited in the file, one finding per logical edit so `git diff` attributes each change to one reason.
 
-### 6. Close out references and verify
+### Close out references and verify
 
 - Grep the wider project for the exact removed text and any retired model ID: classifiers, tests, log parsers, and docs sometimes match on prompt strings. Fix or remove each hit.
 - For request-construction changes (prefill, stop-sequence scaffolding, forced `tool_choice`, sampling fossils), confirm no code path can still emit the dated shape: every call site, the parser and retry helpers that served it, and the tests that asserted it.
@@ -64,7 +66,7 @@ Done when: every high- and medium-confidence finding is edited in the file, one 
 
 Done when: `git grep` for removed symbols and old model IDs returns nothing unintended, and any available tests have been run with their output recorded.
 
-### 7. Report
+### Report
 
 Print, in this order:
 

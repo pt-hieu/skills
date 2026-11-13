@@ -1,6 +1,6 @@
 # Render Templates — closing renders
 
-Read this when turning the user's directions into PR comments (review-only) or the closing chat turn (implementer). Use these blocks verbatim; project from the merged finding list and the directions the user gave — do NOT re-derive fields.
+Read this when turning the user's directions into PR comments (review-only) or the closing chat turn (implementer). Use these blocks verbatim, filled from the merged finding list and the directions the user gave rather than re-derived, so what ships matches what the user decided.
 
 The tension block (`➡️` / `🛑` / `？`) is not here: it is canonical in SKILL.md under "Tensions", together with the rules that govern it.
 

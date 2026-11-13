@@ -40,7 +40,7 @@ If a retry happens, replace the affected agent's block with the retry output and
 
 ## The synthesis
 
-Written once every retry has returned or aborted, and before the tensions are rendered. On the aborted path (both fixed reviewers failed twice): skip it, and emit only one line to chat: `Challenge ABORTED — both fixed reviewers failed twice. See <run_file>.`
+Written once every retry has returned or aborted, and before the tensions are rendered. On the aborted path (both fixed reviewers failed twice) it is skipped, and what chat gets is in SKILL.md's "When a reviewer fails or abstains".
 
 Append:
 

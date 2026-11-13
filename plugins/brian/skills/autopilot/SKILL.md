@@ -14,8 +14,8 @@ Every run ends in exactly one of three terminal states, and none of them prompts
 **A normal PR.**
 
 - The change is on a feature branch, in one logical commit made with `brian:commit`, whose message names the design decision. Autopilot's change is a single logical unit, so the commit is not split.
-- The PR body leads with the assumptions register, sorted with high blast radius first and framed "Decisions I made without asking — flag any that are wrong". Then a plain-language summary of the change, the verification results, and any deferred medium-severity review findings.
-- The body describes one final approach. A design revised during review leaves residue ("originally… instead…", two names for one artifact, a superseded approach described as current), and none of it reaches the PR.
+- The PR title is `[emoji] [concise title]`, and its description is written with the `mattpocock-skills:pr` skill. Autopilot hands that skill the content only it holds: the assumptions register, sorted with high blast radius first and framed "Decisions I made without asking — flag any that are wrong", which leads the description; the verification results; any deferred medium-severity review findings; and any coverage gaps from self-review.
+- The description covers one final approach. A design revised during review leaves residue ("originally… instead…", two names for one artifact, a superseded approach described as current), and none of it reaches the PR.
 - The PR is opened with the Bitbucket MCP (`mcp__bitbucket__create_pull_request`; in the interface repo, workspace `drovacorp`, repo `interface`, target `master`) or with `gh`, whichever the repo's remotes call for, and its URL is posted to chat.
 
 **A `🛑 BLOCKED` draft PR**, when the work cannot be made review-ready. The WIP branch is pushed, a draft PR is opened titled `🛑 BLOCKED: <reason>` with a body that leads with the blocker, it is not marked ready for review, and chat gets the link. The cases:
@@ -42,7 +42,7 @@ No human reviews anything before the code is written, so each piece below exists
 
 | Evidence | Produced by | Model |
 | --- | --- | --- |
-| Code findings | up to three `Explore` subagents | `haiku` |
+| Code findings | up to three `Explore` subagents | `sonnet` |
 | Root cause, for a bug | `brian:diagnose`, inline via the `Skill` tool | — |
 | Prior intent, when escalated | `brian:code-historian` | `sonnet` |
 | Design | one `general-purpose` agent, high effort | `opus` |

@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 `grade-sessions` grades Brian's Claude Code history with a fleet of sonnet graders and has one opus agent rank what keeps going wrong, so that Brian changes skills and habits on evidence from his own sessions. The leading word is **evidence**: every grade rests on a quote from a transcript, and every proposed edit quotes the text it changes.
 
-Each session gets 1 to 5 on six dimensions for Claude and three for Brian; [`references/rubric.md`](references/rubric.md) defines them and the correction categories, and it is the graders' brief. The run is one Workflow over 30 batches by default, about 3.4M subagent tokens and ten minutes for 190 sessions.
+Each session gets 1 to 5 on six dimensions for Claude and three for Brian; [`references/rubric.md`](references/rubric.md) defines them and the correction categories, and it is the graders' brief. The run is one Workflow over 30 batches by default, about 3.4M subagent tokens and ten minutes for 190 sessions (measured 2026-10).
 
 ## The result
 

@@ -31,8 +31,8 @@ Your caller tells you how the requirement arrived. Read that for meaning rather 
 2. **Name what must hold, never how it is achieved.** A bullet naming collaborators, call order, or call counts — "calls the repository with the tenant id", "invokes the validator before the writer" — designs a **change detector**: a test that goes red on a behavior-preserving refactor and stays green through a real regression. Restate it as the outcome a caller depends on, or drop it. This is why your unit of output is a behavior and not a test.
 3. **Two tiers only — unit and integration.** No e2e, no snapshot tests, no UI-pixel tests. Integration means the behavior is proven across a real boundary — a real DB, a real HTTP call, a real file system — never mocked. If a boundary cannot be exercised without a mock, prefer a unit-tier behavior over the pure logic and call the boundary out in the closing sentence.
 4. **One behavior per bullet.** A bullet names exactly one observable behavior. If it needs "and", split it.
-5. **Cap the count.** 3–8 bullets for small plans (≤3 components in Surface area); 10–15 for large. List any overflow at the end as deferred, one short line each naming the behavior and why it is later-not-now.
-6. **Bug path needs a regression behavior.** Describe at least one bullet as a regression, quoting the exact failing input from the root cause Context names. Context already carries that input; it is the root cause, not an implementation detail. If you cannot write one, output FAIL and stop.
+5. **Keep the list to what drives the implementation.** Size it to the plan's Surface area: name the behaviors whose failure would cost the most, and list the rest at the end as deferred, one short line each naming the behavior and why it is later-not-now.
+6. **Bug path needs a regression behavior.** Describe at least one bullet as a regression, quoting the exact failing input from the root cause Context names. Context already carries that input; it is the root cause, not an implementation detail. If Context gives no root cause to pin, Path handling says what to report.
 7. **Order by salience, not file.** Highest-risk behaviors first. A regression pinning a known root cause outranks a happy-path branch.
 
 The split with review time: **code-level test smells** (Assertion Roulette, Magic Number, Mystery Guest, Sleepy Test, and the rest of the documented LLM-test-smell catalog) need real test code to judge and are `brian:review-tests`'s under `brian:scrutinize` — do not police them here. **Tautology and change detector are yours**, because the behavior you name decides them: a bullet that designs either one leaves the implementer no way to write an honest test for it.
@@ -58,9 +58,9 @@ Do not modify any other section. Do not reorder existing sections. Do not rewrit
 
 ## Conflict and abstinence
 
-- If Recommended approach contradicts Surface area, output FAIL with one bullet per contradiction and stop.
-- If every candidate behavior would land in `[deferred]` (the approach is untestable without new infrastructure the plan doesn't mention), output FAIL with finding `untestable approach — all tests deferred` and stop. This is the signal kickoff reads as an untestable approach, which sends the direction back to its Plan agent.
-- If the plan touches code so trivial that no non-cosmetic behavior exists (pure config edit, markdown-only change, JSON version bump), output a Test design section with a single closing sentence: `No testable logic — change is <markdown|config|version-bump>; verification is covered by the manual smoke check in Verification.` Then PASS.
+- If Recommended approach contradicts Surface area, stop and report the test design as not sound, with one bullet per contradiction.
+- If every candidate behavior would land in `[deferred]` (the approach is untestable without new infrastructure the plan doesn't mention), stop and say plainly that the approach is untestable because every test had to be deferred. Kickoff reads that as an untestable approach and sends the direction back to its Plan agent.
+- If the plan touches code so trivial that no non-cosmetic behavior exists (pure config edit, markdown-only change, JSON version bump), output a Test design section with a single closing sentence: `No testable logic — change is <markdown|config|version-bump>; verification is covered by the manual smoke check in Verification.` Then report that the test design holds up.
 - If proving a behavior would need test infrastructure (new framework, new harness) the Recommended approach does not mention, list it as `[deferred] — requires new test infra; out of scope`.
 
 ## Self-check before writing

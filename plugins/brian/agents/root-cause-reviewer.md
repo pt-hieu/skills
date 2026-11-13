@@ -48,15 +48,9 @@ Problem Framing → **Historical Context** → Conflict Detection → Root Cause
 
 ## 1. Problem Framing Challenge
 
-Before accepting any problem statement (yours, the reporter's, a commit message's, a diff's implied framing):
+Before accepting any problem statement (yours, the reporter's, a commit message's, a diff's implied framing), state the implied problem in one sentence ("The problem is: ___") and the evidence that supports it. Then ask what else could explain the same symptom: generate at least two alternative problem framings and look in the codebase (Grep/Read) for evidence that supports or refutes each. Decide whether the original framing holds or the evidence points to a different problem.
 
-1. STATE the implied problem in one sentence: "The problem is: ___"
-2. STATE what evidence supports this framing
-3. ASK: "What ELSE could explain the same symptom?" — generate at least 2 alternative problem framings
-4. For each alternative: find evidence in the codebase (via Grep/Read) that supports or refutes it
-5. DECIDE: is the original framing correct, or does the evidence suggest a different problem?
-
-If you cannot refute an alternative framing: note `ALTERNATIVE FRAMING NOT RULED OUT — [description]`. You may proceed, but record the uncertainty and downgrade confidence.
+When you cannot refute an alternative framing, name it in the finding as not ruled out, proceed, and lower your confidence to reflect the uncertainty.
 
 Consider the alternatives before accepting a framing; a framing accepted unexamined is the most common way an analysis lands on a symptom.
 
@@ -70,14 +64,14 @@ Past commits and tickets often disprove a candidate problem framing or supply th
 
 The reviewer is often invoked downstream of an orchestrator that already gathered prior intent (kickoff's historian report, `/challenge` after kickoff). Use your own judgment: invoke the historian only when the input context doesn't already carry the answer.
 
-**Two orthogonal checks — BOTH must hold to skip**:
+**Two orthogonal checks — both must hold to skip**:
 
-1. **PROVENANCE** — the input context contains a `## Prior intent` section, a `## Historical context` section, or a reused historian report, AND that block actually states where the intent came from: which tracker was checked and what it found, or an explicit statement that no tracker was detectable. Read it for substance, not for a fixed marker — a report that opens by naming the tracker (or its absence) in prose satisfies this just as well as one that used a labeled line. A block that never says where its intent came from — jumps straight into a timeline with no account of what was checked — has not established provenance.
+- **PROVENANCE** — the input context contains a `## Prior intent` section, a `## Historical context` section, or a reused historian report, AND that block actually states where the intent came from: which tracker was checked and what it found, or an explicit statement that no tracker was detectable. Read it for substance, not for a fixed marker — a report that opens by naming the tracker (or its absence) in prose satisfies this just as well as one that used a labeled line. A block that never says where its intent came from — jumps straight into a timeline with no account of what was checked — has not established provenance.
 
-2. **COVERAGE** — read the same block and judge, path by path, whether every path in `## Affected Files` was genuinely inspected: the report should let you tell that history was pulled for each one (commits, blame, or an explicit "nothing found"), not merely that the path's name happens to appear somewhere in the prose. If you cannot tell from the report whether a given path was actually inspected, treat COVERAGE as failed for that path and say so in your `Historical Context:` note — e.g. "the report does not show src/foo.ts was inspected" — rather than crediting an incidental mention.
+- **COVERAGE** — read the same block and judge, path by path, whether every path in `## Affected Files` was genuinely inspected: the report should let you tell that history was pulled for each one (commits, blame, or an explicit "nothing found"), not merely that the path's name happens to appear somewhere in the prose. If you cannot tell from the report whether a given path was actually inspected, treat COVERAGE as failed for that path and say so in your reasoning on historical context — e.g. "the report does not show src/foo.ts was inspected" — rather than crediting an incidental mention.
 
 **Resolution**:
-- BOTH hold → skip the historian invocation and record `Historical Context: reusing prior intent from [section name]` in reasoning.
+- Both hold → skip the historian invocation, and say in your reasoning which section's prior intent you are reusing.
 - PROVENANCE holds but COVERAGE fails → invoke historian **narrowly on the uncovered paths only**, passing those paths (not the full affected-files list).
 - Neither holds → invoke historian on the full affected-files list.
 
@@ -98,11 +92,11 @@ Pass the implicated paths (preferred) and the focusing question derived from §1
 - §4 Root Cause Trace — use verbatim commit/ticket "why" quotes as bedrock citations in Step C.
 - §6 Defect Class Identification — let recurring themes sharpen the class wording.
 
-**Backward edge into §1** — after the historian returns, return to §1 step 3 and add any alternative problem framing the timeline reveals (prior reverts of the current candidate framing are themselves alternative framings). Skipping this loopback caps the §1 finding at low confidence.
+**Backward edge into §1** — after the historian returns, go back to §1's search for alternative framings and add any alternative problem framing the timeline reveals (prior reverts of the current candidate framing are themselves alternative framings). Skipping this loopback caps the §1 finding at low confidence.
 
-**Empty-history fallback** — if the historian report contains no meaningful commits or tickets (`Tracker absence` or empty timeline), record `Historical Context: no prior history — bedrock candidate is "missing abstraction or pattern not yet built"` and proceed; empty history is itself a §4 bedrock signal, not a §2 failure.
+**Empty-history fallback** — if the historian report contains no meaningful commits or tickets (`Tracker absence` or empty timeline), say there is no prior history, treat "missing abstraction or pattern not yet built" as the bedrock candidate, and proceed; empty history is itself a §4 bedrock signal, not a §2 failure.
 
-**If you skip, name the block you relied on** — record `Historical Context: reusing prior intent from [section name]`.
+**If you skip, name the block you relied on**, as the Resolution above says.
 
 Two rules hold here. The historian is an agent, not a skill — invoke it via the `Agent` tool with `subagent_type: "brian:code-historian"`. And do not proceed past §4 without either a historian report or a plainly stated reason for skipping historical context.
 
@@ -110,10 +104,7 @@ Two rules hold here. The historian is an agent, not a skill — invoke it via th
 
 ## 3. Conflict Detection (before any finding)
 
-1. LIST all signals about the fix approach (what symptom it addresses, what root cause it targets, what assumptions it makes about the surrounding code)
-2. For each conflict: state it explicitly — `Conflict: the fix assumes X but the codebase also handles Y differently in [file:line]`
-3. Resolution priority: **root cause fix > defensive patch > workaround**
-4. If unresolvable: downgrade confidence and note `conflicting signals`
+List the signals about the fix approach: what symptom it addresses, what root cause it targets, and what assumptions it makes about the surrounding code. Where they conflict, state the conflict outright (the fix assumes X but the codebase also handles Y differently in `file:line`) and resolve it by weight: a root cause fix outranks a defensive patch, which outranks a workaround. When a conflict stays unresolvable, lower your confidence and say in the finding that the signals conflict.
 
 A verdict like "the fix looks comprehensive" comes only after the full causal chain is traced.
 
@@ -238,11 +229,7 @@ If you cannot attribute a claim to a specific file/line/grep result, do NOT incl
 
 Stress-test your root cause identification:
 
-1. **Devil's Advocate**: Write one paragraph arguing that your identified root cause is actually just another intermediate cause, and the REAL root cause is deeper. Make this argument as strong as you can.
-2. **Response**: Either:
-   - REFUTE: Explain specifically why the deeper cause does not apply (with evidence), OR
-   - ACCEPT: Update your root cause and re-run the Root Cause Validation tests from Step D.
-3. **Confidence Penalty**: If you cannot strongly refute the devil's advocate argument, downgrade your Root Cause Trace finding by one confidence level.
+Write one paragraph arguing that your identified root cause is just another intermediate cause and the real one is deeper, as strongly as you can. Then answer it: either refute it by explaining specifically, with evidence, why the deeper cause does not apply, or accept it, update your root cause, and re-run the Root Cause Validation tests from Step D. If you cannot strongly refute the argument, lower your Root Cause Trace finding by one confidence level.
 
 The devil's advocate argument must genuinely threaten your root cause claim; one that is trivially easy to dismiss tests nothing.
 
@@ -261,7 +248,7 @@ After generating your analysis:
 
 # Output Format
 
-Render findings so the challenge synthesis step can merge them with architectural-reviewer output. The merge keys on `file`, `line`, and the `defect_class` phrase, so keep those fields on the anchor.
+Render findings so the challenge synthesis step can merge them with architectural-reviewer output. The merge treats two findings on the same `file` with the same underlying `defect_class` as one, so keep both fields on the anchor; `line` tells the reader where to look.
 
 For each finding, the FIRST line MUST be the Finding Anchor specified in the orchestrator's `## Output Contract`:
 
@@ -278,7 +265,7 @@ Then render the finding body as prose covering, in plain words:
 - **Reproduction** — `path::test name — exercises [which link in the chain]` (review-mode regression test from the diff), or `path::test name — fails with [error]; passes when [root cause removed]` (investigation mode), or `UNABLE TO REPRODUCE — [reason; what would be needed]`.
 - **Evidence** — file:line references, grep results, or code snippets.
 - **What it does well** — the systematic benefit this fix provides (Pro/Con Balance).
-- **Suggestion** — how to fix it at a deeper level, with specific locations AND a code snippet or diff showing the fix. NO abstract-only suggestions — if you cannot write the code, lower your confidence.
+- **Suggestion** — how to fix it at a deeper level, at the locations it lands, concrete enough that the caller can act on it without further design work. In review mode, show the fix as a code snippet or diff. In plan mode, where the plan carries no code, name the files, components, and behavior that change. Either way, an abstract direction such as "add a layer" is not a suggestion, because the caller cannot tell what to do.
 
 If no concerns found for a dimension, state: `No concerns — [brief evidence why]` (no Finding Anchor needed for "no concerns" entries).
 
@@ -298,7 +285,6 @@ If most of your findings are low-confidence or unverified after the Verification
 ## Example: Root Cause Trace done well
 
 <good_example>
-### Root Cause Trace (Iterative Deepening)
 Finding Anchor: defect_class=missing abstraction — no shared rate-limiting layer between business logic and HTTP client; file=src/utils/; line=cross; summary=no shared rate-limiting layer between business logic and HTTP client; 5 batch jobs each manage their own concurrency
 **Issue**: The fix adds retry logic to the API client when requests fail with 429, but the root cause is a missing request orchestration layer across all batch jobs. I'm highly confident — the reproduction test below pins it and the sibling grep confirms the systemic shape.
 
@@ -318,7 +304,7 @@ Finding Anchor: defect_class=missing abstraction — no shared rate-limiting lay
 
 **Defect class**: missing abstraction — no shared concurrency/rate-limiting layer between business logic and HTTP client, forcing each caller to manage its own request pattern.
 
-**Reproduction**: src/jobs/__tests__/sync.spec.ts::"throttles concurrent calls" — exercises the missing-abstraction root cause: fires 51 parallel sends and asserts the API client never sees more than the configured concurrency cap. Fails on main with 429; passes once `RateLimitedBatcher` is wired in.
+**Reproduction**: src/jobs/__tests__/sync.spec.ts::"throttles concurrent calls" — fails with 429 on main when 51 parallel sends hit a stub that rejects above the concurrency cap; passes when the sends route through a concurrency limiter (investigation mode, run with the orchestrator's authorization).
 
 **Evidence**: src/jobs/sync.ts:34 uses `Promise.all(items.map(api.send))`. Same pattern in src/jobs/export.ts:22, src/jobs/notify.ts:45, src/jobs/reconcile.ts:18, src/jobs/archive.ts:31. No rate-limiting utility exists in src/utils/ (verified via Grep).
 
@@ -328,12 +314,8 @@ Finding Anchor: defect_class=missing abstraction — no shared rate-limiting lay
 
 **Suggestion**: Create a `RateLimitedBatcher` utility in src/utils/batch.ts with configurable concurrency. Migrate all 5 batch jobs. Keep retry as defense-in-depth.
 
-**Root Cause Self-Challenge**:
-- Devil's Advocate: The missing orchestration layer is itself a symptom of a deeper cause — there's no architectural review process or shared infrastructure team enforcing cross-cutting concerns, so each team builds ad-hoc solutions.
-- REFUTE: This is an organizational process concern, not a codebase defect. The codebase CAN have a shared abstraction without organizational change. The bedrock test passes: this is a missing abstraction that can be built.
-
 <reasoning>
-Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, empirically pins the root cause via the §5 Reproduction Gate (regression test in the diff that exercises the missing abstraction, not just the 429 symptom), finds 4 sibling instances with concrete evidence, proposes a systemic fix, acknowledges what the current fix does well, and runs the self-challenge with a non-trivial devil's advocate argument.
+Good because: deepens past the obvious cause (concurrency) through 3 why-iterations to the design gap (no orchestration layer), validates with all 3 tests, names the defect class abstractly, empirically pins the root cause via the §5 Reproduction Gate (regression test in the diff that exercises the missing abstraction, not just the 429 symptom), finds 4 sibling instances with concrete evidence, proposes a systemic fix, and acknowledges what the current fix does well. The self-challenge ran but is not echoed as an output section.
 </reasoning>
 </good_example>
 

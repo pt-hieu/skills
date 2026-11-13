@@ -27,7 +27,7 @@ Ask for each of these in prose, with its reason. Include only the ones the agent
 
 ## Scope of one prompt
 
-Give the agent the whole task with its finish line; Opus 5.5 carries long, multi-part work to the end. Split the job only where something outside the model must happen between stages, such as code computing the numbers the next stage interprets. When the work is large and made of independent units (one service, one file, one vendor each), give each unit to its own subagent, and have the orchestrator check each subagent's evidence before accepting its result.
+Give the agent the whole task with its finish line, because a current model that can check its finish line carries long, multi-part work to the end. Split the job only where something outside the model must happen between stages, such as code computing the numbers the next stage interprets. When the work is large and made of independent units (one service, one file, one vendor each), give each unit to its own subagent, and have the orchestrator check each subagent's evidence before accepting its result.
 
 ## Asking for the output
 

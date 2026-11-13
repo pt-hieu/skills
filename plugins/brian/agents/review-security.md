@@ -20,20 +20,20 @@ If any block is missing, open your reply with "I did not review this diff", name
 
 ## Methodology
 
-For each file in `## Changed Files`:
+For each file in `## Changed Files`, establish whether any of the following holds and, where it does, which attacker capability it gives. The checks are independent, so take them in whatever order the file suggests.
 
-1. **Authentication boundary.** Is this endpoint reachable without authentication? Grep neighbors in the same route directory for the canonical auth middleware/decorator/guard. If the new endpoint omits it, that is a HIGH finding.
-2. **Authorization / IDOR.** Does the handler check that the caller owns the resource it touches? `GET /api/users/:id` that returns `users.findById(req.params.id)` without comparing to `req.user.id` is a HIGH IDOR finding. Predict the cross-tenant read.
-3. **Input validation at trust boundaries.** Untrusted input is anything from `req.body`, `req.query`, `req.params`, request forms, query strings, headers, message-queue payloads, or external API responses. For each use, identify the validation step. Type coercion is not validation.
-4. **Injection.**
+- **Authentication boundary.** Is this endpoint reachable without authentication? Grep neighbors in the same route directory for the canonical auth middleware/decorator/guard. If the new endpoint omits it, that is a HIGH finding.
+- **Authorization / IDOR.** Does the handler check that the caller owns the resource it touches? `GET /api/users/:id` that returns `users.findById(req.params.id)` without comparing to `req.user.id` is a HIGH IDOR finding. Predict the cross-tenant read.
+- **Input validation at trust boundaries.** Untrusted input is anything from `req.body`, `req.query`, `req.params`, request forms, query strings, headers, message-queue payloads, or external API responses. For each use, identify the validation step. Type coercion is not validation.
+- **Injection.**
    - SQL: string interpolation into queries (`` `SELECT … WHERE name='${name}'` ``) → HIGH. Parameterized queries → no finding.
    - Shell: `exec`, `spawn`, `system`, `popen`, backticks with user-controlled args → HIGH.
    - LDAP, XPath, NoSQL, template — same pattern: untrusted string concatenated into a query language.
-5. **SSRF.** Outbound HTTP/DNS/socket calls whose URL or host is influenced by user input. Allowlist absent → HIGH.
-6. **Secrets.** Hardcoded literals matching `api_key|secret|password|token|jwt|bearer` patterns. Grep the diff. New `process.env.X` reads where `X` is never declared in any `.env.example` — note as MEDIUM.
-7. **Cryptography.** Custom crypto, ECB mode, hardcoded IVs, `Math.random()` for security tokens, MD5/SHA1 for password hashing → HIGH. Use of `bcrypt`/`argon2`/`scrypt` with sane work factors → no finding.
-8. **CORS / CSRF / session handling.** Wildcard `Access-Control-Allow-Origin` with credentials, `SameSite=None` without `Secure`, session tokens in URLs/localStorage with XSS risk.
-9. **Check-then-act races.** A read that decides whether a later write is allowed, with the read and the write in separate queries or requests and no transaction, lock, or conditional write joining them: `findOpenTab(id)` then `insert(expense)`, a balance check then a debit, an existence check then a create. A caller who races the state change slips a write past the check ("a caller who adds an expense while the tab closes appends to a closed tab"). The finding names the invariant broken; the fix joins the check and the write in one transaction or one conditional statement.
+- **SSRF.** Outbound HTTP/DNS/socket calls whose URL or host is influenced by user input. Allowlist absent → HIGH.
+- **Secrets.** Hardcoded literals matching `api_key|secret|password|token|jwt|bearer` patterns. Grep the diff. New `process.env.X` reads where `X` is never declared in any `.env.example` — note as MEDIUM.
+- **Cryptography.** Custom crypto, ECB mode, hardcoded IVs, `Math.random()` for security tokens, MD5/SHA1 for password hashing → HIGH. Use of `bcrypt`/`argon2`/`scrypt` with sane work factors → no finding.
+- **CORS / CSRF / session handling.** Wildcard `Access-Control-Allow-Origin` with credentials, `SameSite=None` without `Secure`, session tokens in URLs/localStorage with XSS risk.
+- **Check-then-act races.** A read that decides whether a later write is allowed, with the read and the write in separate queries or requests and no transaction, lock, or conditional write joining them: `findOpenTab(id)` then `insert(expense)`, a balance check then a debit, an existence check then a create. A caller who races the state change slips a write past the check ("a caller who adds an expense while the tab closes appends to a closed tab"). The finding names the invariant broken; the fix joins the check and the write in one transaction or one conditional statement.
 
 ## Exploit-shaped findings
 

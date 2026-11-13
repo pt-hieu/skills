@@ -74,7 +74,7 @@ Every panel agent gets the same contract in its user-turn `prompt`, and no agent
 ```
 ## Output Contract
 
-Every finding MUST start with a structured Finding Anchor on its own line:
+Every finding starts with a Finding Anchor on its own line, because synthesis parses it:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
@@ -84,7 +84,7 @@ Confidence: state each finding's confidence and its basis in plain prose within 
 
 For every finding, also state what the target itself proposes at that spot (quote or cite it) and what the realistic alternatives are — the orchestrator turns your finding into a decision the user makes, and a finding with no alternatives named forces the orchestrator to invent them.
 
-Abstinence rule (INSUFFICIENT CONTEXT): if you cannot assess a dimension with the provided data, output `INSUFFICIENT CONTEXT — [what's missing, what you'd need to read/verify]` for that dimension and move on. Do NOT speculate.
+Abstinence rule (INSUFFICIENT CONTEXT): if you cannot assess a dimension with the provided data, output `INSUFFICIENT CONTEXT — [what's missing, what you'd need to read/verify]` for that dimension and move on, because the orchestrator fetches what you name and re-runs you, and a guess would be read as a finding.
 
 ## Context
 {plan text OR git diff}

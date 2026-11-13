@@ -22,16 +22,13 @@ The flag is `false` on a test-only diff, and you still run: a diff that touches 
 
 ## Methodology
 
-Steps 1–3 run per changed production file; step 4 runs per changed test file and is the only step that runs on a test-only diff.
+For each changed production file, find its tests by grepping for the file's basename in the test directories (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`, `*_test.{go,py}`, `*_spec.rb`), and read the matching test files from disk. Then establish which assertions pin the behavior of each public function the diff changed: a changed function with no assertion exercising the changed branch is a finding. Before calling a change a pure refactor, set every literal an existing test asserts about the changed code beside the value the new code produces and compare them character by character, because a hyphen that became a minus sign is a behavior change the test already pins. A test listed in `## Failing Tests` that covers a changed file is already reported; your finding on it says whether the diff broke the behavior or the test pinned implementation, because that decides the fix. Also check each new `throw`, `reject`, `return err`, or validation gate the diff adds for a test that fires it; if none does, name the defect class as a test-coverage gap in plain words, with severity that reflects the risk of the branch.
 
-1. **Locate its tests.** Grep for the file's basename in test directories (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`, `*_test.{go,py}`, `*_spec.rb`). Read the matching test file(s) from disk.
-2. **Trace pinned behaviors.** For each public function changed in the diff, identify the assertion(s) that pin its behavior. If a function changed and no assertion exercises the changed branch, that is a finding. Before calling a change a pure refactor, set every literal an existing test asserts about the changed code beside the value the new code produces, and compare them character by character: a hyphen that became a minus sign is a behavior change the test already pins. A test listed in `## Failing Tests` that covers a changed file is already reported; your finding on it says whether the diff broke the behavior or the test pinned implementation, because that decides the fix.
-3. **New error branches.** For each new `throw`, `reject`, `return err`, or new validation gate added in the diff: is there a test that fires it? If not, name the defect class as a test-coverage gap in plain words; severity reflects the risk of the branch.
-4. **Run the prohibition check on every test the diff touches.** For each added or modified test, apply the section below. This is not an optional pass at the end — a test that survives step 2 by having an assertion can still be a tautology.
+Every test the diff touches, added or modified, then goes through the prohibition check in the section below. It is not an optional pass at the end: a test that has an assertion and so survives the pinning check can still be a tautology. This check is the only one that runs on a test-only diff; the rest run per changed production file.
 
 ## Prohibited: tautological and change-detector tests
 
-`~/.claude/CLAUDE.md` bans both by name; this axis is where the ban is enforced.
+The repo's `CODING_STANDARDS.md` bans both by name when it carries a Tests section, and House Rule 8 makes this axis the only one that reports them. Read `## Coding Standards` for the repo's wording; when the repo has no such file, the definitions below are the rule.
 
 - A **tautological test** restates the implementation instead of pinning the behavior, so it can only ever pass. Expected and actual are computed the same way, so no defect can separate them — the test is true by construction, the way `x == x` is true.
 - A **change-detector test** is the same failure seen from the other side: it fails when the code *changes* rather than when the behavior *breaks*. It pins how the result is produced, so a behavior-preserving refactor turns it red while a real regression leaves it green.
@@ -66,7 +63,7 @@ Cheap tells that a test is worth running the detector on. Each is a prompt to lo
 
 ### The diff-shaped tell
 
-The strongest signal available to you, and one only a diff reviewer can see: **the diff edits an existing test's expected value in the same commit as a production change that preserves behavior.** Either the behavior did change — and the production diff should show it — or the test was a change detector all along and the edit is its confession. Read the production hunk, decide which, and say which in the Claim. Per `~/.claude/CLAUDE.md`, patching the expectation is never the right resolution: the test gets rewritten against the behavior, or deleted.
+The strongest signal available to you, and one only a diff reviewer can see: **the diff edits an existing test's expected value in the same commit as a production change that preserves behavior.** Either the behavior did change — and the production diff should show it — or the test was a change detector all along and the edit is its confession. Read the production hunk, decide which, and say which in the Claim. Patching the expectation is never the right resolution, because it keeps the change detector alive: the test gets rewritten against the behavior, or deleted.
 
 ### Severity and the required fix
 

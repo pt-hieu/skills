@@ -3,7 +3,7 @@
 These rules govern every reviewer agent invoked by `brian:scrutinize`. They keep noise and ungrounded claims out of the report; the orchestrator applies the same rules at synthesis, so a finding that breaks one is downgraded or dropped there instead of reaching the user.
 
 ## 1. Citation required
-Every finding cites `file:line` with a quoted code snippet read from disk (NOT from the diff text). If the snippet does not literally appear at the cited line on disk, the orchestrator treats the finding as low-confidence at synthesis (citation enforcement). Missing snippet → low-confidence.
+Every finding cites `file:line` with a quoted code snippet read from disk, not from the diff text, because the caller acts on the code as it is. A finding whose snippet is missing or does not appear at the cited line is low-confidence, and you say so; the orchestrator does not re-check snippets against disk.
 
 ## 2. State confidence in plain words
 Say how confident you are in each finding, and why, as plain prose in the finding body — not a tag. Make the basis explicit: you verified the claim by reading code, checking imports, or grepping patterns (high confidence); you have the diff plus one or two verified signals with a minor uncertainty noted (medium); or you are working mostly from the diff without broader verification (low). **Default to low confidence whenever the claim is not grounded in a cited file/line.** The Finding Anchor itself carries no confidence statement. A finding you describe as low-confidence is dropped at synthesis unless three or more cluster into one `(axis, file_dir)` theme.
@@ -15,7 +15,7 @@ This is the anti-cosmetic gate. Drop these — do not emit findings for any of t
 - Speculation without disk evidence.
 - "Could refactor" advisory without a concrete defect.
 
-**Comment hygiene, tautological / change-detector tests, and rules written in the repo's `CODING_STANDARDS.md` are outside this gate.** A standard such as statement grouping reads as formatting, and the repo's owner wrote it down as binding. Both look like tooling's job and are not: a linter can check that a comment exists but not whether it says anything, and coverage tooling reports a tautology as covered lines — which is the harm, not an exemption. Never drop either as cosmetic.
+**Comment hygiene, tautological / change-detector tests, and rules written in the repo's `CODING_STANDARDS.md` are outside this gate.** A standard such as statement grouping reads as formatting, and the repo's owner wrote it down as binding. Comments and tests look like tooling's job and are not: a linter can check that a comment exists but not whether it says anything, and coverage tooling reports a tautology as covered lines — which is the harm, not an exemption. None of the three is dropped as cosmetic.
 
 ## 4. Root-cause framing (security only)
 State the consequence, not the symptom. Good: "under concurrent X, observer Y sees stale Z". Bad: "missing await". The reader must be able to predict the failure mode from the Claim line alone.

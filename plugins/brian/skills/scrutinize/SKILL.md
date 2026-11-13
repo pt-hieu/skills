@@ -61,7 +61,7 @@ Then the findings, HIGH, then MEDIUM, then LOW themes, each card carrying the re
   Confidence: <the reviewer's stated confidence, in a few words>
 ```
 
-The findings come HIGH, then MEDIUM, then LOW themes, each card carrying the reviewer's Claim, Evidence, and Fix as written. Rewording a card changes what the reviewer claimed and what the caller acts on, so a card quotes its reviewer. Your own view of a finding, a caller's filter applied to the list, and any refuted mutation go after the cards, under a line that marks them as yours.
+Rewording a card changes what the reviewer claimed and what the caller acts on, so a card quotes its reviewer. Your own view of a finding, a caller's filter applied to the list, and any refuted mutation go after the cards, under a line that marks them as yours.
 
 When no finding renders, the line after the header reads `No findings.` on a `clean` verdict, and `No findings in the files reviewed; <axes> did not cover the whole diff.` on an `incomplete` one.
 
@@ -115,7 +115,7 @@ Every finding starts with a Finding Anchor on its own line:
 
   Finding Anchor: defect_class=<plain-words defect-class phrase>; file=<repo-relative-path>; line=<N | N-M | "cross">; summary=<one-sentence canonical issue>
 
-Name the defect class in plain words — a short phrase in your own words for the underlying defect (e.g. "missing validation — external input to a DB query"). Synthesis merges and renders by `defect_class`, so every anchor carries it.
+Name the defect class in plain words — a short phrase in your own words for the underlying defect (e.g. "missing validation — external input to a DB query"). Each finding's card shows its `defect_class`, so every anchor carries it.
 
 After the anchor, the body is:
 

@@ -50,7 +50,7 @@ Write each obligation on the side that owns it. When only the actor can tell whe
 
 ## Size
 
-Every line in `SKILL.md` is read on every run, and every reference file costs a hop. A `SKILL.md` past about 150 lines is a sign to move the parts that only some runs need into references. A reference file under about 20 lines is not worth its hop, so inline it.
+Every line in `SKILL.md` is read on every run, and every reference file costs a hop. A `SKILL.md` past about 150 lines is a sign to move the parts that only some runs need into references. A reference file under about 20 lines is not worth its hop, so inline it when every run needs it; content only some runs need goes to a reference whatever its size.
 
 ## Diagnosing a misbehaving skill
 

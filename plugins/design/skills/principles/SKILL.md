@@ -1,6 +1,6 @@
 ---
 name: principles
-description: Use when building or reviewing any UI — applying layout/hierarchy and visual-consistency rules, choosing between drawer/dialog/inline patterns, or defining component states. When a project ships its own design-system skill (component library, brand rules), that skill wins on conflicts; this one fills the gaps.
+description: Use when building or reviewing any UI — applying layout/hierarchy and visual-consistency rules, choosing between drawer/dialog/inline patterns, or defining component states.
 ---
 
 # UI Design Principles
@@ -9,7 +9,7 @@ When a project ships its own design-system skill (component library, brand rules
 
 ## The 9 principles
 
-Non-negotiable. Every build and review run tests against all nine; violations are recorded by principle number.
+Every build and review run tests against all nine; violations are recorded by principle number.
 
 1. **Consistency creates trust** — One visual language everywhere: cards, strips, panels, and dialogs share one skeleton, with constant spacing, padding, and font sizes on a strict 8px grid. Differentiate with subtle signals (color labels, column spans, tints), never different anatomy — structural variation reads as "different data".
 2. **Hierarchy is the product** — Give what matters most visual dominance (size, position, color intensity); high-value items get real estate, low-value items compress. The user should know where to look within 2 seconds without reading anything.
@@ -51,12 +51,12 @@ Non-negotiable. Every build and review run tests against all nine; violations ar
 
 When reviewing a UI for visual consistency, run each block below as a checklist pass — do not eyeball:
 
-1. **The 9 principles** — test the UI against each; record every violation tagged with its principle number.
-2. **Hard rules** — scan for accent stripes, off-scale font sizes, and text-opacity softening; record each occurrence with its location.
-3. **Component states** — confirm every async, empty, and error surface has its state handled.
-4. **Conventions** — verify text casing, dates, numbers, and long text against the rules above.
-5. **Interaction, motion, and containers** — confirm cues match [references/interaction-patterns.md](references/interaction-patterns.md), container choices match [references/drawer-dialog.md](references/drawer-dialog.md), motion matches [references/motion.md](references/motion.md), and, when the UI ships to phones, touch behavior matches [references/touch.md](references/touch.md).
+- **The 9 principles** — test the UI against each; record every violation tagged with its principle number.
+- **Hard rules** — scan for accent stripes, off-scale font sizes, and text-opacity softening; record each occurrence with its location.
+- **Component states** — confirm every async, empty, and error surface has its state handled.
+- **Conventions** — verify text casing, dates, numbers, and long text against the rules above.
+- **Interaction, motion, and containers** — confirm cues match [references/interaction-patterns.md](references/interaction-patterns.md), container choices match [references/drawer-dialog.md](references/drawer-dialog.md), motion matches [references/motion.md](references/motion.md), and, when the UI ships to phones, touch behavior matches [references/touch.md](references/touch.md).
 
 Before listing a violation, re-read it at its location and confirm it. A deviation the project's own design system documents as a chosen exception is noted as such and kept out of the violation list, since that system wins on conflicts.
 
-The audit is done when all five passes are complete and every confirmed violation is listed with a file/location and the rule it breaks, ordered so the ones that do the most damage to the user come first: a hierarchy failure leads, a casing slip trails.
+The audit is done when every pass above is complete and every confirmed violation is listed with a file/location and the rule it breaks, ordered so the ones that do the most damage to the user come first: a hierarchy failure leads, a casing slip trails.
