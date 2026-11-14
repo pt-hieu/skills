@@ -18,7 +18,7 @@ One line each, so the answer reads at a glance:
 - **Sibling instances**: every `file:line` that shares the defect class.
 - **Confidence**, only when it is low or contested, plus a one-line suggestion when one helps.
 
-Show the full reasoning when the user asks to see the work. When an orchestrator such as `brian:kickoff` or `brian:autopilot` hands you its own output shape, use that shape.
+Show the full reasoning when the user asks to see the work. When an orchestrator such as `brian:autopilot` hands you its own output shape, use that shape.
 
 ## How to know it is right
 

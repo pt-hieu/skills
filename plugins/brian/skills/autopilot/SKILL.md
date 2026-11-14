@@ -1,11 +1,11 @@
 ---
 name: autopilot
-description: "Use when Brian hands over a requirement and asks for it to be taken all the way to a PR autonomously — phrased as autopilot, hands-off, unattended, end-to-end, or \"don't ask me anything\". Plans, implements, verifies, self-reviews, commits, and opens the PR as the single human gate, never entering plan mode. When Brian wants to approve a plan first, point him to `/brian:kickoff` instead."
+description: "Use when Brian hands over a requirement and asks for it to be taken all the way to a PR autonomously — phrased as autopilot, hands-off, unattended, end-to-end, or \"don't ask me anything\". Plans, implements, verifies, self-reviews, commits, and opens the PR as the single human gate, never entering plan mode."
 ---
 
 # Autopilot
 
-`autopilot` is the autonomous, no-human-in-the-loop sibling of `brian:kickoff`. It takes a requirement all the way to a PR without entering plan mode, asking a clarifying question, or waiting for approval. The PR is the single human review gate, so every decision a human would have been asked about is made on best judgment and **recorded** where the reviewer reads first.
+`autopilot` runs with no human in the loop. It takes a requirement all the way to a PR without entering plan mode, asking a clarifying question, or waiting for approval. The PR is the single human review gate, so every decision a human would have been asked about is made on best judgment and **recorded** where the reviewer reads first.
 
 ## The result
 
@@ -32,7 +32,7 @@ Every run ends in exactly one of three terminal states, and none of them prompts
 
 ## What holds throughout
 
-- **No human before the PR.** No pre-implementation question, no `EnterPlanMode` or `ExitPlanMode`, no wait for approval, and no skill or agent that does any of these. `brian:challenge` ends by asking the user for directions, so the design is reviewed by the reviewer agents directly.
+- **No human before the PR.** No pre-implementation question, no `EnterPlanMode` or `ExitPlanMode`, no wait for approval, and no skill or agent that does any of these. That is why the design is reviewed by dispatching the reviewer agents directly rather than through a skill that would put their findings to the user.
 - **No edit on the default branch.** On `main`, `master`, or `develop`, `git switch -c <ticket-or-slug>` comes before the first edit; on any other branch the run stays where it is.
 - **Every loop is bounded**, so the run always reaches a terminal state: three verification attempts, one design-review round, one `brian:scrutinize` pass.
 

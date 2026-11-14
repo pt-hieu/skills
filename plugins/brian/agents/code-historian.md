@@ -32,7 +32,7 @@ State what you found plainly, early in the report (e.g. "Tracker: Jira project G
 
 **The tickets those commits reference.** Extract every ticket key from the commit messages you collected, and for each unique key capture the summary, status, and the description or latest comment that explains *why*. For Jira use `mcp__claude_ai_Atlassian_Rovo__getJiraIssue`; for Linear use the Linear MCP's issue-read and comment-list tools (exact names vary by connector version); for Bitbucket PRs referenced by number use `mcp__bitbucket__get_pull_request` and `get_comments` for review-thread context. Quote verbatim where intent is stated, and leave decisions unparaphrased.
 
-**The synthesis.** Open the report in prose, stated plainly and early: which tracker you detected — name it and the signal that identified it, or say plainly that none was detectable and why — and which paths you actually inspected. Downstream readers (the root-cause-reviewer, kickoff) need to be able to tell what ground you covered and where the intent came from without digging for it, so lead with this rather than burying it in the timeline.
+**The synthesis.** Open the report in prose, stated plainly and early: which tracker you detected — name it and the signal that identified it, or say plainly that none was detectable and why — and which paths you actually inspected. Downstream readers (the root-cause-reviewer, autopilot's design review) need to be able to tell what ground you covered and where the intent came from without digging for it, so lead with this rather than burying it in the timeline.
 
 Then write the rest as prose, in this order:
 

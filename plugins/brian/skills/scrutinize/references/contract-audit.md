@@ -1,8 +1,22 @@
 # Contract Audit
 
-Shared-contract tokens this skill consumes. Renaming or deleting any of them is a multi-file change — grep the listed owners in the same commit. ("this file" below means `SKILL.md`, the orchestrator's execution guide.)
+This file is the repo's single registry of literal tokens that one agent or skill emits and another parses, with every file that emits or consumes each one. Renaming or deleting any of them is a multi-file change: update every listed file in the same commit, and grep `plugins/brian/agents/*.md` and `plugins/brian/skills/**/*.md` for the literal in case a copy is missing here. A new token gets its row in the commit that introduces it. ("SKILL.md" below means this skill's `SKILL.md`; agent files are under `plugins/brian/agents/`.)
 
-`defect_class`, `Finding Anchor`, and `Output Contract` describe the shared reviewer contract this skill's Output Contract section (SKILL.md "Reviewers") narrates a copy of. Their canonical registry is `plugins/brian/skills/challenge/references/contract-audit.md`, which also holds the verdict keywords `clean` / `findings` / `incomplete`, because autopilot reads them. A rename of any shared-contract token there must sweep this skill's SKILL.md "Reviewers" narration in the same commit.
+## Shared reviewer contract
+
+The reviewer agents narrate this contract in their Input Contract and Output Format sections, and `autopilot` (design review) and this skill (SKILL.md "Reviewers") each inject their own copy of the Output Contract, so a rename touches every copy.
+
+| Token | Owner file |
+|---|---|
+| `Output Contract` (block name) | emitted by `plugins/brian/skills/autopilot/SKILL.md` (The design review) and SKILL.md (Reviewers); read by `architectural-reviewer.md`, `root-cause-reviewer.md`, `review-cleanness.md`, `review-security.md`, `review-tests.md` (Input Contract) |
+| `Finding Anchor` (`defect_class=…; file=…; line=…; summary=…`) | specified by autopilot (The design review) and SKILL.md (Reviewers); emitted by the same five reviewer agents (Output Format / Output); parsed by SKILL.md (From returns to findings) |
+| `defect_class` (free prose: reviewers name the defect class in plain words) | the same files as `Finding Anchor`; SKILL.md renders it on each card, and `root-cause-reviewer.md` keeps it on the anchor so findings on one file with one defect read as one |
+| `INSUFFICIENT CONTEXT` | specified by autopilot (The design review, Output Contract); emitted by `architectural-reviewer.md` and `root-cause-reviewer.md` (Insufficient context rule / Constraints, Verification Step) for a dimension they cannot assess |
+| `Context`, `Affected Files`, `Project Domain Knowledge` (block names) | emitted by autopilot (The design review); read by `architectural-reviewer.md` and `root-cause-reviewer.md` (Input Contract), which request a missing block before reviewing |
+| `Prior intent` (`## Prior intent` block) | emitted by autopilot (The design review); consumed by `root-cause-reviewer.md` §2 PROVENANCE and COVERAGE checks, which skip its own historian when the block states where its intent came from; `code-historian.md` (The synthesis) writes the report that block carries |
+| `clean` / `findings` / `incomplete` (`verdict:` header keywords) | emitted by SKILL.md (From returns to findings, The result); consumed by autopilot (Self-review), which branches on them. `incomplete` means some dispatched axis left part of the diff unreviewed, and a consumer treats it as unreviewed code rather than a pass |
+
+## Tokens local to scrutinize
 
 | Token | Owner file |
 |---|---|
