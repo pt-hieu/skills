@@ -1,13 +1,13 @@
 ---
 name: setup-coding-standard
-description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog, and its CODE_MAP.md."
+description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog, its CODE_MAP.md, and its .ignore."
 argument-hint: "[repo path]"
 disable-model-invocation: true
 ---
 
 # Setup Coding Standard
 
-Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in. The skill also writes `CODE_MAP.md`, a guide to where things live in the repo.
+Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in. The skill also writes `CODE_MAP.md`, a guide to where things live in the repo, and `.ignore`, which keeps generated files out of an agent's search.
 
 The target is the repo at the path given as the argument, or the current working directory.
 
@@ -15,13 +15,14 @@ The target is the repo at the path given as the argument, or the current working
 
 - **`CODING_STANDARDS.md`** at the repo root, holding the catalog sections the repo's evidence selects, adapted to the repo.
 - **`CODE_MAP.md`** at the repo root, written or updated as `references/code-map.md` describes, naming every top-level directory, package, and entry point.
+- **`.ignore`** at the repo root, listing every generated file git tracks, as "The ignore file" defines one. A repo that tracks none gets no `.ignore`.
 - **`CLAUDE.md`** (or `AGENTS.md`) pointing at both: the line "Every coding rule is in `CODING_STANDARDS.md`." when neither file points there yet, and the block from `references/code-map.md`. No agent instruction file is created for the pointer alone.
 - **The design language**, when the repo has a UI whose look Brian decides: a `DESIGN-LANGUAGE.md` at the repo root, and the block from `references/design-language.md` in `CLAUDE.md` (or `AGENTS.md`).
-- **The report** to Brian: which sections went in and the evidence behind each, which were left out and why, what the catalog had no section for, any repo-own section that looks general enough to join the catalog, whether `DESIGN-LANGUAGE.md` was written and its block added, and why, and whether `CODE_MAP.md` is new or updated, with the paths the update fixed.
+- **The report** to Brian: which sections went in and the evidence behind each, which were left out and why, what the catalog had no section for, any repo-own section that looks general enough to join the catalog, whether `DESIGN-LANGUAGE.md` was written and its block added, and why, whether `CODE_MAP.md` is new or updated, with the paths the update fixed, and what `.ignore` lists, with the command that writes each file.
 
 ## Evidence
 
-A section is selected when a named file in the repo proves its condition, and left out otherwise. The facts that decide the selection, each with the file that proves it: languages, UI framework, styling approach, test runner and its DOM environment, formatter, the directory components live in, the entry points, whether a `CODING_STANDARDS.md`, a `DESIGN-LANGUAGE.md`, and a `CODE_MAP.md` exist, and whether the repo has a UI whose look Brian decides. They come from the manifests and configuration (`package.json` and workspace packages, `tsconfig*.json`, the test runner's and formatter's configs, `components.json`, `registry.json`), the directory layout, `docs/` for ADRs, and `CLAUDE.md` / `AGENTS.md`. In a monorepo a section applies when any package meets its condition.
+A section is selected when a named file in the repo proves its condition, and left out otherwise. The facts that decide the selection, each with the file that proves it: languages, UI framework, styling approach, test runner and its DOM environment, formatter, the directory components live in, the entry points, the generated files git tracks, whether a `CODING_STANDARDS.md`, a `DESIGN-LANGUAGE.md`, a `CODE_MAP.md`, and a `.ignore` exist, and whether the repo has a UI whose look Brian decides. They come from the manifests and configuration (`package.json` and workspace packages, `tsconfig*.json`, the test runner's and formatter's configs, `components.json`, `registry.json`), the directory layout, `docs/` for ADRs, and `CLAUDE.md` / `AGENTS.md`. In a monorepo a section applies when any package meets its condition.
 
 ## The catalog
 
@@ -47,6 +48,12 @@ When the repo already has a `CODING_STANDARDS.md`, its sections are of three kin
 - A selected catalog section the file lacks is added, in catalog order relative to its neighbours, without waiting for Brian.
 - A section present in both whose wording differs is Brian's call, because the repo may have diverged on purpose. Show him the two wordings side by side and replace only the ones he approves.
 
+## The ignore file
+
+`.ignore` is read by ripgrep, which an agent's search runs on, and a file it lists stays out of every search that does not name it by path. A generated file belongs in it: a file a command rewrites in full from a source elsewhere in the repo, such as a lockfile from the manifests, type declarations from a config, or a migration snapshot from the schema. An agent reads the source to do a task, so the generated copy only adds matches it has to discard. The command that writes the file is the evidence that it is generated: a script in a manifest, a tool's config, or the header the tool writes into the file.
+
+Vendored code stays searchable, because a task that wraps or styles a vendored component reads it. A file git ignores needs no line, because ripgrep already skips it. An existing `.ignore` keeps its lines and gains the missing ones.
+
 ## The design language
 
 Read `references/design-language.md` when the repo has a UI whose look Brian decides. A new `DESIGN-LANGUAGE.md` holds the single line `# Design language`; Brian's rules join it as his feedback arrives. An existing one holds Brian's taste and stays as it is. The block from the reference replaces an existing pointer line to `DESIGN-LANGUAGE.md` in `CLAUDE.md` (or `AGENTS.md`), and goes where the reference says when there is none. The rules live in `CLAUDE.md` because that file is loaded into every session, where they shape what gets written into `DESIGN-LANGUAGE.md`.
@@ -57,4 +64,5 @@ Read `references/design-language.md` when the repo has a UI whose look Brian dec
 - The written file and the design-language block have no `<placeholder>` left, and no path or ADR number that belongs to flyingsalmon.
 - An existing file's own sections are byte-identical after the run, an existing `DESIGN-LANGUAGE.md` is untouched, and no differing section was replaced without Brian's approval.
 - Every path `CODE_MAP.md` names exists in the repo, every top-level directory, package, and entry point appears in it, and `CLAUDE.md` or `AGENTS.md` points to it.
+- Every line of `.ignore` matches a file `git ls-files` lists, the report names the command that writes each of those files, and `rg --files` at the repo root lists none of them.
 - Every `DESIGN-LANGUAGE.md` in the repo has the pointer and the rules from `references/design-language.md` in `CLAUDE.md` or `AGENTS.md`.

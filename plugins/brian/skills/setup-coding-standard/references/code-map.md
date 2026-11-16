@@ -8,9 +8,11 @@
 - **Entry points.** The files where execution starts or is wired together: the app's main, the route table, CLI commands, workers, and the build, test, and formatter configs.
 - **Where to go for a task.** The changes this repo sees most and the files each one touches, for example "add an API route: the handler goes in `src/routes/`, is registered in `src/routes/index.ts`, and is tested in `src/routes/__test__/`".
 - **Paths you can predict.** A naming convention that gives a file's path from what the file holds, such as one folder per component or one file per route. When `CODING_STANDARDS.md` states the convention as a rule, the map gives the path pattern and the rule stays in `CODING_STANDARDS.md`.
-- **Places to skip.** Generated, vendored, and build-output directories that a search will hit, and directories whose names point to the wrong thing.
+- **Places to skip.** Vendored directories that a search will hit, directories whose names point to the wrong thing, and the files `.ignore` lists, because a search finds those only with `--no-ignore`.
 
 Leave out a listing of every file and anything one glob finds; `ls` gives the agent those faster than the map.
+
+Each line of the map states one fact about one path or area. An agent pulls a fact out of the map with a search, and a search returns whole lines, so a line that covers ten files returns all ten.
 
 **Existing file** — check every path it names against the tree. A path that moved is updated, a path that is gone is removed with its line, and an area, entry point, or task the map lacks is added. Lines about paths that still exist stay as written.
 

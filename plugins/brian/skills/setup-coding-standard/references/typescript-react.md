@@ -37,14 +37,14 @@ Every component is a folder, named after the component in kebab-case. A folder h
 - `index.ts` re-exports the folder's public surface and defines nothing.
 - One `.tsx` file per component, named after the component in kebab-case, defining that component and its props interface.
 - `types.ts` holds every type the folder exports, except component props.
-- `utils.ts` holds the folder's utility functions with low cognitive complexity, including every value a component derives from props or state beyond a single expression.
-- Any other runtime value the folder needs, such as a React context, a hook, a lookup table, or a utility function too involved for `utils.ts`, gets its own file named after what it holds.
+- `utils.ts` holds the utility functions about the component as a whole, each with low cognitive complexity, including every value a component derives from props or state beyond a single expression.
+- Any other runtime value the folder needs, such as a React context, a hook, a lookup table, a group of utility functions about one subject, or a utility function too involved for `utils.ts`, gets its own file named after what it holds.
 
 Consumers import from the folder, never from a file inside it.
 
 A `.tsx` file defines exactly one component, named after the file in PascalCase. A folder that ships several components has one file per component beside the main one.
 
-Utility functions do not each need a file. The ones with low cognitive complexity, short and with no nested logic, share the folder's `utils.ts`. A utility function whose branching or nesting takes effort to follow gets its own file, named after the function.
+Utility functions do not each need a file. The ones with low cognitive complexity, short and with no nested logic, share the folder's `utils.ts`. Two or more that share a subject narrower than the component, such as the text of an amount field, share a file named after that subject, because a reader picks a file by its name and `utils.ts` names no subject. A utility function whose branching or nesting takes effort to follow gets its own file, named after the function.
 
 Every exported type the folder defines goes in `types.ts`: variant enums, context value shapes, aliases over third-party types, prop-derived helpers. The one exception is the component's own props interface, which stays in the component file directly above the component so the contract and the implementation read together.
 
