@@ -1,6 +1,6 @@
 {
   "name": "brian",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Bundled skills: autopilot, commit, diagnose, prompting, scrutinize, setup-coding-standard, show-me, teach, writing.",
   "author": {
     "name": "Brian Pham",

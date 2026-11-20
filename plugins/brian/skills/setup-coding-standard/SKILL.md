@@ -1,13 +1,13 @@
 ---
 name: setup-coding-standard
-description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog, its CODE_MAP.md, and its .ignore."
+description: "Write or update a repo's CODING_STANDARDS.md from Brian's catalog, its CODE_MAP.md, and its .ignore, and cut its CLAUDE.md down to pointers."
 argument-hint: "[repo path]"
 disable-model-invocation: true
 ---
 
 # Setup Coding Standard
 
-Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in. The skill also writes `CODE_MAP.md`, a guide to where things live in the repo, and `.ignore`, which keeps generated files out of an agent's search.
+Every rule in the `CODING_STANDARDS.md` this skill writes comes from Brian's **catalog** — the section files under `references/` — and a section goes in only when evidence in the repo meets its condition. The catalog is the single home of the wording; the repo's file is a selection from it with the repo's own paths filled in. The skill also writes `CODE_MAP.md`, a guide to where things live in the repo, and `.ignore`, which keeps generated files out of an agent's search, and it cuts `CLAUDE.md` down to a phonebook that points at those files.
 
 The target is the repo at the path given as the argument, or the current working directory.
 
@@ -16,9 +16,9 @@ The target is the repo at the path given as the argument, or the current working
 - **`CODING_STANDARDS.md`** at the repo root, holding the catalog sections the repo's evidence selects, adapted to the repo.
 - **`CODE_MAP.md`** at the repo root, written or updated as `references/code-map.md` describes, naming every top-level directory, package, and entry point.
 - **`.ignore`** at the repo root, listing every generated file git tracks, as "The ignore file" defines one. A repo that tracks none gets no `.ignore`.
-- **`CLAUDE.md`** (or `AGENTS.md`) pointing at both: the line "Every coding rule is in `CODING_STANDARDS.md`." when neither file points there yet, and the block from `references/code-map.md`. No agent instruction file is created for the pointer alone.
+- **`CLAUDE.md`** (or `AGENTS.md`) as a phonebook, as `references/claude-md.md` describes: a sentence or two on what the repo is, pointers to the files that hold the detail, and the instructions that apply to every task and that no file states. It points at both files above: the line "Every coding rule is in `CODING_STANDARDS.md`." when neither file points there yet, and the block from `references/code-map.md`. No agent instruction file is created for the pointer alone.
 - **The design language**, when the repo has a UI whose look Brian decides: a `DESIGN-LANGUAGE.md` at the repo root, and the block from `references/design-language.md` in `CLAUDE.md` (or `AGENTS.md`).
-- **The report** to Brian: which sections went in and the evidence behind each, which were left out and why, what the catalog had no section for, any repo-own section that looks general enough to join the catalog, whether `DESIGN-LANGUAGE.md` was written and its block added, and why, whether `CODE_MAP.md` is new or updated, with the paths the update fixed, and what `.ignore` lists, with the command that writes each file.
+- **The report** to Brian: which sections went in and the evidence behind each, which were left out and why, what the catalog had no section for, any repo-own section that looks general enough to join the catalog, whether `DESIGN-LANGUAGE.md` was written and its block added, and why, whether `CODE_MAP.md` is new or updated, with the paths the update fixed, what left `CLAUDE.md` (each deleted fact with the file and line that states it, and each moved fact with where it went), and what `.ignore` lists, with the command that writes each file.
 
 ## Evidence
 
@@ -63,6 +63,7 @@ Read `references/design-language.md` when the repo has a UI whose look Brian dec
 - Every section in the written file traces to a catalog section, and every selected section to a named file in the repo. Every catalog section opened is accounted for in the report as selected or left out.
 - The written file and the design-language block have no `<placeholder>` left, and no path or ADR number that belongs to flyingsalmon.
 - An existing file's own sections are byte-identical after the run, an existing `DESIGN-LANGUAGE.md` is untouched, and no differing section was replaced without Brian's approval.
+- Every line of `CLAUDE.md` or `AGENTS.md` says what the repo is, points to a file that exists, or gives an instruction that applies to every task and that no file in the repo states. Every fact that left it is in the report with the file and line that states it, or is in `CODE_MAP.md` or the Markdown file it moved to. `git diff --stat` lists no source file.
 - Every path `CODE_MAP.md` names exists in the repo, every top-level directory, package, and entry point appears in it, and `CLAUDE.md` or `AGENTS.md` points to it.
 - Every line of `.ignore` matches a file `git ls-files` lists, the report names the command that writes each of those files, and `rg --files` at the repo root lists none of them.
 - Every `DESIGN-LANGUAGE.md` in the repo has the pointer and the rules from `references/design-language.md` in `CLAUDE.md` or `AGENTS.md`.
