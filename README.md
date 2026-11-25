@@ -44,6 +44,7 @@ I build a lot of LLM agents and skills, and all of them run on prose a model rea
 | --- | --- |
 | `autopilot` | Take a requirement to a PR autonomously, outside plan mode, with the PR as the human review point. |
 | `commit` | Commit the working tree in one commit per concern, with gitmoji conventional-commit messages. |
+| `dev-server` | Inside a Rex terminal, run a long-running process in a minimized floating layer and show the page it serves in a `terminal-browser` split beside the conversation. |
 | `diagnose` | Root-cause debugging, proven by a reproduction. |
 | `prompting` | Write the prose LLMs read (agent prompts, skills, subagent instructions, and handoffs), and remove instructions written for older models from an existing prompt surface, leaving the edits in the working tree. |
 | `scrutinize` | Review local code changes against Brian's house rules for cleanness (comments, reuse), security, tests, and the repo's own `CODING_STANDARDS.md`. |
@@ -82,6 +83,7 @@ plugins/
     skills/
       autopilot/
       commit/
+      dev-server/
       diagnose/
       prompting/
       scrutinize/

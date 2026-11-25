@@ -1,7 +1,7 @@
 {
   "name": "brian",
-  "version": "4.2.0",
-  "description": "Bundled skills: autopilot, commit, diagnose, prompting, scrutinize, setup-coding-standard, show-me, teach, writing.",
+  "version": "4.3.0",
+  "description": "Bundled skills: autopilot, commit, dev-server, diagnose, prompting, scrutinize, setup-coding-standard, show-me, teach, writing.",
   "author": {
     "name": "Brian Pham",
     "url": "https://github.com/pt-hieu"
